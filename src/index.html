@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Projeto FGTS: Simulador de Rescisão e FGTS</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container" aria-label="Conteúdo principal">
+    <main class="card" role="main" aria-labelledby="titulo-app">
+      <header>
+        <h1 id="titulo-app">Projeto FGTS: Simulador de Rescisão e FGTS</h1>
+        <button id="toggleTheme" class="toggle-theme" aria-pressed="false">Tema Escuro</button>
+      </header>
+ 
+      <section aria-labelledby="descr-form" class="form-area">
+        <form id="fgtsForm" autocomplete="off">
+          <div>
+            <label for="salario">Salário Bruto</label>
+            <input id="salario" name="salario" type="number" min="0" step="0.01" placeholder="Ex.: 3000"/>
+          </div>
+ 
+          <div class="row">
+            <div>
+              <label for="inicio">Data de Início</label>
+              <input id="inicio" name="inicio" type="date"/>
+            </div>
+            <div>
+              <label for="termino">Data de Término</label>
+              <input id="termino" name="termino" type="date"/>
+            </div>
+          </div>
+ 
+          <div>
+            <label for="motivo">Motivo da Saída</label>
+            <select id="motivo" name="motivo">
+              <option value="dispensa_sem_causa">Dispensa sem justa causa</option>
+              <option value="demissao_voluntaria">Demissão voluntária</option>
+              <option value="outra_saida">Outra saída</option>
+            </select>
+          </div>
+ 
+          <div class="checkbox-group">
+            <label>
+              <input id="saqueAniversario" type="checkbox" /> Saque Aniversário
+            </label>
+            <label>
+              <input id="incluir13" type="checkbox" checked /> Incluir 13º Proporcional
+            </label>
+            <label>
+              <input id="incluirFerias" type="checkbox" checked /> Férias Proporcionais + 1/3
+            </label>
+          </div>
+        </form>
+ 
+        <div class="actions">
+          <button id="calcular" class="primary" type="button">Calcular</button>
+          <button id="explicar" class="secondary" type="button">Explicar esses valores</button>
+        </div>
+      </section>
+ 
+      <!-- Seção de Resultados Separada -->
+      <section id="result-section" style="margin-top:24px;">
+        
+        <!-- Parte de cima: Gráfico + Valores -->
+        <div class="grid-top">
+          <div class="chart-area" style="text-align:center;">
+            <div class="chart" id="donut" style="--saldoColor:#1E6B52; --multaColor:#3B8C8A; --propColor:#8A9A56; --pSaldo:0; --pMulta:0; --pProp:0;">
+              <span class="chartLabel">Saldo</span>
+            </div>
+            <div class="legend">
+              <div class="legend-item"><span class="swatch saldo"></span>Saldo Acumulado</div>
+              <div class="legend-item"><span class="swatch multa"></span>Multa Rescisória</div>
+              <div class="legend-item"><span class="swatch props"></span>Verbas Proporcionais</div>
+            </div>
+          </div>
+ 
+          <div class="cards">
+            <div class="card-panel">
+              <h3>Direitos Garantidos</h3>
+              <div class="value" id="saldo">—</div>
+            </div>
+            <div class="card-panel">
+              <h3>Multa & Extras</h3>
+              <div class="value" id="multa">—</div>
+            </div>
+            <div class="card-panel" style="border-color: var(--accent);">
+              <h3>Total a Receber</h3>
+              <div class="value" id="total" style="color: var(--accent);">—</div>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- Parte de baixo: Explicações e Avisos -->
+        <div class="grid-bottom">
+          <section class="card-panel educacao">
+            <h3>Explicação rápida dos termos</h3>
+            <p><strong>Saldo Acumulado:</strong> valor aproximado do FGTS disponível com base no salário e no tempo de contrato (8% ao mês).</p>
+            <p><strong>Multa Rescisória:</strong> única para dispensa sem justa causa, equivalente a 40% do saldo acumulado.</p>
+            <p><strong>Verbas Proporcionais:</strong> 13º Proporcional e Férias Proporcionais + 1/3, com base nos meses trabalhados.</p>
+            
+            <!-- LINHA DIVISÓRIA E AVISO LEGAL -->
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
+            <p style="margin-bottom: 0;">
+              <strong>⚠️ Aviso Legal:</strong> Este cálculo <strong>não é totalmente exato</strong> e serve apenas como uma simulação educativa. A conta simplificada não considera variáveis específicas (como horas extras, faltas, descontos ou convenções sindicais). Para obter o valor real e garantir seus direitos, <strong>é recomendado consultar um advogado trabalhista</strong>.
+            </p>
+          </section>
+   
+          <section class="card-panel educacao">
+            <h3>Sobre o Projeto & Privacidade</h3>
+            <p>Seus dados estão protegidos: o cálculo é feito offline diretamente no seu dispositivo, sem envio para servidores.</p>
+            <p style="font-size: 14px; margin-top: 8px;">
+              🎓 <em>Esta ferramenta faz parte de um projeto de extensão universitária do curso de <strong>Engenharia de Software da UNINTER</strong>.</em>
+            </p>
+            
+            <!-- BADGES DO GITHUB E LICENÇA -->
+            <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+              <a href="https://github.com/AndersonTavares0" target="_blank" rel="noopener noreferrer">
+                <img src="https://img.shields.io/badge/GitHub-AndersonTavares0-181717?style=flat-square&logo=github" alt="GitHub do Desenvolvedor">
+              </a>
+              <a href="https://github.com/AndersonTavares0/Projeto-FGTS/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">
+                <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="Licença MIT">
+              </a>
+            </div>
+            
+          </section>
+        </div>
+
+      </section>
+    </main>
+  </div>
+ 
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h4 style="margin:0 0 6px; font-size: 20px;">Explicação dos cálculos</h4>
+      <p>O saldo é calculado como: <strong>Salário Bruto × 8% × meses trabalhados</strong>. O 13º Proporcional e as Férias (+ 1/3) aparecem se você optar por incluí-los.</p>
+      <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+        <button class="primary" id="closeModal" style="padding: 10px 20px; font-size: 16px;">Fechar</button>
+      </div>
+    </div>
+  </div>
+ 
+  <script src="script.js"></script>
+</body>
+</html>
