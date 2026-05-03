@@ -1,23 +1,39 @@
-# Arquivos de Sistema Operacional (Windows/Linux/Mac)
+# --- Sistema Operacional e Editores ---
 .DS_Store
 Thumbs.db
-Desktop.ini
-
-# Pastas de Editores de Código (VS Code, IntelliJ, etc)
-.vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+.vscode/
+*.swp
+*.swo
+*~
 
-# Node.js 
+# --- Logs e Dados Sensíveis (Crítico para Privacidade) ---
+# Garante que nenhum dado de simulação ou log acidental seja commitado
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Dependências (Caso use npm/yarn no futuro) ---
 node_modules/
-npm-debug.log
-yarn-error.log
-.env
+package-lock.json
+yarn.lock
 
-# Build / Dist 
+# --- Build e Distribuição (Se houver minificação futura) ---
 dist/
 build/
+*.min.js.map
+
+# --- Arquivos de Ambiente ---
+.env
+.env.local
+.env.*.local
+
+# --- Testes de Cobertura  ---
+coverage/
+
+# --- Documentos Temporários ---
+# Ignora rascunhos que não fazem parte da docs final
+docs/*.tmp
+docs/*.bak
