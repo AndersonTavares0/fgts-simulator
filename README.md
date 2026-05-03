@@ -27,10 +27,11 @@ O sistema consiste em uma ferramenta de simulação trabalhista que permite ao u
 
 ### Funcionalidades Atuais (v1.0)
 * **Cálculo Automatizado**: Processamento do tempo de contrato e saldo acumulado baseado em alíquotas oficiais.
-* **Regras de Negócio CLT**: Aplicação da alíquota de 8% para depósitos mensais e cálculo da multa rescisória de 40%.
-* **Gerenciamento de Temas**: Interface adaptável com suporte a Light e Dark Mode via módulo dedicado.
-* **Privacidade e Segurança**: Processamento *client-side* que dispensa o cadastro de dados sensíveis ou armazenamento externo.
-* **Arquitetura Modular**: Código refatorado seguindo princípios SOLID com módulos independentes para cálculos, validações e controle de interface.
+* **Precisão Matemática CLT**: Aplicação da alíquota de 8% para depósitos mensais, cálculo da multa rescisória de 40% e regra dos 15 dias para meses fracionados.
+* **Aritmética de Centavos**: Todas as operações monetárias utilizam inteiros para evitar erros de ponto flutuante IEEE 754.
+* **Gerenciamento de Temas**: Interface adaptável com Light/Dark Mode via CSS Variables centralizadas em `:root`.
+* **Privacidade e Segurança**: Processamento *client-side* que dispensa cadastro de dados sensíveis ou armazenamento externo.
+* **Arquitetura Simplificada**: Código organizado por responsabilidade com foco em eficiência e facilidade de manutenção.
 * **Acessibilidade WCAG 2.1 AA**: Implementação completa de ARIA labels, live regions e navegação por teclado para tecnologias assistivas.
 
 ## Automação e Deploy (CI/CD)
@@ -60,7 +61,7 @@ PROJETO-FGTS/
 └── src/              # Código-fonte da aplicação funcional.
     ├── index.html    # Estrutura semântica e acessibilidade.
     ├── css/          # Folhas de estilo e temas.
-    │   └── style.css # Design responsivo e variáveis CSS.
+    │   └── style.css # Design responsivo com CSS Variables em :root.
     └── js/           # Módulos JavaScript organizados por responsabilidade.
         ├── script.js         # Orquestrador principal e manipulação do DOM.
         ├── calculator.js     # Módulo de cálculos FGTS (regras CLT).
