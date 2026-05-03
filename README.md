@@ -5,16 +5,16 @@
 [![Software Version](https://img.shields.io/badge/version-1.0.0--alpha-green?style=flat-square)](#)
 
 ## Contexto Acadêmico
-Este projeto foi desenvolvido como atividade de **Extensão Universitária** para o curso de **Engenharia de Software** do Centro Universitário Internacional **UNINTER**. O objetivo é aplicar conceitos de desenvolvimento de software para solucionar problemas reais de literacia financeira e inclusão digital[cite: 1, 2].
+Este projeto foi desenvolvido como atividade de **Extensão Universitária** para o curso de **Engenharia de Software** do Centro Universitário Internacional **UNINTER**. O objetivo é aplicar conceitos de desenvolvimento de software para solucionar problemas reais de literacia financeira e inclusão digital.
 
 ## Descrição do Projeto
-O sistema consiste em uma ferramenta de simulação trabalhista que permite ao usuário calcular estimativas de verbas rescisórias e saldo de FGTS[cite: 1]. A aplicação foca na privacidade e no **Desenho Universal**, garantindo que a interface seja operável por pessoas com diferentes níveis de habilidade tecnológica[cite: 1].
+O sistema consiste em uma ferramenta de simulação trabalhista que permite ao usuário calcular estimativas de verbas rescisórias e saldo de FGTS. A aplicação foca na privacidade e no **Desenho Universal**, garantindo que a interface seja operável por pessoas com diferentes níveis de habilidade tecnológica.
 
 ### Funcionalidades Atuais (v1.0)
-*   **Cálculo Automatizado**: Processamento de meses trabalhados baseado em datas de início e término[cite: 1].
-*   **Regras de Negócio CLT**: Aplicação de depósitos mensais (8%) e multa rescisória condicional (40%)[cite: 1].
-*   **Gerenciamento de Temas**: Suporte nativo a Light e Dark Mode via variáveis CSS e persistência em local storage[cite: 1].
-*   **Acessibilidade**: Contraste otimizado e componentes amigáveis para tecnologias assistivas[cite: 1].
+*   **Cálculo Automatizado**: Processamento de meses trabalhados baseado em datas de início e término.
+*   **Regras de Negócio CLT**: Aplicação de depósitos mensais (8%) e multa rescisória condicional (40%).
+*   **Gerenciamento de Temas**: Suporte nativo a Light e Dark Mode via variáveis CSS e persistência em local storage.
+*   **Acessibilidade**: Contraste otimizado e componentes amigáveis para tecnologias assistivas.
 
 ## Instalação e Uso
 Como o projeto é uma SPA (Single Page Application) pura, não requer instaladores:
@@ -41,4 +41,5 @@ Este projeto é evolutivo e servirá como base para estudos futuros durante o cu
 
 
 ## Aviso Legal
-Os cálculos fornecidos são **estimativas simplificadas** e não substituem o cálculo oficial realizado por profissionais competentes. Recomenda-se sempre consultar um **advogado trabalhista** ou sindicato para validação de direitos[cite: 1].
+Os cálculos fornecidos são **estimativas simplificadas** e não substituem o cálculo oficial realizado por profissionais competentes. 
+Recomenda-se sempre consultar um **advogado trabalhista** ou sindicato para validação de direitos.
