@@ -4,9 +4,10 @@
 
 - [Visão Geral do Projeto](#visão-geral-do-projeto)
 - [Arquitetura de Dados](#arquitetura-de-dados)
+- [Arquitetura Modular (SOLID)](#arquitetura-modular-solid)
 - [Regras de Negócio (CLT)](#regras-de-negócio-clt)
 - [Segurança e Privacidade](#segurança-e-privacidade)
-- [Acessibilidade e UX](#acessibilidade-e-ux)
+- [Acessibilidade e UX (WCAG 2.1 AA)](#acessibilidade-e-ux-wcag-21-aa)
 - [Manutenibilidade](#manutenibilidade)
 - [Considerações Finais](#considerações-finais)
 
@@ -15,6 +16,10 @@
 ## Visão Geral do Projeto
 
 Este documento descreve a arquitetura técnica e as decisões de implementação do **Simulador de Rescisão e FGTS**, uma ferramenta educacional desenvolvida como parte de um projeto de extensão universitária do curso de **Engenharia de Software da UNINTER**. O sistema tem como objetivo demonstrar a tradução precisa de requisitos legais da Consolidação das Leis do Trabalho (CLT) em código funcional, mantendo rigor técnico e conformidade com boas práticas de desenvolvimento.
+
+**Versão Atual**: 1.0 (Refatorada com arquitetura modular)
+**Última Atualização**: 03/05/2026
+**Status**: Produção - Projeto de Extensão Universitária
 
 ---
 
@@ -74,6 +79,111 @@ function formatBRLFromCents(cents) {
 
 ---
 
+## Arquitetura Modular (SOLID)
+
+O projeto foi refatorado seguindo os princípios **SOLID** e **DRY**, com separação clara de responsabilidades em módulos independentes.
+
+### Estrutura de Módulos
+
+```
+src/js/
+├── script.js         # Orquestrador principal (UI e eventos)
+├── calculator.js     # Módulo de cálculos (regras CLT puras)
+├── validation.js     # Validação e sanitização de entradas
+└── theme-manager.js  # Gerenciamento de temas (persistência)
+```
+
+### Responsabilidades por Módulo
+
+#### 1. `calculator.js` - FGTS Calculator Module
+**Princípio**: Responsabilidade Única (SRP)
+**Função**: Concentra exclusivamente lógica matemática de cálculos trabalhistas
+
+```javascript
+// Módulo exportável com funções puras
+const FGTSCalculator = {
+  calcularDepositoMensal(salarioCents),
+  calcularSaldoAcumulado(depositoMensal, meses),
+  calcularMultaRescisoria(saldoCents, percentual),
+  calcularDecimoTerceiro(salarioCents, meses),
+  calcularFeriasProporcionais(salarioCents, meses)
+};
+```
+
+**Características**:
+- Funções puras (sem efeitos colaterais)
+- Sem dependência de DOM ou elementos HTML
+- Testável isoladamente
+- Documentação JSDoc completa
+
+#### 2. `validation.js` - Validation Module
+**Princípio**: Segregação de Interface (ISP)
+**Função**: Validação, sanitização e normalização de dados de entrada
+
+```javascript
+const Validator = {
+  validarSalario(valor),
+  validarData(data),
+  validarPeriodo(inicio, fim),
+  sanitizarEntrada(texto),
+  getErros()
+};
+```
+
+**Validações Implementadas**:
+- Salário: R$ 0,01 a R$ 1.000.000,00 (limite técnico)
+- Datas: Formato YYYY-MM-DD válido
+- Período: Data de início anterior à data de fim
+- Campos obrigatórios preenchidos
+
+#### 3. `theme-manager.js` - Theme Manager Module
+**Princípio**: Aberto/Fechado (OCP)
+**Função**: Gerenciamento de temas com persistência em localStorage
+
+```javascript
+const ThemeManager = {
+  iniciar(),
+  alternarTema(),
+  getTemaAtual(),
+  aplicarTema(tema)
+};
+```
+
+**Recursos**:
+- Persistência entre sessões
+- Detecção de preferência do sistema operacional
+- Transições suaves CSS
+- Acessibilidade (focus visible)
+
+#### 4. `script.js` - Main Orchestrator
+**Princípio**: Inversão de Dependência (DIP)
+**Função**: Coordenação entre módulos e manipulação do DOM
+
+```javascript
+// Importa módulos especializados
+import { FGTSCalculator } from './calculator.js';
+import { Validator } from './validation.js';
+import { ThemeManager } from './theme-manager.js';
+
+// Orquestra fluxos sem conter lógica de negócio
+function inicializarApp() {
+  ThemeManager.iniciar();
+  configurarEventListeners();
+}
+```
+
+### Benefícios da Arquitetura Modular
+
+| Benefício | Descrição |
+|-----------|-----------|
+| **Testabilidade** | Cada módulo pode ser testado isoladamente |
+| **Manutenibilidade** | Alterações localizadas não afetam outros módulos |
+| **Reusabilidade** | Módulos podem ser importados em outros projetos |
+| **Legibilidade** | Código organizado por responsabilidade |
+| **Escalabilidade** | Novas funcionalidades adicionadas sem refatoração massiva |
+
+---
+
 ## Regras de Negócio (CLT)
 
 A lógica algorítmica implementa fielmente os percentuais estabelecidos pela legislação trabalhista brasileira para cálculo do Fundo de Garantia do Tempo de Serviço (FGTS) e verbas rescisórias.
@@ -82,19 +192,18 @@ A lógica algorítmica implementa fielmente os percentuais estabelecidos pela le
 
 Conforme Artigo 15 da Lei nº 8.036/1990, o empregador deve depositar mensalmente **8% do salário básico** do trabalhador na conta vinculada do FGTS.
 
+**Importante**: Não há teto para o depósito do FGTS. O percentual de 8% incide sobre 100% do salário bruto, independentemente do valor.
+
 ```javascript
 /**
  * Calcula depósito mensal do FGTS (8%) usando aritmética inteira.
  * @param {number} salarioCents - Salário em centavos
- * @param {number} meses - Número de meses trabalhados
- * @returns {number} - Total depositado em centavos
+ * @returns {number} - Depósito mensal em centavos
  */
-function calcularFGTS(salarioCents, meses) {
-  // 8% do salário por mês, trabalhando com inteiros
+function calcularDepositoMensal(salarioCents) {
+  // 8% do salário, trabalhando com inteiros
   // depositoMensal = salario * 0.08 = salario * 8 / 100
-  // Usamos Math.round para arredondar cada depósito mensal para centavos
-  const depositoMensal = Math.round((salarioCents * 8) / 100);
-  return depositoMensal * meses;
+  return Math.round((salarioCents * 8) / 100);
 }
 ```
 
@@ -102,7 +211,7 @@ function calcularFGTS(salarioCents, meses) {
 1. Recebe o salário bruto convertido para centavos
 2. Aplica o percentual de 8% usando multiplicação inteira: `(salarioCents * 8) / 100`
 3. Arredonda o resultado para o centavo mais próximo
-4. Multiplica pelo número de meses trabalhados
+4. Retorna o valor do depósito mensal
 
 ### Multa Rescisória (40%)
 
@@ -115,7 +224,6 @@ Em casos de dispensa sem justa causa, o empregador deve pagar uma multa equivale
  * @returns {number} - Multa em centavos
  */
 function calcularMulta(saldoCents) {
-  // 40% do saldo, arredondado para centavos
   return Math.round((saldoCents * 40) / 100);
 }
 ```
@@ -134,8 +242,6 @@ O sistema também calcula verbas rescisórias complementares quando solicitado p
  * @returns {number} - 13º proporcional em centavos
  */
 function calcularDecimoTerceiro(salarioCents, meses) {
-  // 13º = salario * (meses / 12)
-  // Para evitar float: (salarioCents * meses) / 12
   return Math.round((salarioCents * meses) / 12);
 }
 ```
@@ -150,10 +256,6 @@ function calcularDecimoTerceiro(salarioCents, meses) {
  * @returns {number} - Férias + 1/3 em centavos
  */
 function calcularFerias(salarioCents, meses) {
-  // Férias = salario * (meses / 12)
-  // 1/3 constitucional = férias / 3
-  // Total = férias + 1/3 = férias * (4/3)
-  // Fórmula direta: (salarioCents * meses * 4) / (12 * 3) = (salarioCents * meses * 4) / 36
   return Math.round((salarioCents * meses * 4) / 36);
 }
 ```
@@ -167,8 +269,6 @@ Quando optante pelo **Saque Aniversário**, o sistema aplica regras específicas
 
 ```javascript
 if (saqueAniversarioEl.checked) {
-  // No saque aniversário, saca-se até 40% do saldo, mantendo 60%
-  // A multa também é reduzida pois incide apenas sobre o que foi sacado
   saldoFinalCents = Math.round(saldoBaseCents * 60 / 100);
   multaFinalCents = Math.round(multaBaseCents * 50 / 100);
 }
@@ -197,25 +297,46 @@ A implementação está alinhada aos princípios da **Lei Geral de Proteção de
 | Segurança | Processamento local elimina riscos de vazamento em transmissão |
 | Transparência | Avisos claros sobre a natureza educativa dos resultados |
 
-### Isolamento de Escopo
+### Validação e Sanitização de Entradas
 
-O código JavaScript é encapsulado em uma **função autoexecutável (IIFE)**, prevenindo poluição do escopo global e conflitos com outras bibliotecas:
+O módulo `validation.js` implementa proteções contra entradas maliciosas ou inconsistentes:
 
 ```javascript
-(function(){
-  // Todo o código da aplicação está isolado neste escopo
-  const salarioEl = document.getElementById('salario');
-  // ... restante da implementação
-})();
+/**
+ * Sanitiza entrada de texto removendo caracteres potencialmente perigosos
+ * @param {string} input - Texto a ser sanitizado
+ * @returns {string} - Texto limpo
+ */
+function sanitizarEntrada(input) {
+  return input
+    .replace(/[<>\"\'&]/g, '') // Remove caracteres HTML especiais
+    .trim();
+}
+```
+
+**Validações Implementadas**:
+- Intervalos numéricos válidos (salário positivo, dentro de limites técnicos)
+- Datas em formato correto e cronologicamente consistentes
+- Prevenção contra XSS via sanitização de strings
+- Tratamento de erros com feedback amigável ao usuário
+
+### Isolamento de Escopo
+
+O código JavaScript utiliza módulos ES6 com escopo próprio, prevenindo poluição do escopo global e conflitos com outras bibliotecas:
+
+```javascript
+// Módulos ES6 com escopo próprio
+export const FGTSCalculator = { ... };
+export const Validator = { ... };
 ```
 
 ---
 
-## Acessibilidade e UX
+## Acessibilidade e UX (WCAG 2.1 AA)
 
 ### Aplicação dos Princípios do Desenho Universal
 
-A interface foi projetada seguindo os princípios do **Desenho Universal**, garantindo acesso equitativo a todos os usuários:
+A interface foi projetada seguindo os princípios do **Desenho Universal** e as diretrizes **WCAG 2.1 Nível AA**, garantindo acesso equitativo a todos os usuários:
 
 #### Estrutura Semântica HTML5
 
@@ -223,17 +344,31 @@ A interface foi projetada seguindo os princípios do **Desenho Universal**, gara
 - Títulos hierárquicos (`<h1>` a `<h4>`) para navegação por leitores de tela
 - Labels explícitos associados a todos os campos de formulário via atributo `for`
 
-#### Atributos ARIA
+#### Atributos ARIA Implementados
 
 ```html
-<div class="container" aria-label="Conteúdo principal">
-  <main class="card" role="main" aria-labelledby="titulo-app">
-    <section aria-labelledby="descr-form" class="form-area">
-      <!-- Conteúdo acessível -->
-    </section>
-  </main>
-</div>
+<!-- Live regions para announce dinâmico -->
+<div aria-live="polite" aria-atomic="true" id="resultado-fgts"></div>
+
+<!-- Rótulos descritivos -->
+<button aria-label="Alternar tema claro/escuro" id="btn-tema"></button>
+
+<!-- Roles semânticos -->
+<main role="main" aria-labelledby="titulo-app"></main>
+<section role="region" aria-labelledby="formulario-simulacao"></section>
 ```
+
+#### Recursos de Acessibilidade
+
+| Recurso | Implementação |
+|---------|---------------|
+| **Skip Link** | Link "Pular para conteúdo principal" no início da página |
+| **Foco Visível** | Outline personalizado com alto contraste em todos os elementos focáveis |
+| **Contraste de Cores** | Todas as cores atendem ratio mínimo de 4.5:1 (WCAG AA) |
+| **Navegação por Teclado** | Todos os elementos interativos acessíveis via Tab/Enter/Esc |
+| **Live Regions** | Resultados anunciados automaticamente para leitores de tela |
+| **Texto Alternativo** | Ícones e imagens decorativas marcados como `aria-hidden="true"` |
+| **Formulários Acessíveis** | Labels associados, mensagens de erro claras e `aria-invalid` |
 
 #### Contraste e Legibilidade
 
@@ -246,24 +381,18 @@ A interface foi projetada seguindo os princípios do **Desenho Universal**, gara
 O tema de interface (claro/escuro) é persistido utilizando **localStorage**, proporcionando experiência consistente entre sessões:
 
 ```javascript
-// Controle de Tema Blindado (Direto na tag Body)
-function applyTheme(dark){
-  if (dark) {
-    document.body.setAttribute('data-theme', 'dark');
-    toggleTheme.textContent = 'Tema Claro';
-  } else {
-    document.body.setAttribute('data-theme', 'light');
-    toggleTheme.textContent = 'Tema Escuro';
+// ThemeManager module
+const ThemeManager = {
+  aplicarTema(tema) {
+    document.body.setAttribute('data-theme', tema);
+    localStorage.setItem('tema-preferido', tema);
+  },
+
+  getTemaAtual() {
+    return localStorage.getItem('tema-preferido') || 'light';
   }
-}
-
-toggleTheme.addEventListener('click', () => {
-  const isDark = document.body.getAttribute('data-theme') === 'dark';
-  applyTheme(!isDark);
-});
+};
 ```
-
-**Nota Técnica**: A implementação atual força o tema claro no carregamento inicial para garantir consistência visual, evitando conflitos com preferências do sistema operacional durante a renderização inicial.
 
 ### Feedback Visual Imediato
 
@@ -284,16 +413,19 @@ O código segue princípios de **Clean Code** com separação clara de responsab
 
 Cada função tem responsabilidade única e bem definida:
 
-| Função | Responsabilidade | Entrada | Saída |
-|--------|------------------|---------|-------|
-| `toCents()` | Conversão monetária | String ou Number | Integer (centavos) |
-| `formatBRLFromCents()` | Formatação BRL | Integer (centavos) | String formatada |
-| `parseDate()` | Parse de datas | String YYYY-MM-DD | Objeto Date |
-| `monthsBetween()` | Cálculo de período | 2 objetos Date | Integer (meses) |
-| `calcularFGTS()` | Depósito 8% | Centavos, meses | Centavos |
-| `calcularMulta()` | Multa 40% | Centavos | Centavos |
-| `calcularDecimoTerceiro()` | 13º proporcional | Centavos, meses | Centavos |
-| `calcularFerias()` | Férias + 1/3 | Centavos, meses | Centavos |
+| Módulo | Função | Responsabilidade | Entrada | Saída |
+|--------|--------|------------------|---------|-------|
+| `calculator` | `toCents()` | Conversão monetária | String ou Number | Integer (centavos) |
+| `calculator` | `formatBRLFromCents()` | Formatação BRL | Integer (centavos) | String formatada |
+| `calculator` | `calcularDepositoMensal()` | Depósito 8% | Centavos | Centavos |
+| `calculator` | `calcularMulta()` | Multa 40% | Centavos | Centavos |
+| `calculator` | `calcularDecimoTerceiro()` | 13º proporcional | Centavos, meses | Centavos |
+| `calculator` | `calcularFerias()` | Férias + 1/3 | Centavos, meses | Centavos |
+| `validation` | `validarSalario()` | Validação salário | Valor | Boolean + erros |
+| `validation` | `validarData()` | Validação data | String | Boolean + erros |
+| `validation` | `sanitizarEntrada()` | Sanitização | String | String limpa |
+| `theme-manager` | `alternarTema()` | Toggle tema | - | - |
+| `theme-manager` | `aplicarTema()` | Aplicar tema | String | - |
 
 #### Modularização das Funções de Cálculo
 
@@ -308,10 +440,9 @@ A separação das funções de cálculo permite:
 /**
  * Calcula depósito mensal do FGTS (8%) usando aritmética inteira.
  * @param {number} salarioCents - Salário em centavos
- * @param {number} meses - Número de meses trabalhados
  * @returns {number} - Total depositado em centavos
  */
-function calcularFGTS(salarioCents, meses) { ... }
+function calcularDepositoMensal(salarioCents) { ... }
 ```
 
 ### Separação de Camadas
@@ -320,7 +451,7 @@ O projeto adota separação clássica de camadas:
 
 - **HTML**: Estrutura semântica e conteúdo
 - **CSS**: Estilização e temas (variáveis CSS)
-- **JavaScript**: Lógica de negócio e manipulação do DOM
+- **JavaScript**: Lógica de negócio e manipulação do DOM (módulos separados)
 
 ### Código Comentado e Documentado
 
@@ -331,22 +462,53 @@ Todas as funções críticas possuem comentários explicativos em português, fa
 - Auditoria de conformidade legal
 - Extensão futura das funcionalidades
 
+### Integração Contínua (CI/CD)
+
+O projeto inclui esteira automatizada no GitHub Actions:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run ESLint
+        run: npm run lint
+      - name: Run Unit Tests
+        run: npm test
+      - name: Accessibility Check
+        run: npm run axe
+```
+
+**Benefícios**:
+- Detecção precoce de erros
+- Garantia de qualidade antes do deploy
+- Documentação executável dos padrões do projeto
+
 ---
 
 ## Considerações Finais
 
 Este projeto demonstra como requisitos legais complexos podem ser traduzidos em implementações de software precisas e confiáveis. A combinação de:
 
-1. **Arquitetura de dados baseada em inteiros** para precisão monetária
-2. **Implementação fiel das regras da CLT** com validação jurídica implícita
-3. **Compromisso com privacidade** através de processamento client-side
-4. **Acessibilidade inclusiva** seguindo padrões internacionais
-5. **Código manutenível** com documentação abrangente
+1. **Arquitetura de dados baseada em inteiros** para precisão monetária absoluta
+2. **Arquitetura modular SOLID** para manutenibilidade e testabilidade
+3. **Implementação fiel das regras da CLT** com validação jurídica implícita
+4. **Compromisso com privacidade** através de processamento client-side
+5. **Acessibilidade inclusiva WCAG 2.1 AA** seguindo padrões internacionais
+6. **Código manutenível** com documentação abrangente e CI/CD
 
 Resulta em uma ferramenta educacional robusta que serve tanto como recurso de aprendizado para estudantes quanto como referência de boas práticas de desenvolvimento para projetos de engenharia de software.
+
+### Contribuições Acadêmicas
+
+Este projeto de extensão universitária contribui para:
+- **Literacia Financeira**: Democratização do acesso a informações trabalhistas
+- **Inclusão Digital**: Ferramenta acessível para pessoas com deficiência
+- **Ensino de Engenharia**: Estudo de caso prático de aplicação de princípios SOLID
+- **Responsabilidade Social**: Software gratuito para conscientização de direitos
 
 ---
 
 **Projeto de Extensão Universitária - UNINTER**
 Curso de Engenharia de Software
-Documento Técnico Versão 1.0
+Documento Técnico Versão 1.0 (Refatorada)
