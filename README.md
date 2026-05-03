@@ -18,19 +18,22 @@ O sistema consiste em uma ferramenta de simulação trabalhista que permite ao u
 
 ## Instalação e Uso
 Como o projeto é uma SPA (Single Page Application) pura, não requer instaladores:
-1. Clone o repositório: `git clone https://github.com/AndersonTavares0/PROJETO-FGTS.git`
+1. Clone o repositório: `git clone [https://github.com/AndersonTavares0/PROJETO-FGTS.git](https://github.com/AndersonTavares0/PROJETO-FGTS.git)`
 2. Abra o arquivo `src/index.html` em qualquer navegador moderno.
 
 ## Estrutura do Repositório
 ```text
 PROJETO-FGTS/
-├── .gitignore      # Definições de arquivos ignorados pelo Git.
-├── LICENSE         # Licença MIT.
-├── README.md       # Documentação técnica.
-└── src/            # Código-fonte da aplicação funcional.
-    ├── index.html  # Estrutura e semântica.
-    ├── style.css   # Estilização e temas.
-    └── script.js   # Lógica e cálculos em Vanilla JS.
+├── .github/
+│   └── workflows/    # Automação para deploy via GitHub Actions.
+├── .gitignore        # Definições de arquivos ignorados pelo Git.
+├── LICENSE           # Licença MIT.
+├── README.md         # Documentação técnica.
+└── src/              # Código-fonte da aplicação funcional.
+    ├── index.html    # Estrutura e semântica.
+    ├── style.css     # Estilização e temas.
+    └── script.js     # Lógica e cálculos em Vanilla JS.
+```
 
 ## Roadmap (Futuras Melhorias)
 Este projeto é evolutivo e servirá como base para estudos futuros durante o curso. Estão previstas as seguintes atualizações:
@@ -39,7 +42,5 @@ Este projeto é evolutivo e servirá como base para estudos futuros durante o cu
 *   [ ] **Gráficos Avançados**: Implementação de bibliotecas como D3.js ou Chart.js para visualização complexa.
 *   [ ] **Módulo de Exportação**: Opção de gerar relatórios detalhados em PDF.
 
-
 ## Aviso Legal
-Os cálculos fornecidos são **estimativas simplificadas** e não substituem o cálculo oficial realizado por profissionais competentes. 
-Recomenda-se sempre consultar um **advogado trabalhista** ou sindicato para validação de direitos.
+Os cálculos fornecidos são **estimativas simplificadas** e não substituem o cálculo oficial realizado por profissionais competentes. Recomenda-se sempre consultar um **advogado trabalhista** ou sindicato para validação de direitos.
