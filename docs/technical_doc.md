@@ -4,7 +4,7 @@
 
 - [Visão Geral do Projeto](#visão-geral-do-projeto)
 - [Arquitetura de Dados](#arquitetura-de-dados)
-- [Arquitetura Modular (SOLID)](#arquitetura-modular-solid)
+- [Organização do Código](#organização-do-código)
 - [Regras de Negócio (CLT)](#regras-de-negócio-clt)
 - [Segurança e Privacidade](#segurança-e-privacidade)
 - [Acessibilidade e UX (WCAG 2.1 AA)](#acessibilidade-e-ux-wcag-21-aa)
@@ -17,7 +17,7 @@
 
 Este documento descreve a arquitetura técnica e as decisões de implementação do **Simulador de Rescisão e FGTS**, uma ferramenta educacional desenvolvida como parte de um projeto de extensão universitária do curso de **Engenharia de Software da UNINTER**. O sistema tem como objetivo demonstrar a tradução precisa de requisitos legais da Consolidação das Leis do Trabalho (CLT) em código funcional, mantendo rigor técnico e conformidade com boas práticas de desenvolvimento.
 
-**Versão Atual**: 1.0 (Refatorada com arquitetura modular)
+**Versão Atual**: 1.0 (Refatorada com foco em simplicidade pragmática)
 **Última Atualização**: 03/05/2026
 **Status**: Produção - Projeto de Extensão Universitária
 
@@ -48,17 +48,15 @@ Todos os valores monetários são convertidos e armazenados como **inteiros repr
  */
 function toCents(value) {
   if (typeof value === 'string') {
-    // Remove formatação brasileira (R$, pontos, espaços) e troca vírgula por ponto
     const cleaned = value.replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
     value = parseFloat(cleaned);
   }
   if (isNaN(value)) return 0;
-  // Math.round para garantir arredondamento correto para centavos
   return Math.round(value * 100);
 }
 
 /**
- * Formata inteiro em centavos para string monetária BRL usando Intl.NumberFormat
+ * Formata inteiro em centavos para string monetária BRL
  * Ex: 125050 -> "R$ 1.250,50"
  */
 function formatBRLFromCents(cents) {
@@ -79,11 +77,11 @@ function formatBRLFromCents(cents) {
 
 ---
 
-## Arquitetura Modular (SOLID)
-
-O projeto foi refatorado seguindo os princípios **SOLID** e **DRY**, com separação clara de responsabilidades em módulos independentes.
+## Organização do Código
 
 ### Estrutura de Módulos
+
+O projeto adota uma organização por responsabilidade, com módulos independentes que facilitam a manutenção e o teste isolado:
 
 ```
 src/js/
@@ -95,16 +93,14 @@ src/js/
 
 ### Responsabilidades por Módulo
 
-#### 1. `calculator.js` - FGTS Calculator Module
-**Princípio**: Responsabilidade Única (SRP)
+#### 1. `calculator.js` - Módulo de Cálculo FGTS
 **Função**: Concentra exclusivamente lógica matemática de cálculos trabalhistas
 
 ```javascript
-// Módulo exportável com funções puras
 const FGTSCalculator = {
   calcularDepositoMensal(salarioCents),
-  calcularSaldoAcumulado(depositoMensal, meses),
-  calcularMultaRescisoria(saldoCents, percentual),
+  calcularSaldoFGTS(salarioCents, meses),
+  calcularMultaRescisoria(saldoCents, motivo),
   calcularDecimoTerceiro(salarioCents, meses),
   calcularFeriasProporcionais(salarioCents, meses)
 };
@@ -116,17 +112,16 @@ const FGTSCalculator = {
 - Testável isoladamente
 - Documentação JSDoc completa
 
-#### 2. `validation.js` - Validation Module
-**Princípio**: Segregação de Interface (ISP)
+#### 2. `validation.js` - Módulo de Validação
 **Função**: Validação, sanitização e normalização de dados de entrada
 
 ```javascript
-const Validator = {
+const ValidationModule = {
   validarSalario(valor),
   validarData(data),
   validarPeriodo(inicio, fim),
   sanitizarEntrada(texto),
-  getErros()
+  calcularMesesTrabalhados(inicio, termino)
 };
 ```
 
@@ -136,16 +131,14 @@ const Validator = {
 - Período: Data de início anterior à data de fim
 - Campos obrigatórios preenchidos
 
-#### 3. `theme-manager.js` - Theme Manager Module
-**Princípio**: Aberto/Fechado (OCP)
+#### 3. `theme-manager.js` - Gerenciador de Temas
 **Função**: Gerenciamento de temas com persistência em localStorage
 
 ```javascript
 const ThemeManager = {
-  iniciar(),
-  alternarTema(),
-  getTemaAtual(),
-  aplicarTema(tema)
+  iniciar(toggleButton),
+  aplicarTema(tema),
+  getTemaAtual()
 };
 ```
 
@@ -155,14 +148,13 @@ const ThemeManager = {
 - Transições suaves CSS
 - Acessibilidade (focus visible)
 
-#### 4. `script.js` - Main Orchestrator
-**Princípio**: Inversão de Dependência (DIP)
+#### 4. `script.js` - Orquestrador Principal
 **Função**: Coordenação entre módulos e manipulação do DOM
 
 ```javascript
 // Importa módulos especializados
 import { FGTSCalculator } from './calculator.js';
-import { Validator } from './validation.js';
+import { ValidationModule } from './validation.js';
 import { ThemeManager } from './theme-manager.js';
 
 // Orquestra fluxos sem conter lógica de negócio
@@ -172,7 +164,7 @@ function inicializarApp() {
 }
 ```
 
-### Benefícios da Arquitetura Modular
+### Benefícios desta Organização
 
 | Benefício | Descrição |
 |-----------|-----------|
@@ -201,8 +193,6 @@ Conforme Artigo 15 da Lei nº 8.036/1990, o empregador deve depositar mensalment
  * @returns {number} - Depósito mensal em centavos
  */
 function calcularDepositoMensal(salarioCents) {
-  // 8% do salário, trabalhando com inteiros
-  // depositoMensal = salario * 0.08 = salario * 8 / 100
   return Math.round((salarioCents * 8) / 100);
 }
 ```
@@ -309,7 +299,7 @@ O módulo `validation.js` implementa proteções contra entradas maliciosas ou i
  */
 function sanitizarEntrada(input) {
   return input
-    .replace(/[<>\"\'&]/g, '') // Remove caracteres HTML especiais
+    .replace(/[<>\"\'&]/g, '')
     .trim();
 }
 ```
@@ -322,12 +312,14 @@ function sanitizarEntrada(input) {
 
 ### Isolamento de Escopo
 
-O código JavaScript utiliza módulos ES6 com escopo próprio, prevenindo poluição do escopo global e conflitos com outras bibliotecas:
+O código JavaScript utiliza módulos com escopo próprio (IIFE pattern), prevenindo poluição do escopo global e conflitos com outras bibliotecas:
 
 ```javascript
-// Módulos ES6 com escopo próprio
-export const FGTSCalculator = { ... };
-export const Validator = { ... };
+const FGTSCalculator = (function() {
+  'use strict';
+  // Código do módulo com escopo isolado
+  return { /* API pública */ };
+})();
 ```
 
 ---
@@ -376,22 +368,30 @@ A interface foi projetada seguindo os princípios do **Desenho Universal** e as 
 - Tamanhos de fonte responsivos que se adaptam a diferentes dispositivos
 - Indicadores visuais claros para estados interativos (hover, focus, active)
 
-### Persistência de Estado via localStorage
+### Gerenciamento de Temas com CSS Variables
 
-O tema de interface (claro/escuro) é persistido utilizando **localStorage**, proporcionando experiência consistente entre sessões:
+O sistema de temas utiliza **CSS Variables centralizadas em `:root`**, proporcionando:
 
-```javascript
-// ThemeManager module
-const ThemeManager = {
-  aplicarTema(tema) {
-    document.body.setAttribute('data-theme', tema);
-    localStorage.setItem('tema-preferido', tema);
-  },
+- **Eficiência**: Uma única definição de variáveis para todo o projeto
+- **Manutenibilidade**: Alterações de cores em um único local
+- **Performance**: Sem repetição desnecessária de regras CSS
 
-  getTemaAtual() {
-    return localStorage.getItem('tema-preferido') || 'light';
-  }
-};
+```css
+:root {
+  /* Tema Claro (Padrão) */
+  --bg: #F3F4F6;
+  --surface: #FFFFFF;
+  --fg: #111827;
+  --accent: #1E6B52;
+}
+
+[data-theme="dark"] {
+  /* Sobrescrita para Tema Escuro */
+  --bg: #0B0F14;
+  --surface: #141A20;
+  --fg: #E9F0F5;
+  --accent: #4DDC9A;
+}
 ```
 
 ### Feedback Visual Imediato
@@ -405,9 +405,9 @@ const ThemeManager = {
 
 ## Manutenibilidade
 
-### Organização de Constantes e Configurações
+### Princípios de Clean Code Aplicados
 
-O código segue princípios de **Clean Code** com separação clara de responsabilidades:
+O código segue boas práticas de desenvolvimento para facilitar a manutenção futura:
 
 #### Funções Puras e Especializadas
 
@@ -427,7 +427,7 @@ Cada função tem responsabilidade única e bem definida:
 | `theme-manager` | `alternarTema()` | Toggle tema | - | - |
 | `theme-manager` | `aplicarTema()` | Aplicar tema | String | - |
 
-#### Modularização das Funções de Cálculo
+#### Separação de Responsabilidades
 
 A separação das funções de cálculo permite:
 
@@ -444,6 +444,19 @@ A separação das funções de cálculo permite:
  */
 function calcularDepositoMensal(salarioCents) { ... }
 ```
+
+---
+
+## Considerações Finais
+
+Esta documentação reflete a arquitetura simplificada do Simulador FGTS, com foco em:
+
+1. **Eficiência**: CSS Variables centralizadas, código organizado por responsabilidade
+2. **Precisão**: Aritmética de centavos para evitar erros de ponto flutuante
+3. **Acessibilidade**: Conformidade WCAG 2.1 AA com recursos de tecnologia assistiva
+4. **Manutenibilidade**: Funções puras, documentação clara e separação de concerns
+
+O projeto continua evoluindo como ferramenta educacional de extensão universitária, mantendo o equilíbrio entre simplicidade pragmática e rigor técnico necessário para cálculos trabalhistas precisos.
 
 ### Separação de Camadas
 
