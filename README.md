@@ -7,6 +7,18 @@
 ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=flat-square&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/javascript-%23F7DF1E.svg?style=flat-square&logo=javascript&logoColor=black)
 
+## Sumário
+
+- [Contexto Acadêmico](#contexto-acadêmico)
+- [Descrição do Projeto](#descrição-do-projeto)
+  - [Funcionalidades Atuais (v1.0)](#funcionalidades-atuais-v10)
+- [Automação e Deploy (CI/CD)](#automação-e-deploy-cicd)
+- [Instalação e Uso](#instalação-e-uso)
+- [Estrutura do Repositório](#estrutura-do-repositório)
+- [Roadmap (Futuras Melhorias)](#roadmap-futuras-melhorias)
+- [Aviso Legal](#aviso-legal)
+- [Documentação Técnica](#documentação-técnica)
+
 ## Contexto Acadêmico
 Este projeto foi desenvolvido como atividade de **Extensão Universitária** para o curso de **Engenharia de Software** do Centro Universitário Internacional **UNINTER**. O objetivo central é utilizar o desenvolvimento de software como instrumento de promoção da justiça social, focando na literacia financeira e na inclusão digital de trabalhadores regidos pela CLT.
 
@@ -25,7 +37,7 @@ O projeto utiliza **GitHub Actions** para gerenciar o ciclo de vida da aplicaç�
 
 ## Instalação e Uso
 Como o projeto é uma SPA (Single Page Application) pura, não requer instaladores:
-1. Clone o repositório: `git clone [https://github.com/AndersonTavares0/PROJETO-FGTS.git](https://github.com/AndersonTavares0/PROJETO-FGTS.git)`
+1. Clone o repositório: `git clone https://github.com/AndersonTavares0/PROJETO-FGTS.git`
 2. Abra o arquivo `src/index.html` em qualquer navegador moderno.
 
 ## Estrutura do Repositório
@@ -36,6 +48,8 @@ PROJETO-FGTS/
 ├── .gitignore        # Definições de arquivos ignorados pelo Git.
 ├── LICENSE           # Licença MIT.
 ├── README.md         # Documentação técnica e acadêmica.
+├── docs/             # Documentação técnica detalhada.
+│   └── technical_doc.md  # Arquitetura e regras de negócio.
 └── src/              # Código-fonte da aplicação funcional.
     ├── index.html    # Estrutura semântica e acessibilidade.
     ├── style.css     # Design responsivo e temas.
@@ -52,3 +66,11 @@ Este projeto é evolutivo e servirá como base para as próximas etapas da ativi
 
 ## Aviso Legal
 Os cálculos fornecidos são **estimativas educativas** e servem como ferramenta de conscientização sobre direitos vigentes. Eles não substituem o cálculo oficial e recomenda-se sempre consultar um **advogado trabalhista** ou sindicato para validação legal.
+
+---
+
+## Documentação Técnica
+
+Para detalhes sobre arquitetura de dados, regras de negócio CLT, segurança, acessibilidade e manutenibilidade, consulte a documentação técnica completa:
+
+📄 **[Acessar Documentação Técnica (technical_doc.md)](docs/technical_doc.md)**
