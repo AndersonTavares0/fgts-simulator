@@ -188,14 +188,14 @@
   function updateUI(resultado) {
     // Atualiza valores
     saldoEl.textContent = formatBRLFromCents(resultado.saldoFinal);
-    multaEl.textContent = formatBRLFromCents(resultado.multaFinal + resultado.decimoterceiro + resultado.ferias);
+    multaEl.textContent = formatBRLFromCents(resultado.multaFinal + resultado.decimoTerceiro + resultado.ferias);
     totalEl.textContent = formatBRLFromCents(resultado.total);
 
     // Atualiza gráfico donut
     const denom = resultado.total || 1;
     donut.style.setProperty('--pSaldo', ((resultado.saldoFinal / denom) * 100).toFixed(2) + '%');
     donut.style.setProperty('--pMulta', ((resultado.multaFinal / denom) * 100).toFixed(2) + '%');
-    donut.style.setProperty('--pProp', (((resultado.decimoterceiro + resultado.ferias) / denom) * 100).toFixed(2) + '%');
+    donut.style.setProperty('--pProp', (((resultado.decimoTerceiro + resultado.ferias) / denom) * 100).toFixed(2) + '%');
 
     // Announce para leitores de tela
     announceResults(resultado);
