@@ -26,6 +26,11 @@ const ThemeManager = (function() {
       console.warn('localStorage não disponível:', e);
     }
 
+    // Verifica preferência do sistema se não houver escolha salva
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return DARK_THEME;
+    }
+
     // Padrão: tema claro
     return LIGHT_THEME;
   }
@@ -56,7 +61,7 @@ const ThemeManager = (function() {
 
     if (toggleButton) {
       const isDark = theme === DARK_THEME;
-      toggleButton.textContent = isDark ? 'Tema Claro' : 'Tema Escuro';
+      toggleButton.textContent = isDark ? '☀️' : '🌙';
       toggleButton.setAttribute('aria-pressed', String(isDark));
     }
   }
@@ -77,7 +82,7 @@ const ThemeManager = (function() {
     // Aplica tema inicial
     applyTheme(savedTheme, toggleButton);
 
-    // Configura event listener
+    // Configura event listener do botão
     toggleButton.addEventListener('click', function() {
       const currentTheme = document.body.getAttribute('data-theme');
       const newTheme = currentTheme === DARK_THEME ? LIGHT_THEME : DARK_THEME;
@@ -88,6 +93,15 @@ const ThemeManager = (function() {
       // Announce mudança para leitores de tela
       announceThemeChange(newTheme);
     });
+
+    // Escuta mudanças de tema no sistema (apenas se o usuário não salvou uma preferência)
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem(THEME_KEY)) {
+          applyTheme(e.matches ? DARK_THEME : LIGHT_THEME, toggleButton);
+        }
+      });
+    }
   }
 
   /**
