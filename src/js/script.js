@@ -1,305 +1,299 @@
 /**
- * Script Principal - FGTS Simulator
- * Projeto de Extensão Universitária - UNINTER
- * Engenharia de Software
- *
- * Arquitetura modular seguindo princípios SOLID e DRY
+ * Script Principal — FGTS Simulator (Refatorado)
+ * Orquestrador da nova UI de Dashboard
+ * Projeto de Extensão Universitária — UNINTER
  */
 
-(function() {
+(function () {
   'use strict';
 
-  // Referências DOM - Formulário
-  const salarioEl = document.getElementById('salario');
-  const inicioEl = document.getElementById('inicio');
-  const terminoEl = document.getElementById('termino');
-  const motivoEl = document.getElementById('motivo');
-  const calcularBtn = document.getElementById('calcular');
-
-  // Referências DOM - Resultados
-  const saldoEl = document.getElementById('saldo');
-  const multaEl = document.getElementById('multa');
-  const totalEl = document.getElementById('total');
-
-  // Referências DOM - Opções
-  const incluir13El = document.getElementById('incluir13');
-  const incluirFeriasEl = document.getElementById('incluirFerias');
+  // ── Referências DOM — Formulário ──────────────────────────────
+  const salarioEl        = document.getElementById('salario');
+  const inicioEl         = document.getElementById('inicio');
+  const terminoEl        = document.getElementById('termino');
+  const motivoEl         = document.getElementById('motivo');
+  const calcularBtn      = document.getElementById('calcular');
+  const incluir13El      = document.getElementById('incluir13');
+  const incluirFeriasEl  = document.getElementById('incluirFerias');
   const saqueAniversarioEl = document.getElementById('saqueAniversario');
 
-  // Referências DOM - Gráfico e Tema
-  const donut = document.getElementById('donut');
-  const toggleTheme = document.getElementById('toggleTheme');
-  const modalOverlay = document.getElementById('modal');
+  // ── Referências DOM — Resultados ─────────────────────────────
+  const saldoEl      = document.getElementById('saldo');
+  const multaEl      = document.getElementById('multa');
+  const totalEl      = document.getElementById('total');
+  const emptyState   = document.getElementById('emptyState');
+  const resultsContent = document.getElementById('resultsContent');
 
-  // Região live para acessibilidade (anúncio de resultados)
+  // Donut SVG
+  const dSaldo = document.getElementById('d-saldo');
+  const dMulta = document.getElementById('d-multa');
+  const dProp  = document.getElementById('d-prop');
+  const donutCenter = document.getElementById('donut-center');
+
+  // Legenda + Percentuais
+  const pctSaldo = document.getElementById('pct-saldo');
+  const pctMulta = document.getElementById('pct-multa');
+  const pctProp  = document.getElementById('pct-prop');
+
+  // Barra de progresso
+  const barSaldo = document.getElementById('bar-saldo');
+  const barMulta = document.getElementById('bar-multa');
+  const barProp  = document.getElementById('bar-prop');
+
+  // Breakdown
+  const breakdownList = document.getElementById('breakdownList');
+
+  // Header dos resultados
+  const resultsDate       = document.getElementById('results-date');
+  const resultsMotivoEl   = document.getElementById('results-motivo-badge');
+
+  // Live region
   let resultsLiveRegion = null;
 
-  /**
-   * Inicializa região live para anúncio de resultados
-   */
+  // ── Circunferência do donut (r=78, 2πr ≈ 490) ────────────────
+  const CIRCUM = 2 * Math.PI * 78; // ~490
+
+  // ── Utilitários ──────────────────────────────────────────────
+  const fmt = (cents) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
+  const pct = (part, total) => total > 0 ? ((part / total) * 100).toFixed(1) + '%' : '0%';
+
+  // ── Live Region ──────────────────────────────────────────────
   function initLiveRegion() {
     resultsLiveRegion = document.getElementById('results-live-region');
-
-    if (!resultsLiveRegion) {
-      resultsLiveRegion = document.createElement('div');
-      resultsLiveRegion.id = 'results-live-region';
-      resultsLiveRegion.setAttribute('aria-live', 'polite');
-      resultsLiveRegion.setAttribute('aria-atomic', 'true');
-      resultsLiveRegion.className = 'sr-only';
-      resultsLiveRegion.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;';
-      document.body.appendChild(resultsLiveRegion);
-    }
   }
 
-  /**
-   * Anuncia resultados para leitores de tela
-   * @param {Object} resultado - Objeto com valores calculados
-   */
   function announceResults(resultado) {
     if (!resultsLiveRegion) return;
-
-    const mensagem = `Cálculo concluído. ` +
-                     `Saldo FGTS: ${formatBRLFromCents(resultado.saldoFinal)}. ` +
-                     `Multa e extras: ${formatBRLFromCents(resultado.multaFinal)}. ` +
-                     `Total a receber: ${formatBRLFromCents(resultado.total)}.`;
-
-    resultsLiveRegion.textContent = mensagem;
-
-    // Limpa após 5 segundos
-    setTimeout(() => {
-      resultsLiveRegion.textContent = '';
-    }, 5000);
+    resultsLiveRegion.textContent =
+      `Cálculo concluído. Saldo FGTS: ${fmt(resultado.saldoFinal)}. ` +
+      `Multa e extras: ${fmt(resultado.multaFinal)}. ` +
+      `Total a receber: ${fmt(resultado.total)}.`;
+    setTimeout(() => { resultsLiveRegion.textContent = ''; }, 5000);
   }
 
-  /**
-   * Exibe mensagem de erro inline com acessibilidade
-   * @param {string} message - Mensagem de erro
-   * @param {HTMLElement} element - Elemento associado ao erro
-   */
+  // ── Erros inline ─────────────────────────────────────────────
   function showError(message, element) {
-    // Remove erros anteriores
     clearErrors();
-
     if (element) {
       element.setAttribute('aria-invalid', 'true');
-      element.style.borderColor = '#dc2626';
-
-      // Cria label de erro associado
-      const errorLabel = document.createElement('span');
-      errorLabel.className = 'error-message';
-      errorLabel.id = element.id + '-error';
-      errorLabel.textContent = message;
-      errorLabel.style.cssText = 'color:#dc2626;font-size:14px;margin-top:4px;display:block;';
-      errorLabel.setAttribute('role', 'alert');
-
-      element.parentNode.appendChild(errorLabel);
-      element.setAttribute('aria-describedby', errorLabel.id);
+      const err = document.createElement('span');
+      err.className = 'error-message';
+      err.id = element.id + '-error';
+      err.setAttribute('role', 'alert');
+      err.textContent = message;
+      element.parentNode.appendChild(err);
+      element.setAttribute('aria-describedby', err.id);
     } else {
-      // Erro genérico
       alert(message);
     }
   }
 
-  /**
-   * Limpa todas as mensagens de erro
-   */
   function clearErrors() {
-    // Remove labels de erro
     document.querySelectorAll('.error-message').forEach(el => el.remove());
-
-    // Reseta estados de invalidade
     document.querySelectorAll('[aria-invalid="true"]').forEach(el => {
       el.setAttribute('aria-invalid', 'false');
-      el.style.borderColor = '';
       el.removeAttribute('aria-describedby');
     });
   }
 
-  /**
-   * Formata inteiro em centavos para string monetária BRL
-   * @param {number} cents - Valor em centavos
-   * @returns {string} - Valor formatado como moeda brasileira
-   */
-  function formatBRLFromCents(cents) {
-    const formatter = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    });
-    return formatter.format(cents / 100);
+  // ── Donut SVG ─────────────────────────────────────────────────
+  function setDonutArc(el, value, offset) {
+    el.setAttribute('stroke-dasharray', `${value} ${CIRCUM - value}`);
+    el.setAttribute('stroke-dashoffset', offset);
   }
 
-  /**
-   * Valida formulário antes do cálculo
-   * @returns {{valid: boolean, data?: Object}}
-   */
+  function updateDonut(saldo, multa, prop, total) {
+    const denom = total || 1;
+    const saldoArc = (saldo / denom) * CIRCUM;
+    const multaArc = (multa / denom) * CIRCUM;
+    const propArc  = (prop  / denom) * CIRCUM;
+
+    // stroke-dashoffset: começa no topo (-90°) → offset = CIRCUM/4 + 90° offset
+    const saldoOffset = CIRCUM * 0.25;
+    const multaOffset = saldoOffset - saldoArc;
+    const propOffset  = multaOffset - multaArc;
+
+    setDonutArc(dSaldo, saldoArc, saldoOffset);
+    setDonutArc(dMulta, multaArc, multaOffset);
+    setDonutArc(dProp,  propArc,  propOffset);
+  }
+
+  // ── Badge do motivo ───────────────────────────────────────────
+  function updateMotivoBadge(motivo) {
+    const map = {
+      dispensa_sem_causa: { label: 'Dispensa sem justa causa', cls: 'dispensa' },
+      demissao_voluntaria: { label: 'Demissão voluntária',     cls: 'voluntaria' },
+      outra_saida:         { label: 'Outra saída',             cls: 'outra' }
+    };
+    const m = map[motivo] || map.outra_saida;
+    resultsMotivoEl.textContent = m.label;
+    resultsMotivoEl.className = `results-badge ${m.cls}`;
+  }
+
+  // ── Breakdown detalhado ───────────────────────────────────────
+  function updateBreakdown(resultado) {
+    const items = [
+      { label: 'Saldo FGTS',              value: resultado.saldoFinal,    color: 'var(--donut-saldo)' },
+      { label: 'Multa Rescisória (40%)',   value: resultado.multaFinal,    color: 'var(--donut-multa)' },
+      { label: '13º Proporcional',         value: resultado.decimoTerceiro, color: 'var(--donut-prop)' },
+      { label: 'Férias Proporcionais + ⅓', value: resultado.ferias,        color: 'var(--amber)' }
+    ];
+
+    breakdownList.innerHTML = '';
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'breakdown-row' + (item.value === 0 ? ' zero' : '');
+      row.innerHTML = `
+        <span class="breakdown-row-label">
+          <span class="breakdown-dot" style="background:${item.color}"></span>
+          ${item.label}
+        </span>
+        <span class="breakdown-value">${fmt(item.value)}</span>
+      `;
+      breakdownList.appendChild(row);
+    });
+  }
+
+  // ── Atualização da UI com resultado ──────────────────────────
+  function updateUI(resultado) {
+    const { saldoFinal, multaFinal, decimoTerceiro, ferias, total, detalhes } = resultado;
+    const extras = multaFinal + decimoTerceiro + ferias;
+
+    // Cards principais
+    saldoEl.textContent = fmt(saldoFinal);
+    multaEl.textContent = fmt(extras);
+    totalEl.textContent = fmt(total);
+
+    // Header
+    resultsDate.textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    updateMotivoBadge(detalhes.motivo);
+
+    // Donut
+    updateDonut(saldoFinal, multaFinal, decimoTerceiro + ferias, total);
+    donutCenter.textContent = total > 0 ? fmt(total).replace('R$', '').trim() : '—';
+
+    // Percentuais na legenda
+    pctSaldo.textContent = pct(saldoFinal, total);
+    pctMulta.textContent = pct(multaFinal, total);
+    pctProp.textContent  = pct(decimoTerceiro + ferias, total);
+
+    // Barra de progresso
+    barSaldo.style.width = pct(saldoFinal, total);
+    barMulta.style.width = pct(multaFinal, total);
+    barProp.style.width  = pct(decimoTerceiro + ferias, total);
+
+    // Breakdown detalhado
+    updateBreakdown(resultado);
+
+    // Exibir resultados / ocultar empty state
+    emptyState.style.display   = 'none';
+    resultsContent.style.display = 'flex';
+
+    // Anuncia para leitores de tela
+    announceResults(resultado);
+
+    // Re-instancia ícones Lucide nos elementos recém-inseridos
+    if (window.lucide) { window.lucide.createIcons(); }
+  }
+
+  // ── Validação e Cálculo ───────────────────────────────────────
   function validateForm() {
     clearErrors();
 
-    // Sanitiza salário
     const salarioCents = ValidationModule.sanitizeMonetaryValue(salarioEl.value);
-    const salarioValidation = ValidationModule.validateSalario(salarioCents);
+    const salarioVal = ValidationModule.validateSalario(salarioCents);
+    if (!salarioVal.valid) { showError(salarioVal.error, salarioEl); return { valid: false }; }
 
-    if (!salarioValidation.valid) {
-      showError(salarioValidation.error, salarioEl);
-      return { valid: false };
-    }
+    const inicio   = ValidationModule.parseDate(inicioEl.value);
+    const termino  = ValidationModule.parseDate(terminoEl.value);
+    const periodoVal = ValidationModule.validatePeriodo(inicio, termino);
+    if (!periodoVal.valid) { showError(periodoVal.error, terminoEl); return { valid: false }; }
 
-    // Parse e valida datas
-    const inicio = ValidationModule.parseDate(inicioEl.value);
-    const termino = ValidationModule.parseDate(terminoEl.value);
+    const motivoVal = ValidationModule.validateMotivo(motivoEl.value);
+    if (!motivoVal.valid) { showError(motivoVal.error, motivoEl); return { valid: false }; }
 
-    const periodoValidation = ValidationModule.validatePeriodo(inicio, termino);
-
-    if (!periodoValidation.valid) {
-      showError(periodoValidation.error, terminoEl);
-      return { valid: false };
-    }
-
-    // Valida motivo
-    const motivoValidation = ValidationModule.validateMotivo(motivoEl.value);
-
-    if (!motivoValidation.valid) {
-      showError(motivoValidation.error, motivoEl);
-      return { valid: false };
-    }
-
-    // Calcula meses trabalhados com precisão CLT
     const mesesTrabalhados = ValidationModule.calcularMesesTrabalhados(inicio, termino);
 
     return {
       valid: true,
       data: {
         salarioCents,
-        inicio,
-        termino,
+        inicio, termino,
         motivo: motivoEl.value,
         mesesTrabalhados,
         incluirDecimoTerceiro: incluir13El.checked,
-        incluirFerias: incluirFeriasEl.checked,
-        saqueAniversario: saqueAniversarioEl.checked
+        incluirFerias:         incluirFeriasEl.checked,
+        saqueAniversario:      saqueAniversarioEl.checked
       }
     };
   }
 
-  /**
-   * Atualiza UI com resultados do cálculo
-   * @param {Object} resultado - Resultado do cálculo
-   */
-  function updateUI(resultado) {
-    // Atualiza valores
-    saldoEl.textContent = formatBRLFromCents(resultado.saldoFinal);
-    multaEl.textContent = formatBRLFromCents(resultado.multaFinal + resultado.decimoTerceiro + resultado.ferias);
-    totalEl.textContent = formatBRLFromCents(resultado.total);
-
-    // Atualiza gráfico donut
-    const denom = resultado.total || 1;
-    donut.style.setProperty('--pSaldo', ((resultado.saldoFinal / denom) * 100).toFixed(2) + '%');
-    donut.style.setProperty('--pMulta', ((resultado.multaFinal / denom) * 100).toFixed(2) + '%');
-    donut.style.setProperty('--pProp', (((resultado.decimoTerceiro + resultado.ferias) / denom) * 100).toFixed(2) + '%');
-
-    // Announce para leitores de tela
-    announceResults(resultado);
-  }
-
-  /**
-   * Handler principal do botão Calcular
-   */
   function handleCalcular() {
     try {
       const validation = validateForm();
-
-      if (!validation.valid) {
-        return;
-      }
+      if (!validation.valid) return;
 
       const { data } = validation;
-
-      // Executa cálculo usando módulo especializado
       const resultado = FGTSCalculator.calcularRescisaoCompleta({
-        salarioCents: data.salarioCents,
-        mesesTrabalhados: data.mesesTrabalhados,
-        motivo: data.motivo,
+        salarioCents:          data.salarioCents,
+        mesesTrabalhados:      data.mesesTrabalhados,
+        motivo:                data.motivo,
         incluirDecimoTerceiro: data.incluirDecimoTerceiro,
-        incluirFerias: data.incluirFerias,
-        saqueAniversario: data.saqueAniversario
+        incluirFerias:         data.incluirFerias,
+        saqueAniversario:      data.saqueAniversario
       });
 
       updateUI(resultado);
 
-    } catch (error) {
-      console.error('Erro no cálculo:', error);
+    } catch (err) {
+      console.error('Erro no cálculo:', err);
       showError('Ocorreu um erro ao calcular. Por favor, tente novamente.', null);
     }
   }
 
-  /**
-   * Inicializa modal de explicação
-   */
+  // ── Modal ─────────────────────────────────────────────────────
   function initModal() {
-    const explicarBtn = document.getElementById('explicar');
-    const closeModalBtn = document.getElementById('closeModal');
+    const overlay    = document.getElementById('modal');
+    const openBtn    = document.getElementById('explicar');
+    const closeBtn   = document.getElementById('closeModal');
+    const closeBtn2  = document.getElementById('closeModal2');
 
-    if (!explicarBtn || !closeModalBtn) return;
+    if (!overlay || !openBtn) return;
 
-    explicarBtn.addEventListener('click', function() {
-      modalOverlay.style.display = 'grid';
-      closeModalBtn.focus();
+    const open  = () => { overlay.style.display = 'grid'; closeBtn && closeBtn.focus(); };
+    const close = () => { overlay.style.display = 'none'; openBtn.focus(); };
+
+    openBtn.addEventListener('click', open);
+    closeBtn  && closeBtn.addEventListener('click',  close);
+    closeBtn2 && closeBtn2.addEventListener('click', close);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && overlay.style.display === 'grid') close();
     });
-
-    closeModalBtn.addEventListener('click', function() {
-      modalOverlay.style.display = 'none';
-      explicarBtn.focus();
-    });
-
-    // Fecha modal com ESC
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && modalOverlay.style.display === 'grid') {
-        modalOverlay.style.display = 'none';
-        explicarBtn.focus();
-      }
-    });
-
-    // Fecha ao clicar fora
-    modalOverlay.addEventListener('click', function(e) {
-      if (e.target === modalOverlay) {
-        modalOverlay.style.display = 'none';
-        explicarBtn.focus();
-      }
-    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   }
 
-  /**
-   * Inicialização da aplicação
-   */
+  // ── Init ──────────────────────────────────────────────────────
   function init() {
-    // Inicializa módulos
-    ThemeManager.init(toggleTheme);
+    ThemeManager.init(document.getElementById('toggleTheme'));
     initLiveRegion();
     initModal();
 
-    // Configura handler do botão calcular
     calcularBtn.addEventListener('click', handleCalcular);
 
-    // Permite cálculo com Enter nos inputs
-    [salarioEl, inicioEl, terminoEl].forEach(function(input) {
-      input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleCalcular();
-        }
+    [salarioEl, inicioEl, terminoEl].forEach(input => {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); handleCalcular(); }
       });
     });
-
-    // Força tema claro no início (fallback)
-    if (!document.body.getAttribute('data-theme')) {
-      document.body.setAttribute('data-theme', 'light');
-    }
   }
 
-  // Inicializa quando DOM estiver pronto
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
+
 })();

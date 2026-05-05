@@ -1,0 +1,102 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Cores Base (Dark Mode Padrão) */
+  --bg-base: #070C12;
+  --bg-surface: #0D1620;
+  --bg-elevated: #131F2E;
+  --bg-hover: #1A2840;
+  --bg-input: #0A1219;
+
+  /* Bordas */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-mid: rgba(255, 255, 255, 0.11);
+  --border-focus: #00D17A;
+
+  /* Textos */
+  --text-primary: #E2EDF5;
+  --text-secondary: #7A9AB8;
+  --text-muted: #4A6680;
+  --text-on-accent: #030E09;
+
+  /* Acentos e Cores de Destaque */
+  --accent: #00D17A;
+  --accent-dim: rgba(0, 209, 122, 0.12);
+  --accent-glow: rgba(0, 209, 122, 0.25);
+
+  --teal: #00BFA5;
+  --teal-dim: rgba(0, 191, 165, 0.12);
+  
+  --blue: #3B8FE0;
+  --blue-dim: rgba(59, 143, 224, 0.12);
+  
+  --amber: #F0A418;
+  --amber-dim: rgba(240, 164, 24, 0.12);
+  
+  --purple: #9B7AEA;
+  --purple-dim: rgba(155, 122, 234, 0.12);
+
+  /* Gráfico Donut */
+  --donut-saldo: #00D17A;
+  --donut-multa: #3B8FE0;
+  --donut-prop: #F0A418;
+  --donut-bg: rgba(255, 255, 255, 0.05);
+
+  /* Dimensões e Layout */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
+  --sidebar-w: 340px;
+
+  /* Transições e Fontes */
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-ui: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+[data-theme="light"] {
+  --bg-base: #F0F4F8;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F7FAFB;
+  --bg-hover: #EDF2F7;
+  --bg-input: #FFFFFF;
+
+  --border-subtle: rgba(0, 0, 0, 0.07);
+  --border-mid: rgba(0, 0, 0, 0.12);
+  --border-focus: #009E5A;
+
+  --text-primary: #0F1E2E;
+  --text-secondary: #4A6680;
+  --text-muted: #8AAAC4;
+  --text-on-accent: #FFFFFF;
+
+  --accent: #009E5A;
+  --accent-dim: rgba(0, 158, 90, 0.1);
+  --accent-glow: rgba(0, 158, 90, 0.2);
+
+  --teal: #00897B;
+  --teal-dim: rgba(0, 137, 123, 0.1);
+  
+  --blue: #1E6EC8;
+  --blue-dim: rgba(30, 110, 200, 0.1);
+  
+  --amber: #C97C00;
+  --amber-dim: rgba(201, 124, 0, 0.1);
+  
+  --purple: #7048C8;
+  --purple-dim: rgba(112, 72, 200, 0.1);
+
+  --donut-saldo: #009E5A;
+  --donut-multa: #1E6EC8;
+  --donut-prop: #C97C00;
+  --donut-bg: rgba(0, 0, 0, 0.06);
+}
