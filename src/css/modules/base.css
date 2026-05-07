@@ -9,7 +9,9 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
-  transition: background var(--transition-slow), color var(--transition-slow);
+  transition:
+    background var(--transition-slow),
+    color var(--transition-slow);
 }
 
 /* Acessibilidade */

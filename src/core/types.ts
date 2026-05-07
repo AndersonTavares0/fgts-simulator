@@ -15,6 +15,12 @@ Decimal.set({
   toExpPos: 9,
 });
 
+// ─── Formatters em cache para performance ────────────────────────────────────
+const brlFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
 // ─── Enums ──────────────────────────────────────────────────────────────────
 
 /**
@@ -137,10 +143,7 @@ export class Money {
 
   /** Formata para BRL (R$ 1.234,56) */
   toBRL(): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(this.reais);
+    return brlFormatter.format(this.reais);
   }
 }
 

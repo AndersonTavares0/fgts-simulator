@@ -5,6 +5,19 @@
 
 import { Money, TipoRescisao } from '../core/types';
 
+// ─── Formatters em cache para performance ────────────────────────────────────
+const brlFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+const dateFullFormatter = new Intl.DateTimeFormat('pt-BR', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
 /** Labels legíveis para cada tipo de rescisão */
 const LABELS_RESCISAO: Record<TipoRescisao, { label: string; cssClass: string }> = {
   [TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA]: {
@@ -49,10 +62,7 @@ export class FormatAdapter {
 
   /** Formata centavos brutos para BRL */
   static formatCentsBRL(cents: number): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(cents / 100);
+    return brlFormatter.format(cents / 100);
   }
 
   /** Calcula percentual formatado (ex: "45.2%") */
@@ -63,12 +73,7 @@ export class FormatAdapter {
 
   /** Formata data para exibição em pt-BR */
   static formatDateFull(date: Date): string {
-    return date.toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+    return dateFullFormatter.format(date);
   }
 
   /** Retorna label e classe CSS para um tipo de rescisão */
@@ -92,11 +97,7 @@ export class FormatAdapter {
 
     const date = new Date(year, month - 1, day);
 
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month - 1 ||
-      date.getDate() !== day
-    ) {
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
       return null;
     }
 
@@ -107,7 +108,10 @@ export class FormatAdapter {
   static parseMonetaryInput(value: string): Money | null {
     if (!value || typeof value !== 'string') return null;
 
-    const cleaned = value.replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+    const cleaned = value
+      .replace(/[R$\s]/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
     const parsed = parseFloat(cleaned);
 
     if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) return null;

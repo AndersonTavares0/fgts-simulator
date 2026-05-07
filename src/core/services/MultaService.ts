@@ -12,10 +12,7 @@
 import { TipoRescisao, Money, ResultadoMulta } from '../types';
 
 /** Mapeamento exaustivo: TipoRescisao → percentual de multa e base legal */
-const REGRAS_MULTA: Record<
-  TipoRescisao,
-  { percentual: number; fundamento: string }
-> = {
+const REGRAS_MULTA: Record<TipoRescisao, { percentual: number; fundamento: string }> = {
   [TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA]: {
     percentual: 40,
     fundamento: 'Art. 18, §1º, Lei 8.036/1990',
@@ -69,8 +66,7 @@ export class MultaService {
       };
     }
 
-    const valorMulta =
-      regra.percentual > 0 ? saldoFGTS.percentage(regra.percentual) : Money.zero();
+    const valorMulta = regra.percentual > 0 ? saldoFGTS.percentage(regra.percentual) : Money.zero();
 
     return {
       percentualAplicado: regra.percentual,

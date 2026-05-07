@@ -9,11 +9,15 @@
 }
 
 @media (max-width: 900px) {
-  .results-panel { padding: 24px 20px; }
+  .results-panel {
+    padding: 24px 20px;
+  }
 }
 
 @media (max-width: 600px) {
-  .results-panel { padding: 20px 16px; }
+  .results-panel {
+    padding: 20px 16px;
+  }
 }
 
 /* Estado Vazio (Antes de Calcular) */
@@ -157,16 +161,22 @@
   animation: fade-in-up 0.35s ease both;
 }
 
-.metric-card:nth-child(1) { animation-delay: 0.05s; }
-.metric-card:nth-child(2) { animation-delay: 0.10s; }
-.metric-card:nth-child(3) { animation-delay: 0.15s; }
+.metric-card:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.metric-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.metric-card:nth-child(3) {
+  animation-delay: 0.15s;
+}
 
 .metric-card.accent {
   border-color: rgba(0, 209, 122, 0.25);
   background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(0, 209, 122, 0.04) 100%);
 }
 
-[data-theme="light"] .metric-card.accent {
+[data-theme='light'] .metric-card.accent {
   background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(0, 158, 90, 0.04) 100%);
 }
 
@@ -190,11 +200,26 @@
 }
 
 /* Cores Utilitárias para Ícones e Backgrounds */
-.bg-accent { background: var(--accent-dim); color: var(--accent); }
-.bg-teal   { background: var(--teal-dim); color: var(--teal); }
-.bg-blue   { background: var(--blue-dim); color: var(--blue); }
-.bg-amber  { background: var(--amber-dim); color: var(--amber); }
-.bg-purple { background: var(--purple-dim); color: var(--purple); }
+.bg-accent {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.bg-teal {
+  background: var(--teal-dim);
+  color: var(--teal);
+}
+.bg-blue {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+.bg-amber {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+.bg-purple {
+  background: var(--purple-dim);
+  color: var(--purple);
+}
 
 .metric-body {
   display: flex;
@@ -314,9 +339,15 @@
   transition: stroke-dasharray 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.donut-saldo { stroke: var(--donut-saldo); }
-.donut-multa { stroke: var(--donut-multa); }
-.donut-prop  { stroke: var(--donut-prop); }
+.donut-saldo {
+  stroke: var(--donut-saldo);
+}
+.donut-multa {
+  stroke: var(--donut-multa);
+}
+.donut-prop {
+  stroke: var(--donut-prop);
+}
 
 .donut-center-label {
   fill: var(--text-muted);
@@ -368,9 +399,18 @@
 }
 
 /* Reutilização de cores para Legenda e Progresso */
-.legend-dot.saldo, .progress-saldo { background: var(--donut-saldo); }
-.legend-dot.multa, .progress-multa { background: var(--donut-multa); }
-.legend-dot.prop,  .progress-prop  { background: var(--donut-prop); }
+.legend-dot.saldo,
+.progress-saldo {
+  background: var(--donut-saldo);
+}
+.legend-dot.multa,
+.progress-multa {
+  background: var(--donut-multa);
+}
+.legend-dot.prop,
+.progress-prop {
+  background: var(--donut-prop);
+}
 
 .legend-text {
   flex: 1;
