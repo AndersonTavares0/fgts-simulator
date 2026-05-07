@@ -25,14 +25,8 @@ import { DoencaGraveService } from './DoencaGraveService';
 const ALIQUOTA = {
   [TipoContrato.CLT_PADRAO]: 8,
   [TipoContrato.APRENDIZ]: 2,
-<<<<<<< New base: fix(ui): correct layout structure and styling for health documentation box
-} satisfies Record<TipoContrato, number>;
-||||||| Common ancestor
-};
-=======
   [TipoContrato.DOMESTICO]: 3.2,
 } satisfies Record<TipoContrato, number>;
->>>>>>> Current commit: fix(ui): correct layout structure and styling for health documentation box
 
 export class FGTSCalculatorService {
   /**
