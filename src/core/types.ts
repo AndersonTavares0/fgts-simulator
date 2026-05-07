@@ -147,7 +147,33 @@ export class Money {
   }
 }
 
-// ─── Interfaces de Resultado ────────────────────────────────────────────────
+// ─── Template Literal Types para validação de formato ─────────────────────
+export type YYYYMMDD = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
+
+export type DataISO = YYYYMMDD;
+
+// ─── Type Guards ──────────────────────────────────────────────────────────────
+export function isDataISO(value: unknown): value is DataISO {
+  if (typeof value !== 'string') return false;
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(value)) return false;
+
+  const parts = value.split('-');
+  const year = parseInt(parts[0]!, 10);
+  const month = parseInt(parts[1]!, 10);
+  const day = parseInt(parts[2]!, 10);
+
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
+export function isTipoRescisao(value: unknown): value is TipoRescisao {
+  return (value as TipoRescisao) in Object.values(TipoRescisao).reduce((acc, curr) => ({ ...acc, [curr]: true }), {} as Record<string, boolean>);
+}
 
 export interface IndicesCorrecao {
   /** Taxa Referencial mensal (ex: 0.0008 = 0.08%) */

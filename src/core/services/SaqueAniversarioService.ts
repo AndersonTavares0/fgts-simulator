@@ -9,7 +9,8 @@
  * Base legal: Lei 13.932/2019
  */
 
-import { Money, ResultadoSaqueAniversario } from '../types';
+import { Money, TipoContrato } from '../types';
+import type { ResultadoSaqueAniversario } from '../types';
 
 interface FaixaSaque {
   limiteInferior: number;
@@ -20,7 +21,7 @@ interface FaixaSaque {
 }
 
 /** Tabela oficial de faixas do Saque-Aniversário (valores em reais) */
-const FAIXAS_SAQUE: readonly FaixaSaque[] = [
+const FAIXAS_SAQUE = [
   {
     limiteInferior: 0,
     limiteSuperior: 500,
@@ -70,7 +71,7 @@ const FAIXAS_SAQUE: readonly FaixaSaque[] = [
     parcelaAdicional: 2900,
     descricao: 'Acima de R$ 20.000,00',
   },
-] as const;
+] satisfies Array<FaixaSaque>;
 
 export class SaqueAniversarioService {
   /**

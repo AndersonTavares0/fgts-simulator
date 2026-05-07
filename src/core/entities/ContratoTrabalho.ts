@@ -3,7 +3,8 @@
  * Encapsula dados e validação do contrato de trabalho
  */
 
-import { TipoContrato, TipoRescisao, Money, ValidationResult } from '../types';
+import { TipoContrato, TipoRescisao, Money } from '../types';
+import type { ValidationResult } from '../types';
 
 const DIAS_MINIMO_MES_COMPLETO = 15;
 const MAX_ANOS_CONTRATO = 50;

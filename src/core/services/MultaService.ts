@@ -9,10 +9,11 @@
  *  -  0% — Demissão voluntária, justa causa
  */
 
-import { TipoRescisao, Money, ResultadoMulta } from '../types';
+import { TipoRescisao, Money } from '../types';
+import type { ResultadoMulta } from '../types';
 
 /** Mapeamento exaustivo: TipoRescisao → percentual de multa e base legal */
-const REGRAS_MULTA: Record<TipoRescisao, { percentual: number; fundamento: string }> = {
+const REGRAS_MULTA = {
   [TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA]: {
     percentual: 40,
     fundamento: 'Art. 18, §1º, Lei 8.036/1990',
@@ -45,7 +46,7 @@ const REGRAS_MULTA: Record<TipoRescisao, { percentual: number; fundamento: strin
     percentual: 0,
     fundamento: 'Art. 482, CLT — Falta grave do empregado',
   },
-};
+} satisfies Record<TipoRescisao, { percentual: number; fundamento: string }>;
 
 export class MultaService {
   /**

@@ -10,7 +10,8 @@
  */
 
 import Decimal from 'decimal.js';
-import { Money, IndicesCorrecao, ResultadoCorrecao } from '../types';
+import { Money } from '../types';
+import type { IndicesCorrecao, ResultadoCorrecao } from '../types';
 
 /** Constantes legais de rendimento do FGTS */
 const JUROS_ANUAL = new Decimal(3); // 3% ao ano
