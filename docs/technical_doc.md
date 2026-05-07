@@ -17,8 +17,8 @@
 
 Este documento descreve a arquitetura técnica e as decisões de implementação do **Simulador de Rescisão e FGTS**, uma ferramenta educacional desenvolvida como parte de um projeto de extensão universitária do curso de **Engenharia de Software da UNINTER**. O sistema tem como objetivo demonstrar a tradução precisa de requisitos legais da Consolidação das Leis do Trabalho (CLT) em código funcional, mantendo rigor técnico e conformidade com boas práticas de desenvolvimento.
 
-**Versão Atual**: 1.0 (Refatorada com foco em simplicidade pragmática)
-**Última Atualização**: 03/05/2026
+**Versão Atual**: 1.1 (Conformidade Legal Avançada)
+**Última Atualização**: 05/05/2026
 **Status**: Produção - Projeto de Extensão Universitária
 
 ---
@@ -252,17 +252,30 @@ function calcularFerias(salarioCents, meses) {
 
 ### Regra Especial: Saque Aniversário
 
-Quando optante pelo **Saque Aniversário**, o sistema aplica regras específicas:
+Quando optante pelo **Saque Aniversário**, o sistema aplica as regras oficiais da Caixa Econômica Federal:
 
-- O trabalhador mantém **60% do saldo** na conta vinculada
-- A multa rescisória é reduzida para **50% do valor original**, pois incide apenas sobre o montante disponível para saque imediato
+1.  **Cálculo da Parcela Anual**: Baseado em faixas de saldo com alíquota progressiva e parcela adicional.
+    
+    | Faixa de Saldo | Alíquota | Parcela Adicional |
+    | :--- | :---: | :--- |
+    | Até R$ 500,00 | 50% | R$ 0,00 |
+    | R$ 500,01 a R$ 1.000,00 | 40% | R$ 50,00 |
+    | R$ 1.000,01 a R$ 5.000,00 | 30% | R$ 150,00 |
+    | R$ 5.000,01 a R$ 10.000,00 | 20% | R$ 650,00 |
+    | R$ 10.000,01 a R$ 15.000,00 | 15% | R$ 1.150,00 |
+    | R$ 15.000,01 a R$ 20.000,00 | 10% | R$ 1.900,00 |
+    | Acima de R$ 20.000,00 | 5% | R$ 2.900,00 |
 
-```javascript
-if (saqueAniversarioEl.checked) {
-  saldoFinalCents = Math.round(saldoBaseCents * 60 / 100);
-  multaFinalCents = Math.round(multaBaseCents * 50 / 100);
-}
-```
+2.  **Impacto na Rescisão**:
+    *   O trabalhador **mantém o saldo retido** na conta (saldoFinal = 0 no saque imediato).
+    *   A **Multa Rescisória de 40%** é paga integralmente sobre o total de depósitos.
+    *   O sistema exibe o valor da próxima parcela anual estimada.
+
+### Juros e Correção Monetária (Art. 13 da Lei 8.036/1990)
+
+O saldo do FGTS deve ser atualizado mensalmente. O simulador agora considera:
+- **Juros de 3% ao ano**: Calculados de forma composta mensalmente (~0,246% a.m.).
+- **TR (Taxa Referencial)**: Utiliza-se uma estimativa conservadora para simular o crescimento real do fundo.
 
 ---
 
@@ -486,10 +499,8 @@ jobs:
     steps:
       - name: Run ESLint
         run: npm run lint
-      - name: Run Unit Tests
+      - name: Run Unit Tests (Vitest)
         run: npm test
-      - name: Accessibility Check
-        run: npm run axe
 ```
 
 **Benefícios**:

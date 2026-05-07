@@ -10,9 +10,14 @@ const FGTSCalculator = (function() {
   'use strict';
 
   // Constantes legais
-  const PERCENTUAL_FGTS = 8; // 8% do salário
+  const PERCENTUAL_FGTS_PADRAO = 8; // 8% do salário (CLT normal)
+  const PERCENTUAL_FGTS_APRENDIZ = 2; // 2% para aprendiz
   const PERCENTUAL_MULTA = 40; // 40% sobre saldo para dispensa sem justa causa
-  const PERCENTUAL_SAUDE_EDUCACAO = 10; // Adicional para dispensa sem justa causa
+  
+  // Taxas de atualização (Art. 13 da Lei 8.036/1990)
+  const JUROS_ANUAL = 3; // 3% ao ano
+  const JUROS_MENSAL = Math.pow(1 + JUROS_ANUAL / 100, 1 / 12) - 1;
+  const TR_ESTIMADA_MENSAL = 0.0008; // Estimativa conservadora de TR (0.08% ao mês)
 
   // NOTA: FGTS não possui teto de contribuição
   // Diferente do INSS, o FGTS incide sobre a totalidade da remuneração (Art. 15 da Lei 8.036/1990)
@@ -21,42 +26,47 @@ const FGTSCalculator = (function() {
   /**
    * Calcula depósito mensal do FGTS com precisão de centavos
    * @param {number} salarioCents - Salário em centavos
+   * @param {boolean} isAprendiz - Se é contrato de aprendizagem (2%)
    * @returns {number} - Depósito mensal em centavos
    */
-  function calcularDepositoMensal(salarioCents) {
+  function calcularDepositoMensal(salarioCents, isAprendiz = false) {
     if (!isValidSalario(salarioCents)) {
       return 0;
     }
 
-    // FGTS incide sobre 100% do salário (sem teto)
-    // Art. 15 da Lei 8.036/1990: base de cálculo é a totalidade da remuneração
-    const salarioBase = salarioCents;
+    const percentual = isAprendiz ? PERCENTUAL_FGTS_APRENDIZ : PERCENTUAL_FGTS_PADRAO;
 
-    // 8% do salário, arredondado para centavos
-    return Math.round((salarioBase * PERCENTUAL_FGTS) / 100);
+    // FGTS incide sobre 100% do salário (sem teto)
+    return Math.round((salarioCents * percentual) / 100);
   }
 
   /**
-   * Calcula total acumulado do FGTS considerando meses trabalhados
+   * Calcula total acumulado do FGTS considerando meses trabalhados e correção
    * @param {number} salarioCents - Salário em centavos
-   * @param {number} meses - Número de meses (pode ser fracionado)
-   * @returns {number} - Total acumulado em centavos
+   * @param {number} meses - Número de meses
+   * @param {boolean} isAprendiz - Se é aprendiz
+   * @returns {number} - Total acumulado com juros e TR em centavos
    */
-  function calcularSaldoFGTS(salarioCents, meses) {
+  function calcularSaldoFGTS(salarioCents, meses, isAprendiz = false) {
     if (!isValidSalario(salarioCents) || meses <= 0) {
       return 0;
     }
 
-    const depositoMensal = calcularDepositoMensal(salarioCents);
+    const depositoMensal = calcularDepositoMensal(salarioCents, isAprendiz);
+    const taxaTotalMensal = JUROS_MENSAL + TR_ESTIMADA_MENSAL;
+    
+    // Cálculo de Juros Compostos sobre depósitos mensais (Série de pagamentos)
+    // FV = P * [((1 + i)^n - 1) / i]
+    // Onde P = depósito, i = taxa, n = meses
+    let saldoAcumulado = 0;
+    
+    if (taxaTotalMensal > 0) {
+      saldoAcumulado = depositoMensal * (Math.pow(1 + taxaTotalMensal, meses) - 1) / taxaTotalMensal;
+    } else {
+      saldoAcumulado = depositoMensal * meses;
+    }
 
-    // Para precisão máxima, calculamos mês a mês se for fracionado
-    const mesesInteiros = Math.floor(meses);
-    const fracaoMes = meses - mesesInteiros;
-
-    const saldoMesesInteiros = depositoMensal * mesesInteiros;
-    const saldoFracao = Math.round(depositoMensal * fracaoMes);
-
-    return saldoMesesInteiros + saldoFracao;
+    return Math.round(saldoAcumulado);
   }
 
   /**
@@ -121,23 +131,58 @@ const FGTSCalculator = (function() {
   }
 
   /**
-   * Calcula valores para modalidade Saque Aniversário
+   * Calcula o valor anual do Saque-Aniversário com base na tabela oficial da Caixa
+   * @param {number} saldoCents - Saldo base do FGTS
+   * @returns {number} - Valor do saque anual (parcela) em centavos
+   */
+  function calcularParcelaSaqueAniversario(saldoCents) {
+    const saldoReais = saldoCents / 100;
+    let aliquota = 0;
+    let parcelaAdicional = 0;
+
+    if (saldoReais <= 500) {
+      aliquota = 0.50;
+      parcelaAdicional = 0;
+    } else if (saldoReais <= 1000) {
+      aliquota = 0.40;
+      parcelaAdicional = 50;
+    } else if (saldoReais <= 5000) {
+      aliquota = 0.30;
+      parcelaAdicional = 150;
+    } else if (saldoReais <= 10000) {
+      aliquota = 0.20;
+      parcelaAdicional = 650;
+    } else if (saldoReais <= 15000) {
+      aliquota = 0.15;
+      parcelaAdicional = 1150;
+    } else if (saldoReais <= 20000) {
+      aliquota = 0.10;
+      parcelaAdicional = 1900;
+    } else {
+      aliquota = 0.05;
+      parcelaAdicional = 2900;
+    }
+
+    return Math.round((saldoCents * aliquota) + (parcelaAdicional * 100));
+  }
+
+  /**
+   * Calcula o impacto do Saque Aniversário na rescisão
+   * NOTA: No Saque-Aniversário, o trabalhador NÃO saca o saldo na rescisão, 
+   * mas recebe a multa de 40% integral sobre os depósitos feitos pelo empregador.
    * @param {number} saldoBaseCents - Saldo base do FGTS em centavos
    * @param {number} multaBaseCents - Multa base em centavos
-   * @returns {{saldoFinal: number, multaFinal: number, valorSaque: number}}
+   * @returns {{saldoFinal: number, multaFinal: number, valorSaqueImediato: number}}
    */
-  function calcularSaqueAniversario(saldoBaseCents, multaBaseCents) {
-    // No saque aniversário, mantém-se 60% do saldo na conta
-    const saldoFinal = Math.round((saldoBaseCents * 60) / 100);
-    const valorSaque = saldoBaseCents - saldoFinal;
-
-    // Multa reduzida (aplica-se percentual diferente conforme regra Caixa)
-    const multaFinal = Math.round((multaBaseCents * 50) / 100);
-
+  function calcularImpactoRescisaoSaqueAniversario(saldoBaseCents, multaBaseCents) {
+    // Na rescisão, quem optou pelo Saque-Aniversário:
+    // 1. Recebe a multa de 40% (multaBaseCents) - Integral
+    // 2. NÃO recebe o saldo principal (fica retido para saques anuais futuros)
+    
     return {
-      saldoFinal,
-      multaFinal,
-      valorSaque
+      saldoFinal: 0, // Saldo fica retido
+      multaFinal: multaBaseCents, // Multa é paga integralmente
+      valorSaqueImediato: multaBaseCents // Apenas a multa é sacada na hora
     };
   }
 
@@ -199,11 +244,13 @@ const FGTSCalculator = (function() {
     // Aplicar regras do saque aniversário se aplicável
     let saldoFinal = saldoBase;
     let multaFinal = multaBase;
+    let valorSaqueParcelaAnual = 0;
 
     if (saqueAniversario) {
-      const saqueCalc = calcularSaqueAniversario(saldoBase, multaBase);
+      const saqueCalc = calcularImpactoRescisaoSaqueAniversario(saldoBase, multaBase);
       saldoFinal = saqueCalc.saldoFinal;
       multaFinal = saqueCalc.multaFinal;
+      valorSaqueParcelaAnual = calcularParcelaSaqueAniversario(saldoBase);
     }
 
     // Total geral
@@ -221,8 +268,10 @@ const FGTSCalculator = (function() {
         mesesTrabalhados,
         motivo,
         saqueAniversario,
+        valorSaqueParcelaAnual,
         depositoMensalFGTS: calcularDepositoMensal(salarioCents),
-        tetoAplicado: false // FGTS não possui teto de contribuição
+        tetoAplicado: false,
+        correcaoEstimada: saldoBase - (calcularDepositoMensal(salarioCents) * mesesTrabalhados)
       }
     };
   }
@@ -234,11 +283,13 @@ const FGTSCalculator = (function() {
     calcularMultaRescisoria,
     calcularDecimoTerceiro,
     calcularFeriasProporcionais,
-    calcularSaqueAniversario,
+    calcularParcelaSaqueAniversario,
+    calcularImpactoRescisaoSaqueAniversario,
     calcularRescisaoCompleta,
     isValidSalario,
     // Constantes exportadas
-    PERCENTUAL_FGTS,
+    PERCENTUAL_FGTS_PADRAO,
+    PERCENTUAL_FGTS_APRENDIZ,
     PERCENTUAL_MULTA
   };
 })();
