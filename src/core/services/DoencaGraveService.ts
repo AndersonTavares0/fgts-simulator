@@ -13,10 +13,7 @@
 import { Money, TipoDoencaGrave, ResultadoDoencaGrave } from '../types';
 
 /** Mapeamento de doenças graves com fundamentação legal específica */
-const DOENCAS_QUALIFICADAS: Record<
-  TipoDoencaGrave,
-  { descricao: string; fundamento: string }
-> = {
+const DOENCAS_QUALIFICADAS: Record<TipoDoencaGrave, { descricao: string; fundamento: string }> = {
   [TipoDoencaGrave.CANCER]: {
     descricao: 'Neoplasia maligna (Câncer)',
     fundamento: 'Lei 8.036/90, Art. 20, XIII — Portaria Interministerial MPAS/MS nº 2.998/2001',

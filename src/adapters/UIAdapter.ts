@@ -4,12 +4,7 @@
  * Substitui o script.js original com type safety completa.
  */
 
-import {
-  Money,
-  TipoRescisao,
-  TipoContrato,
-  ResultadoRescisao,
-} from '../core/types';
+import { TipoRescisao, TipoContrato, ResultadoRescisao } from '../core/types';
 import { FGTSCalculatorService } from '../core/services/FGTSCalculatorService';
 import { FormatAdapter } from './FormatAdapter';
 import { ContratoTrabalho } from '../core/entities/ContratoTrabalho';
@@ -121,13 +116,16 @@ export class UIAdapter {
 
   private handleCurrencyMask(e: Event): void {
     const input = e.target as HTMLInputElement;
-    let value = input.value.replace(/\D/g, '');
+    const value = input.value.replace(/\D/g, '');
     if (value === '') {
       input.value = '';
       return;
     }
     const num = parseInt(value, 10) / 100;
-    input.value = num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    input.value = num.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   private bindModalEvents(): void {
@@ -240,9 +238,15 @@ export class UIAdapter {
     this.resultsMotivoEl.className = `results-badge ${rescisaoInfo.cssClass}`;
 
     // Donut
-    this.updateDonut(saldoFinal.cents, multaFinal.cents, decimoTerceiro.cents + ferias.cents, total.cents);
-    this.donutCenter.textContent =
-      total.isPositive() ? total.toBRL().replace('R$', '').trim() : '—';
+    this.updateDonut(
+      saldoFinal.cents,
+      multaFinal.cents,
+      decimoTerceiro.cents + ferias.cents,
+      total.cents,
+    );
+    this.donutCenter.textContent = total.isPositive()
+      ? total.toBRL().replace('R$', '').trim()
+      : '—';
 
     // Percentuais
     const pct = (part: number, tot: number) => FormatAdapter.formatPercent(part, tot);
@@ -265,9 +269,16 @@ export class UIAdapter {
     // Acessibilidade
     this.announceResults(resultado);
 
-    // Re-instancia ícones Lucide
-    if ((window as any).lucide) {
-      (window as any).lucide.createIcons();
+    // Re-instancia ícones Lucide apenas nos elementos novos
+    const lucide = window.lucide;
+    if (lucide) {
+      const newIcons = this.resultsContent.querySelectorAll(
+        '[data-lucide]:not(.lucide-initialized)',
+      );
+      if (newIcons.length > 0) {
+        lucide.createIcons({ nodes: Array.from(newIcons) });
+        newIcons.forEach((el) => el.classList.add('lucide-initialized'));
+      }
     }
   }
 
@@ -312,13 +323,23 @@ export class UIAdapter {
     items.forEach((item) => {
       const row = document.createElement('div');
       row.className = 'breakdown-row' + (item.value.cents <= 0 ? ' zero' : '');
-      row.innerHTML = `
-        <span class="breakdown-row-label">
-          <span class="breakdown-dot" style="background:${item.color}"></span>
-          ${item.label}
-        </span>
-        <span class="breakdown-value">${item.value.toBRL()}</span>
-      `;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'breakdown-row-label';
+
+      const dotSpan = document.createElement('span');
+      dotSpan.className = 'breakdown-dot';
+      dotSpan.style.background = item.color;
+      labelSpan.appendChild(dotSpan);
+
+      labelSpan.appendChild(document.createTextNode(` ${item.label}`));
+
+      const valueSpan = document.createElement('span');
+      valueSpan.className = 'breakdown-value';
+      valueSpan.textContent = item.value.toBRL();
+
+      row.appendChild(labelSpan);
+      row.appendChild(valueSpan);
       this.breakdownList.appendChild(row);
     });
 

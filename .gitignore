@@ -58,3 +58,10 @@ desktop.ini
 # Temporary Files
 tmp/
 temp/
+
+# Logs
+logs/
+*.log
+
+# Optional: husky is committed, but some prefer to ignore
+# .husky/

@@ -12,8 +12,11 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/js/**/*.js",
-    "lint:fix": "eslint src/js/**/*.js --fix"
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write \"src/**/*.{ts,html,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,css}\"",
+    "prepare": "husky"
   },
   "keywords": [
     "fgts",
@@ -30,13 +33,26 @@
     "decimal.js": "^10.4.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@types/node": "^22.15.17",
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
-    "@eslint/js": "^9.0.0",
+    "husky": "^9.0.0",
+    "jsdom": "^24.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.59.2",
     "vite": "^6.3.4",
-    "vitest": "^1.5.0",
-    "jsdom": "^24.0.0"
+    "vitest": "^1.5.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{ts,html,css}": [
+      "prettier --write"
+    ]
   }
 }

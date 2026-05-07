@@ -3,12 +3,7 @@
  * Encapsula dados e validação do contrato de trabalho
  */
 
-import {
-  TipoContrato,
-  TipoRescisao,
-  Money,
-  ValidationResult,
-} from '../types';
+import { TipoContrato, TipoRescisao, Money, ValidationResult } from '../types';
 
 const DIAS_MINIMO_MES_COMPLETO = 15;
 const MAX_ANOS_CONTRATO = 50;
@@ -41,10 +36,7 @@ export class ContratoTrabalho {
 
   /** Calcula meses trabalhados com regra CLT (15+ dias = mês completo) */
   get mesesTrabalhados(): number {
-    return ContratoTrabalho.calcularMesesTrabalhados(
-      this.dataInicio,
-      this.dataTermino,
-    );
+    return ContratoTrabalho.calcularMesesTrabalhados(this.dataInicio, this.dataTermino);
   }
 
   /** Alíquota FGTS conforme tipo de contrato */
@@ -85,8 +77,7 @@ export class ContratoTrabalho {
     }
 
     const diffDays = Math.ceil(
-      Math.abs(params.dataTermino.getTime() - params.dataInicio.getTime()) /
-        (1000 * 60 * 60 * 24),
+      Math.abs(params.dataTermino.getTime() - params.dataInicio.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (diffDays > MAX_ANOS_CONTRATO * 365) {
       return { valid: false, error: `Período máximo permitido: ${MAX_ANOS_CONTRATO} anos.` };
@@ -115,11 +106,16 @@ export class ContratoTrabalho {
     if (d2 >= DIAS_MINIMO_MES_COMPLETO && d2 < d1) {
       mesesCompletos++;
     } else if (d2 < DIAS_MINIMO_MES_COMPLETO && d2 < d1) {
-      const diasNoMesFinal = new Date(y2, m2 + 1, 0).getDate();
-      const fracaoMes = d2 / diasNoMesFinal;
+      const fracaoMes = this.calcularFracaoMes(d2, m2, y2);
       return Math.max(0, parseFloat((mesesCompletos + 1 + fracaoMes).toFixed(2)));
     }
 
     return Math.max(0, mesesCompletos);
+  }
+
+  /** Calcula fração do mês baseada no dia e mês */
+  private static calcularFracaoMes(dia: number, mes: number, ano: number): number {
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+    return dia / diasNoMes;
   }
 }

@@ -9,7 +9,6 @@
 import {
   Money,
   TipoContrato,
-  TipoRescisao,
   ParametrosCalculo,
   ResultadoRescisao,
   ResultadoSaqueAniversario,
@@ -120,10 +119,7 @@ export class FGTSCalculatorService {
 
     if (saqueAniversario) {
       resultadoSaqueAniversario = SaqueAniversarioService.calcularParcela(saldoBase);
-      const impacto = SaqueAniversarioService.calcularImpactoRescisao(
-        saldoBase,
-        multa.valorMulta,
-      );
+      const impacto = SaqueAniversarioService.calcularImpactoRescisao(saldoBase, multa.valorMulta);
       saldoFinal = impacto.saldoFinal;
       multaFinal = impacto.multaFinal;
     }
