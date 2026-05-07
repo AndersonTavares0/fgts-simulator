@@ -1,0 +1,42 @@
+{
+  "name": "projeto-fgts",
+  "version": "2.0.0",
+  "description": "Simulador de FGTS e rescisão trabalhista — Projeto de Extensão UNINTER (TypeScript + DDD)",
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "vite src",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --outDir dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/js/**/*.js",
+    "lint:fix": "eslint src/js/**/*.js --fix"
+  },
+  "keywords": [
+    "fgts",
+    "clt",
+    "trabalhista",
+    "simulador",
+    "brasil",
+    "typescript",
+    "ddd"
+  ],
+  "author": "AndersonTavares0",
+  "license": "MIT",
+  "dependencies": {
+    "decimal.js": "^10.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
+    "@eslint/js": "^9.0.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.4",
+    "vitest": "^1.5.0",
+    "jsdom": "^24.0.0"
+  }
+}

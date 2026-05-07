@@ -16,6 +16,7 @@
   const incluir13El      = document.getElementById('incluir13');
   const incluirFeriasEl  = document.getElementById('incluirFerias');
   const saqueAniversarioEl = document.getElementById('saqueAniversario');
+  const isAprendizEl      = document.getElementById('isAprendiz');
 
   // ── Referências DOM — Resultados ─────────────────────────────
   const saldoEl      = document.getElementById('saldo');
@@ -136,13 +137,14 @@
       { label: 'Saldo FGTS',              value: resultado.saldoFinal,    color: 'var(--donut-saldo)' },
       { label: 'Multa Rescisória (40%)',   value: resultado.multaFinal,    color: 'var(--donut-multa)' },
       { label: '13º Proporcional',         value: resultado.decimoTerceiro, color: 'var(--donut-prop)' },
-      { label: 'Férias Proporcionais + ⅓', value: resultado.ferias,        color: 'var(--amber)' }
+      { label: 'Férias Proporcionais + ⅓', value: resultado.ferias,        color: 'var(--amber)' },
+      { label: 'Correção Estimada (TR+3%)', value: resultado.detalhes.correcaoEstimada, color: 'var(--teal)' }
     ];
 
     breakdownList.innerHTML = '';
     items.forEach(item => {
       const row = document.createElement('div');
-      row.className = 'breakdown-row' + (item.value === 0 ? ' zero' : '');
+      row.className = 'breakdown-row' + (item.value <= 0 ? ' zero' : '');
       row.innerHTML = `
         <span class="breakdown-row-label">
           <span class="breakdown-dot" style="background:${item.color}"></span>
@@ -152,6 +154,16 @@
       `;
       breakdownList.appendChild(row);
     });
+
+    // Saque Aniversário extra info
+    const infoBox = document.getElementById('saqueAniversarioInfo');
+    const valorSaqueAnualEl = document.getElementById('valorSaqueAnual');
+    if (resultado.detalhes.saqueAniversario) {
+      infoBox.style.display = 'flex';
+      valorSaqueAnualEl.textContent = fmt(resultado.detalhes.valorSaqueParcelaAnual);
+    } else {
+      infoBox.style.display = 'none';
+    }
   }
 
   // ── Atualização da UI com resultado ──────────────────────────
@@ -225,7 +237,8 @@
         mesesTrabalhados,
         incluirDecimoTerceiro: incluir13El.checked,
         incluirFerias:         incluirFeriasEl.checked,
-        saqueAniversario:      saqueAniversarioEl.checked
+        saqueAniversario:      saqueAniversarioEl.checked,
+        isAprendiz:            isAprendizEl.checked
       }
     };
   }
@@ -242,7 +255,8 @@
         motivo:                data.motivo,
         incluirDecimoTerceiro: data.incluirDecimoTerceiro,
         incluirFerias:         data.incluirFerias,
-        saqueAniversario:      data.saqueAniversario
+        saqueAniversario:      data.saqueAniversario,
+        isAprendiz:            data.isAprendiz
       });
 
       updateUI(resultado);

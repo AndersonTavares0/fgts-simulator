@@ -439,6 +439,29 @@
   color: var(--text-muted);
 }
 
+/* Info Box (Contexto Extra) */
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--teal-dim);
+  border: 1px solid rgba(0, 191, 165, 0.2);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-top: 4px;
+}
+
+.info-box p {
+  font-size: 13px;
+  color: var(--teal);
+  margin: 0;
+}
+
+.info-box strong {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
 /* Barra de Progresso Lineares */
 .progress-bar-section {
   display: flex;

@@ -56,8 +56,8 @@
               <input
                 id="salario"
                 name="salario"
-                type="number"
-                min="0.01"
+                type="text"
+                inputmode="numeric"
                 step="0.01"
                 placeholder="3.000,00"
                 aria-describedby="salario-help"
@@ -95,11 +95,24 @@
               <select id="motivo" name="motivo" class="field-input" aria-describedby="motivo-help">
                 <option value="dispensa_sem_causa">Dispensa sem justa causa</option>
                 <option value="demissao_voluntaria">Demissão voluntária</option>
-                <option value="outra_saida">Outra saída</option>
+                <option value="justa_causa">Justa causa</option>
+                <option value="acordo_comum">Acordo comum (Art. 484-A)</option>
+                <option value="doenca_grave">Doença grave</option>
+                <option value="aposentadoria">Aposentadoria</option>
+                <option value="falecimento">Falecimento</option>
+                <option value="culpa_reciproca">Culpa recíproca</option>
               </select>
               <i data-lucide="chevron-down" class="select-arrow icon-xs" aria-hidden="true"></i>
             </div>
             <span id="motivo-help" class="sr-only">Selecione o motivo do encerramento do contrato</span>
+          </div>
+
+          <div class="field-group">
+            <label class="option-toggle">
+              <input id="isAprendiz" type="checkbox"/>
+              <span class="toggle-track" aria-hidden="true"></span>
+              <span class="toggle-label">Contrato de Aprendizagem (2%)</span>
+            </label>
           </div>
         </div>
 
@@ -127,7 +140,7 @@
 
         <!-- Ações -->
         <div class="form-actions">
-          <button id="calcular" class="btn-primary" type="button" aria-label="Calcular valores de rescisão e FGTS">
+          <button id="calcular" class="btn-primary" type="submit" aria-label="Calcular valores de rescisão e FGTS">
             <i data-lucide="calculator" class="icon-sm" aria-hidden="true"></i>
             Calcular Rescisão
           </button>
@@ -252,7 +265,12 @@
           <div class="breakdown">
             <p class="breakdown-title">Composição detalhada</p>
             <div class="breakdown-list" id="breakdownList">
-              <!-- Preenchido via JS -->
+              <!-- Preenchido via TS -->
+            </div>
+
+            <div id="saqueAniversarioInfo" class="info-box" style="display:none;">
+              <i data-lucide="calendar-check" class="icon-xs"></i>
+              <p>Saque Aniversário Estimado: <strong id="valorSaqueAnual">—</strong></p>
             </div>
 
             <!-- Barra de progresso proporcional -->
@@ -293,14 +311,14 @@
           <div class="explain-icon bg-teal"><i data-lucide="piggy-bank" class="icon-sm"></i></div>
           <div>
             <strong>Saldo FGTS</strong>
-            <p>Salário Bruto × 8% × meses trabalhados. Para meses fracionados, aplica-se a regra dos 15 dias (mês completo se ≥ 15 dias trabalhados).</p>
+            <p>Salário Bruto × 8% × meses trabalhados, com correção monetária (TR + 3% a.a. ou IPCA conforme ADI 5090).</p>
           </div>
         </div>
         <div class="explain-item">
           <div class="explain-icon bg-blue"><i data-lucide="shield" class="icon-sm"></i></div>
           <div>
             <strong>Multa Rescisória</strong>
-            <p>Aplicável apenas em dispensa sem justa causa: 40% sobre o saldo acumulado do FGTS. Base legal: Lei 8.036/1990.</p>
+            <p>40% para dispensa sem justa causa; 20% para acordo comum (Art. 484-A CLT); 0% para demissão voluntária e justa causa.</p>
           </div>
         </div>
         <div class="explain-item">
@@ -324,12 +342,13 @@
     </div>
   </div>
 
-  <!-- Scripts modulares (mesma lógica, nova UI) -->
-  <script src="js/validation.js"></script>
-  <script src="js/calculator.js"></script>
-  <script src="js/theme-manager.js"></script>
-  <script src="js/script.js"></script>
-  <script>lucide.createIcons();</script>
+  <!-- TypeScript Entry Point (Vite compila automaticamente) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module" src="/main.ts"></script>
+  <script>
+    // Lucide icons initialization (após DOM load)
+    document.addEventListener('DOMContentLoaded', function() { lucide.createIcons(); });
+  </script>
 
 </body>
 </html>
