@@ -51,6 +51,8 @@ export enum TipoContrato {
   CLT_PADRAO = 'clt_padrao',
   /** Contrato de Aprendizagem — alíquota de 2% (Lei 10.097/2000) */
   APRENDIZ = 'aprendiz',
+  /** Trabalhador doméstico — alíquota de 3,2% (Lei 5.859/1972) */
+  DOMESTICO = 'domestico',
 }
 
 /** Doenças graves que permitem saque integral (Lei 8.036/90, Art. 20, XIII) */
@@ -239,6 +241,8 @@ export interface ParametrosCalculo {
   incluirDecimoTerceiro: boolean;
   incluirFerias: boolean;
   saqueAniversario: boolean;
+  /** Total historical deposits (for fine calculation - Art. 18, Lei 8.036/1990) */
+  depositoHistoricoTotal?: Money;
   doencaGrave?: TipoDoencaGrave;
   indicesCorrecao?: IndicesCorrecao;
 }
