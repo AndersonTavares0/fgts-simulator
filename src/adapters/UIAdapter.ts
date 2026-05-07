@@ -38,8 +38,6 @@ export class UIAdapter {
   private incluirFeriasEl!: HTMLInputElement;
   private saqueAniversarioEl!: HTMLInputElement;
   private isAprendizEl!: HTMLInputElement;
-  private isDomesticoEl!: HTMLInputElement;
-  private healthDocsInfo!: HTMLElement;
 
   private saldoEl!: HTMLElement;
   private multaEl!: HTMLElement;
@@ -84,8 +82,6 @@ export class UIAdapter {
     this.incluirFeriasEl = document.getElementById('incluirFerias') as HTMLInputElement;
     this.saqueAniversarioEl = document.getElementById('saqueAniversario') as HTMLInputElement;
     this.isAprendizEl = document.getElementById('isAprendiz') as HTMLInputElement;
-    this.isDomesticoEl = document.getElementById('isDomestico') as HTMLInputElement;
-    this.healthDocsInfo = document.getElementById('healthDocsInfo')!;
 
     this.saldoEl = document.getElementById('saldo')!;
     this.multaEl = document.getElementById('multa')!;
@@ -117,12 +113,6 @@ export class UIAdapter {
     });
 
     this.salarioEl.addEventListener('input', (e) => this.handleCurrencyMask(e));
-
-    // Show/hide medical info box based on selected reason
-    this.motivoEl.addEventListener('change', () => {
-      const isDoencaGrave = this.motivoEl.value === 'doenca_grave';
-      this.healthDocsInfo.style.display = isDoencaGrave ? 'flex' : 'none';
-    });
   }
 
   private handleCurrencyMask(e: Event): void {
@@ -209,16 +199,9 @@ export class UIAdapter {
       const motivoValue = this.motivoEl.value;
       const tipoRescisao = MOTIVO_MAP[motivoValue] ?? TipoRescisao.DEMISSAO_VOLUNTARIA;
 
-      // Detectar tipo de contrato (CLT, Aprendiz, ou Doméstico)
-      const tipoContrato = this.isDomesticoEl.checked
-        ? TipoContrato.DOMESTICO
-        : this.isAprendizEl.checked
-          ? TipoContrato.APRENDIZ
-          : TipoContrato.CLT_PADRAO;
-
-      // Calcular depósito histórico total para multa (Art. 18, Lei 8.036/1990)
-      const depositoMensal = FGTSCalculatorService.calcularDepositoMensal(salario, tipoContrato);
-      const depositoHistoricoTotal = depositoMensal.multiply(mesesTrabalhados);
+      const tipoContrato = this.isAprendizEl.checked
+        ? TipoContrato.APRENDIZ
+        : TipoContrato.CLT_PADRAO;
 
       // Executar cálculo
       const resultado = FGTSCalculatorService.calcularRescisao({
@@ -229,7 +212,6 @@ export class UIAdapter {
         incluirDecimoTerceiro: this.incluir13El.checked,
         incluirFerias: this.incluirFeriasEl.checked,
         saqueAniversario: this.saqueAniversarioEl.checked,
-        depositoHistoricoTotal,
       });
 
       this.updateUI(resultado);

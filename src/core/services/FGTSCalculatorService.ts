@@ -25,14 +25,7 @@ import { DoencaGraveService } from './DoencaGraveService';
 const ALIQUOTA = {
   [TipoContrato.CLT_PADRAO]: 8,
   [TipoContrato.APRENDIZ]: 2,
-<<<<<<< New base: fix(ui): correct layout structure and styling for health documentation box
 } satisfies Record<TipoContrato, number>;
-||||||| Common ancestor
-};
-=======
-  [TipoContrato.DOMESTICO]: 3.2,
-} satisfies Record<TipoContrato, number>;
->>>>>>> Current commit: fix(ui): correct layout structure and styling for health documentation box
 
 export class FGTSCalculatorService {
   /**
@@ -109,9 +102,8 @@ export class FGTSCalculatorService {
 
     const saldoBase = correcao.saldoCorrigido;
 
-    // 3. Multa rescisória (must be 40% of TOTAL HISTORICAL DEPOSITS - Art. 18, Lei 8.036/1990)
-    const baseCalculoMulta = params.depositoHistoricoTotal ?? saldoBase;
-    const multa = MultaService.calcular(baseCalculoMulta, tipoRescisao);
+    // 3. Multa rescisória
+    const multa = MultaService.calcular(saldoBase, tipoRescisao);
 
     // 4. Verbas proporcionais
     const decimoTerceiro = incluirDecimoTerceiro
