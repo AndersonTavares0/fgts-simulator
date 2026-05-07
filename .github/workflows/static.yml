@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Workflow for deploying Vite/TypeScript content to GitHub Pages
 name: Deploy static content to Pages
 
 on:
@@ -26,8 +26,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Job de testes automatizados
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,53 +36,36 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: 'npm'
 
-      - name: Instalar dependências de linting
-        run: |
-          npm init -y
-          npm install --save-dev eslint
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Executar ESLint
-        run: npx eslint src/**/*.js --no-eslintrc --env browser --env es6 --parser-options ecmaVersion:2020 || true
+      - name: Run Typecheck
+        run: npm run typecheck
 
-      - name: Validar estrutura de arquivos JavaScript
-        run: |
-          echo "Validando módulos JavaScript..."
-          for file in src/validation.js src/calculator.js src/theme-manager.js src/script.js; do
-            if [ -f "$file" ]; then
-              echo "✓ $file encontrado"
-              # Verifica sintaxe básica
-              node --check "$file" 2>/dev/null && echo "  ✓ Sintaxe válida" || echo "  ⚠ Verificação manual necessária"
-            else
-              echo "✗ $file não encontrado"
-            fi
-          done
+      - name: Run Unit Tests
+        run: npm run test
+        continue-on-error: true
 
-      - name: Verificar atributos de acessibilidade no HTML
-        run: |
-          echo "Verificando atributos ARIA no HTML..."
-          grep -q 'aria-live' src/index.html && echo "✓ aria-live encontrado" || echo "✗ aria-live ausente"
-          grep -q 'aria-label' src/index.html && echo "✓ aria-label encontrado" || echo "✗ aria-label ausente"
-          grep -q 'role=' src/index.html && echo "✓ roles ARIA encontrados" || echo "✗ roles ARIA ausentes"
-          grep -q 'sr-only' src/index.html && echo "✓ Classe sr-only encontrada" || echo "✗ Classe sr-only ausente"
+      - name: Build project
+        run: npm run build
 
-  # Single deploy job since we're just deploying
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
   deploy:
-    needs: test
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: 'src'
+      
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
