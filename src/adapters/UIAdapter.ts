@@ -4,7 +4,8 @@
  * Substitui o script.js original com type safety completa.
  */
 
-import { TipoRescisao, TipoContrato, ResultadoRescisao } from '../core/types';
+import { TipoRescisao, TipoContrato } from '../core/types';
+import type { ResultadoRescisao } from '../core/types';
 import { FGTSCalculatorService } from '../core/services/FGTSCalculatorService';
 import { FormatAdapter } from './FormatAdapter';
 import { ContratoTrabalho } from '../core/entities/ContratoTrabalho';

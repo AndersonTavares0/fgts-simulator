@@ -9,6 +9,8 @@
 import {
   Money,
   TipoContrato,
+} from '../types';
+import type {
   ParametrosCalculo,
   ResultadoRescisao,
   ResultadoSaqueAniversario,
@@ -20,10 +22,10 @@ import { SaqueAniversarioService } from './SaqueAniversarioService';
 import { DoencaGraveService } from './DoencaGraveService';
 
 /** Alíquotas FGTS por tipo de contrato */
-const ALIQUOTA: Record<TipoContrato, number> = {
+const ALIQUOTA = {
   [TipoContrato.CLT_PADRAO]: 8,
   [TipoContrato.APRENDIZ]: 2,
-};
+} satisfies Record<TipoContrato, number>;
 
 export class FGTSCalculatorService {
   /**

@@ -10,7 +10,8 @@
  * Base legal: Lei 8.036/1990, Art. 20, inciso XIII
  */
 
-import { Money, TipoDoencaGrave, ResultadoDoencaGrave } from '../types';
+import { Money, TipoDoencaGrave } from '../types';
+import type { ResultadoDoencaGrave } from '../types';
 
 /** Mapeamento de doenças graves com fundamentação legal específica */
 const DOENCAS_QUALIFICADAS: Record<TipoDoencaGrave, { descricao: string; fundamento: string }> = {
