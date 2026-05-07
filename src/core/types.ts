@@ -173,8 +173,10 @@ export function isDataISO(value: unknown): value is DataISO {
   );
 }
 
+const TIPOS_RESCISAO_SET = new Set<string>(Object.values(TipoRescisao));
+
 export function isTipoRescisao(value: unknown): value is TipoRescisao {
-  return (value as TipoRescisao) in Object.values(TipoRescisao).reduce((acc, curr) => ({ ...acc, [curr]: true }), {} as Record<string, boolean>);
+  return TIPOS_RESCISAO_SET.has(value as string);
 }
 
 export interface IndicesCorrecao {

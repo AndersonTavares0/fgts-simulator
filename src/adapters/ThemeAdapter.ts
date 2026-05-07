@@ -1,7 +1,7 @@
 /**
  * Adapter: ThemeAdapter
- * Gerenciamento de temas claro/escuro com persistência em localStorage.
- * Migrado do theme-manager.js original para TypeScript.
+ * Light/dark theme management with localStorage persistence.
+ * Migrated from the original theme-manager.js to TypeScript.
  */
 
 const THEME_KEY = 'fgts_simulator_theme';
@@ -11,10 +11,10 @@ type Theme = 'dark' | 'light';
 export class ThemeAdapter {
   private toggleButton: HTMLElement | null = null;
 
-  /** Inicializa o gerenciador de tema */
+  /** Initializes the theme manager */
   init(toggleButton: HTMLElement | null): void {
     if (!toggleButton) {
-      console.error('ThemeAdapter: botão de toggle não fornecido');
+      console.error('ThemeAdapter: toggle button not provided');
       return;
     }
     this.toggleButton = toggleButton;
@@ -71,8 +71,10 @@ export class ThemeAdapter {
     document.documentElement.setAttribute('data-theme', theme);
 
     if (this.toggleButton) {
-      this.toggleButton.textContent = theme === 'dark' ? '☀️' : '🌙';
+      const iconName = theme === 'dark' ? 'sun' : 'moon';
+      this.toggleButton.innerHTML = `<i data-lucide="${iconName}" class="icon-sm"></i>`;
       this.toggleButton.setAttribute('aria-pressed', String(theme === 'dark'));
+      window.lucide?.createIcons({ nodes: [this.toggleButton] });
     }
   }
 
@@ -81,7 +83,7 @@ export class ThemeAdapter {
   }
 
   private announceChange(theme: Theme): void {
-    const msg = theme === 'dark' ? 'Tema escuro ativado' : 'Tema claro ativado';
+    const msg = theme === 'dark' ? 'Dark theme activated' : 'Light theme activated';
 
     let region = document.getElementById('theme-live-region');
     if (!region) {

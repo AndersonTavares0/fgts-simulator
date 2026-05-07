@@ -1,7 +1,7 @@
 /**
  * Adapter: UIAdapter
- * Camada de apresentação — manipulação do DOM e binding de eventos.
- * Substitui o script.js original com type safety completa.
+ * Presentation layer — DOM manipulation and event binding.
+ * Replaces the original script.js with full type safety.
  */
 
 import { TipoRescisao, TipoContrato } from '../core/types';
@@ -13,7 +13,7 @@ import { ContratoTrabalho } from '../core/entities/ContratoTrabalho';
 // ─── Circunferência do donut (r=78, 2πr ≈ 490) ────────────────
 const CIRCUM = 2 * Math.PI * 78;
 
-/** Mapeamento de valor do select HTML → TipoRescisao */
+/** HTML select value → TipoRescisao mapping */
 const MOTIVO_MAP: Record<string, TipoRescisao> = {
   dispensa_sem_causa: TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA,
   demissao_voluntaria: TipoRescisao.DEMISSAO_VOLUNTARIA,
@@ -27,7 +27,7 @@ const MOTIVO_MAP: Record<string, TipoRescisao> = {
 };
 
 export class UIAdapter {
-  // ── Referências DOM ─────────────────────────────────────────
+  // ── DOM References ───────────────────────────────────────────
   private formEl!: HTMLFormElement;
   private salarioEl!: HTMLInputElement;
   private inicioEl!: HTMLInputElement;
@@ -65,7 +65,7 @@ export class UIAdapter {
 
   private resultsLiveRegion: HTMLElement | null = null;
 
-  /** Inicializa o adapter, capturando referências DOM e ligando eventos */
+  /** Initializes the adapter, capturing DOM references and binding events */
   init(): void {
     this.bindElements();
     this.bindEvents();
@@ -168,20 +168,20 @@ export class UIAdapter {
     });
   }
 
-  // ── Validação e Cálculo ──────────────────────────────────────
+  // ── Validation & Calculation ─────────────────────────────────
 
   private handleCalcular(): void {
     try {
       this.clearErrors();
 
-      // Parse e validação do salário
+      // Parse and validate salary
       const salario = FormatAdapter.parseMonetaryInput(this.salarioEl.value);
       if (!salario) {
         this.showError('Informe um salário válido maior que zero.', this.salarioEl);
         return;
       }
 
-      // Parse de datas
+      // Parse dates
       const inicio = FormatAdapter.parseDate(this.inicioEl.value);
       const termino = FormatAdapter.parseDate(this.terminoEl.value);
 
@@ -190,7 +190,7 @@ export class UIAdapter {
         return;
       }
 
-      // Validação do contrato
+      // Contract validation
       const validacao = ContratoTrabalho.validar({
         salarioBruto: salario,
         dataInicio: inicio,
@@ -202,25 +202,25 @@ export class UIAdapter {
         return;
       }
 
-      // Calcular meses
+      // Calculate months
       const mesesTrabalhados = ContratoTrabalho.calcularMesesTrabalhados(inicio, termino);
 
-      // Mapear motivo
+      // Map reason
       const motivoValue = this.motivoEl.value;
       const tipoRescisao = MOTIVO_MAP[motivoValue] ?? TipoRescisao.DEMISSAO_VOLUNTARIA;
 
-      // Detectar tipo de contrato (CLT, Aprendiz, ou Doméstico)
+      // Detect contract type (CLT, Apprentice, or Domestic)
       const tipoContrato = this.isDomesticoEl.checked
         ? TipoContrato.DOMESTICO
         : this.isAprendizEl.checked
           ? TipoContrato.APRENDIZ
           : TipoContrato.CLT_PADRAO;
 
-      // Calcular depósito histórico total para multa (Art. 18, Lei 8.036/1990)
+      // Calculate total historical deposit for fine (Art. 18, Lei 8.036/1990)
       const depositoMensal = FGTSCalculatorService.calcularDepositoMensal(salario, tipoContrato);
       const depositoHistoricoTotal = depositoMensal.multiply(mesesTrabalhados);
 
-      // Executar cálculo
+      // Execute calculation
       const resultado = FGTSCalculatorService.calcularRescisao({
         salarioBruto: salario,
         mesesTrabalhados,
@@ -234,18 +234,18 @@ export class UIAdapter {
 
       this.updateUI(resultado);
     } catch (err) {
-      console.error('Erro no cálculo:', err);
+      console.error('Calculation error:', err);
       this.showError('Ocorreu um erro ao calcular. Por favor, tente novamente.', null);
     }
   }
 
-  // ── Atualização da UI ───────────────────────────────────────
+  // ── UI Update ────────────────────────────────────────────────
 
   private updateUI(resultado: ResultadoRescisao): void {
     const { saldoFinal, multaFinal, decimoTerceiro, ferias, total, detalhes } = resultado;
     const extras = multaFinal.add(decimoTerceiro).add(ferias);
 
-    // Cards principais
+    // Main metric cards
     this.saldoEl.textContent = saldoFinal.toBRL();
     this.multaEl.textContent = extras.toBRL();
     this.totalEl.textContent = total.toBRL();
@@ -267,13 +267,13 @@ export class UIAdapter {
       ? total.toBRL().replace('R$', '').trim()
       : '—';
 
-    // Percentuais
+    // Percentages
     const pct = (part: number, tot: number) => FormatAdapter.formatPercent(part, tot);
     this.pctSaldo.textContent = pct(saldoFinal.cents, total.cents);
     this.pctMulta.textContent = pct(multaFinal.cents, total.cents);
     this.pctProp.textContent = pct(decimoTerceiro.cents + ferias.cents, total.cents);
 
-    // Barra de progresso
+    // Progress bar
     this.barSaldo.style.width = pct(saldoFinal.cents, total.cents);
     this.barMulta.style.width = pct(multaFinal.cents, total.cents);
     this.barProp.style.width = pct(decimoTerceiro.cents + ferias.cents, total.cents);
@@ -281,14 +281,14 @@ export class UIAdapter {
     // Breakdown
     this.updateBreakdown(resultado);
 
-    // Exibir resultados
+    // Show results
     this.emptyState.style.display = 'none';
     this.resultsContent.style.display = 'flex';
 
-    // Acessibilidade
+    // Accessibility
     this.announceResults(resultado);
 
-    // Re-instancia ícones Lucide apenas nos elementos novos
+    // Re-instantiate Lucide icons only on new elements
     const lucide = window.lucide;
     if (lucide) {
       const newIcons = this.resultsContent.querySelectorAll(
@@ -362,7 +362,7 @@ export class UIAdapter {
       this.breakdownList.appendChild(row);
     });
 
-    // Saque-Aniversário info box
+    // Birthday Withdrawal info box
     const infoBox = document.getElementById('saqueAniversarioInfo');
     const valorSaqueAnualEl = document.getElementById('valorSaqueAnual');
     if (resultado.saqueAniversario && infoBox && valorSaqueAnualEl) {
@@ -373,7 +373,7 @@ export class UIAdapter {
     }
   }
 
-  // ── Erros e Acessibilidade ──────────────────────────────────
+  // ── Errors & Accessibility ───────────────────────────────────
 
   private showError(message: string, element: HTMLElement | null): void {
     this.clearErrors();
@@ -384,7 +384,7 @@ export class UIAdapter {
       err.id = element.id + '-error';
       err.setAttribute('role', 'alert');
       err.textContent = message;
-      element.parentNode?.appendChild(err);
+      element.parentElement?.insertAdjacentElement('afterend', err);
       element.setAttribute('aria-describedby', err.id);
     } else {
       alert(message);
