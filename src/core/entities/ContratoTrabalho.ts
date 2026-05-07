@@ -1,6 +1,6 @@
 /**
  * Entity: ContratoTrabalho
- * Encapsula dados e validação do contrato de trabalho
+ * Encapsulates employment contract data and validation
  */
 
 import { TipoContrato, TipoRescisao, Money } from '../types';
@@ -35,17 +35,19 @@ export class ContratoTrabalho {
     this.tipoRescisao = params.tipoRescisao;
   }
 
-  /** Calcula meses trabalhados com regra CLT (15+ dias = mês completo) */
+  /** Calculates worked months using CLT rule (15+ days = full month) */
   get mesesTrabalhados(): number {
     return ContratoTrabalho.calcularMesesTrabalhados(this.dataInicio, this.dataTermino);
   }
 
-  /** Alíquota FGTS conforme tipo de contrato */
+  /** FGTS rate according to contract type */
   get aliquotaFGTS(): number {
-    return this.tipoContrato === TipoContrato.APRENDIZ ? 2 : 8;
+    if (this.tipoContrato === TipoContrato.APRENDIZ) return 2;
+    if (this.tipoContrato === TipoContrato.DOMESTICO) return 3.2;
+    return 8;
   }
 
-  /** Validação estática reutilizável */
+  /** Reusable static validation */
   static validar(params: {
     salarioBruto: Money;
     dataInicio: Date;
@@ -87,7 +89,7 @@ export class ContratoTrabalho {
     return { valid: true };
   }
 
-  /** Calcula meses trabalhados com regra CLT dos 15 dias */
+  /** Calculates worked months using the 15-day CLT rule */
   static calcularMesesTrabalhados(inicio: Date, termino: Date): number {
     if (!inicio || !termino || termino < inicio) return 0;
 
@@ -114,7 +116,7 @@ export class ContratoTrabalho {
     return Math.max(0, mesesCompletos);
   }
 
-  /** Calcula fração do mês baseada no dia e mês */
+  /** Calculates month fraction based on day and month */
   private static calcularFracaoMes(dia: number, mes: number, ano: number): number {
     const diasNoMes = new Date(ano, mes + 1, 0).getDate();
     return dia / diasNoMes;

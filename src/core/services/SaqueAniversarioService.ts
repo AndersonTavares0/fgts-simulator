@@ -9,7 +9,7 @@
  * Base legal: Lei 13.932/2019
  */
 
-import { Money, TipoContrato } from '../types';
+import { Money } from '../types';
 import type { ResultadoSaqueAniversario } from '../types';
 
 interface FaixaSaque {
