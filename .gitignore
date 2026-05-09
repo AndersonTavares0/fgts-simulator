@@ -55,6 +55,9 @@ desktop.ini
 .stylelintcache
 .prettiercache
 
+# graphify outputs (knowledge graph)
+graphify-out/
+
 # Temporary Files
 tmp/
 temp/
