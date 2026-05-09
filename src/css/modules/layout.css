@@ -20,7 +20,7 @@
   flex-direction: column;
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
   transition: background var(--transition-slow);
@@ -103,6 +103,13 @@
   transition: all var(--transition);
   font-size: 1.2rem;
   line-height: 1;
+  position: relative;
+}
+
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
 }
 
 .theme-toggle:hover {

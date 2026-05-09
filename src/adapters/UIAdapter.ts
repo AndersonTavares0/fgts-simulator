@@ -40,10 +40,16 @@ export class UIAdapter {
   private isAprendizEl!: HTMLInputElement;
   private isDomesticoEl!: HTMLInputElement;
   private healthDocsInfo!: HTMLElement;
+  private exampleBtn!: HTMLButtonElement | null;
+  private multaBadge!: HTMLElement | null;
+  private donutTooltip!: HTMLElement | null;
+  private accordionBtn!: HTMLButtonElement | null;
+  private accordionContent!: HTMLElement | null;
 
   private saldoEl!: HTMLElement;
   private multaEl!: HTMLElement;
   private totalEl!: HTMLElement;
+  private totalCard!: HTMLElement;
   private emptyState!: HTMLElement;
   private resultsContent!: HTMLElement;
   private resultsDate!: HTMLElement;
@@ -64,6 +70,7 @@ export class UIAdapter {
   private barProp!: HTMLElement;
 
   private resultsLiveRegion: HTMLElement | null = null;
+  private isCalculating = false;
 
   /** Initializes the adapter, capturing DOM references and binding events */
   init(): void {
@@ -86,10 +93,16 @@ export class UIAdapter {
     this.isAprendizEl = document.getElementById('isAprendiz') as HTMLInputElement;
     this.isDomesticoEl = document.getElementById('isDomestico') as HTMLInputElement;
     this.healthDocsInfo = document.getElementById('healthDocsInfo')!;
+    this.exampleBtn = document.getElementById('exampleBtn') as HTMLButtonElement | null;
+    this.multaBadge = document.getElementById('multaBadge') as HTMLElement | null;
+    this.donutTooltip = document.getElementById('donutTooltip') as HTMLElement | null;
+    this.accordionBtn = document.getElementById('accordionBtn') as HTMLButtonElement | null;
+    this.accordionContent = document.getElementById('accordionContent') as HTMLElement | null;
 
     this.saldoEl = document.getElementById('saldo')!;
     this.multaEl = document.getElementById('multa')!;
     this.totalEl = document.getElementById('total')!;
+    this.totalCard = document.querySelector('.metric-card.featured')!;
     this.emptyState = document.getElementById('emptyState')!;
     this.resultsContent = document.getElementById('resultsContent')!;
     this.resultsDate = document.getElementById('results-date')!;
@@ -118,11 +131,39 @@ export class UIAdapter {
 
     this.salarioEl.addEventListener('input', (e) => this.handleCurrencyMask(e));
 
+    // Real-time calculation on blur/change
+    const inputs = [
+      this.salarioEl,
+      this.inicioEl,
+      this.terminoEl,
+      this.motivoEl,
+      this.incluir13El,
+      this.incluirFeriasEl,
+      this.saqueAniversarioEl,
+      this.isAprendizEl,
+      this.isDomesticoEl,
+    ];
+
+    inputs.forEach((input) => {
+      input.addEventListener('blur', () => this.handleCalcular());
+      input.addEventListener('change', () => this.handleCalcular());
+    });
+
     // Show/hide medical info box based on selected reason
     this.motivoEl.addEventListener('change', () => {
       const isDoencaGrave = this.motivoEl.value === 'doenca_grave';
       this.healthDocsInfo.style.display = isDoencaGrave ? 'flex' : 'none';
+      this.updateMultaBadge();
     });
+
+    // Example button
+    this.exampleBtn?.addEventListener('click', () => this.loadExample());
+
+    // Accordion
+    this.accordionBtn?.addEventListener('click', () => this.toggleAccordion());
+
+    // Donut chart interactions
+    this.bindDonutInteractions();
   }
 
   private handleCurrencyMask(e: Event): void {
@@ -139,38 +180,165 @@ export class UIAdapter {
     });
   }
 
+  private loadExample(): void {
+    this.salarioEl.value = '3.000,00';
+    this.inicioEl.value = '2022-01-01';
+    const today = (new Date().toISOString().split('T')[0] ?? '');
+    this.terminoEl.value = today;
+    this.motivoEl.value = 'dispensa_sem_causa';
+    this.incluir13El.checked = true;
+    this.incluirFeriasEl.checked = true;
+    this.saqueAniversarioEl.checked = false;
+    this.isAprendizEl.checked = false;
+    this.isDomesticoEl.checked = false;
+    this.healthDocsInfo.style.display = 'none';
+    this.updateMultaBadge();
+    this.handleCalcular();
+  }
+
+  private updateMultaBadge(): void {
+    if (!this.multaBadge) return;
+
+    const multaPercentages: Record<string, number> = {
+      dispensa_sem_causa: 40,
+      acordo_comum: 20,
+      culpa_reciproca: 20,
+      demissao_voluntaria: 0,
+      justa_causa: 0,
+      doenca_grave: 0,
+      aposentadoria: 0,
+      falecimento: 0,
+      outra_saida: 0,
+    };
+
+    const percent = multaPercentages[this.motivoEl.value] ?? 0;
+    let colorClass = 'bg-gray-500';
+    let text = 'Multa: 0%';
+
+    if (percent === 40) {
+      colorClass = 'bg-green-500';
+      text = 'Multa: 40% do FGTS';
+    } else if (percent === 20) {
+      colorClass = 'bg-yellow-500';
+      text = 'Multa: 20% do FGTS';
+    }
+
+    this.multaBadge.className = `multa-badge ${colorClass}`;
+    this.multaBadge.textContent = text;
+  }
+
+  private toggleAccordion(): void {
+    if (!this.accordionBtn || !this.accordionContent) return;
+
+    const isExpanded = this.accordionBtn.getAttribute('aria-expanded') === 'true';
+    this.accordionBtn.setAttribute('aria-expanded', String(!isExpanded));
+    this.accordionContent.style.display = isExpanded ? 'none' : 'block';
+  }
+
+  private bindDonutInteractions(): void {
+    if (!this.donutTooltip) return;
+
+    const segments = [
+      { el: this.dSaldo, name: 'Saldo FGTS' },
+      { el: this.dMulta, name: 'Multa Rescisória' },
+      { el: this.dProp, name: '13º e Férias' },
+    ];
+
+    const showSegmentTooltip = (target: SVGCircleElement, name: string) => {
+      const value = target.getAttribute('data-value');
+      if (value && this.donutTooltip) {
+        this.donutTooltip.textContent = `${name}: R$ ${value}`;
+        this.donutTooltip.style.display = 'block';
+        target.style.strokeWidth = '26px';
+        target.style.filter = 'brightness(1.3) drop-shadow(0 0 6px currentColor)';
+      }
+    };
+
+    const hideSegmentTooltip = (target: SVGCircleElement) => {
+      if (this.donutTooltip) {
+        this.donutTooltip.style.display = 'none';
+      }
+      target.style.strokeWidth = '';
+      target.style.filter = '';
+    };
+
+    segments.forEach((segment) => {
+      segment.el.addEventListener('mouseenter', (e) => {
+        showSegmentTooltip(e.target as SVGCircleElement, segment.name);
+      });
+
+      segment.el.addEventListener('mouseleave', (e) => {
+        hideSegmentTooltip(e.target as SVGCircleElement);
+      });
+
+      segment.el.addEventListener('mousemove', (e) => {
+        if (this.donutTooltip) {
+          this.donutTooltip.style.left = `${e.clientX + 10}px`;
+          this.donutTooltip.style.top = `${e.clientY + 10}px`;
+        }
+      });
+
+      segment.el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const target = e.target as SVGCircleElement;
+          const isShowing = this.donutTooltip?.style.display === 'block';
+          if (isShowing) {
+            hideSegmentTooltip(target);
+          } else {
+            showSegmentTooltip(target, segment.name);
+          }
+        }
+      });
+
+      segment.el.addEventListener('blur', (e) => {
+        hideSegmentTooltip(e.target as SVGCircleElement);
+      });
+    });
+
+    // Interactive legend toggles
+    const legendItems = document.querySelectorAll('.legend-item[data-legend]');
+    const segmentMap: Record<string, SVGCircleElement> = {
+      saldo: this.dSaldo,
+      multa: this.dMulta,
+      prop: this.dProp,
+    };
+
+    legendItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        const legend = item.getAttribute('data-legend');
+        if (!legend || !segmentMap[legend]) return;
+
+        const circle = segmentMap[legend];
+        const isChecked = item.getAttribute('aria-checked') === 'true';
+        const newChecked = !isChecked;
+
+        item.setAttribute('aria-checked', String(newChecked));
+        circle.classList.toggle('donut-segment-hidden', !newChecked);
+      });
+
+      item.addEventListener('keydown', (e: Event) => {
+        const ke = e as KeyboardEvent;
+        if (ke.key === 'Enter' || ke.key === ' ') {
+          e.preventDefault();
+          (e.target as HTMLElement).click();
+        }
+      });
+    });
+  }
+
   private bindModalEvents(): void {
-    const overlay = document.getElementById('modal');
-    const openBtn = document.getElementById('explicar');
-    const closeBtn = document.getElementById('closeModal');
-    const closeBtn2 = document.getElementById('closeModal2');
-
-    if (!overlay || !openBtn) return;
-
-    const open = (): void => {
-      overlay.style.display = 'grid';
-      closeBtn?.focus();
-    };
-    const close = (): void => {
-      overlay.style.display = 'none';
-      openBtn.focus();
-    };
-
-    openBtn.addEventListener('click', open);
-    closeBtn?.addEventListener('click', close);
-    closeBtn2?.addEventListener('click', close);
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.style.display === 'grid') close();
-    });
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) close();
-    });
+    // Modal functionality replaced with inline accordion
+    // No modal events needed anymore
   }
 
   // ── Validation & Calculation ─────────────────────────────────
 
   private handleCalcular(): void {
+    if (this.isCalculating) return;
+
+    this.setLoading(true);
+
     try {
       this.clearErrors();
 
@@ -236,6 +404,36 @@ export class UIAdapter {
     } catch (err) {
       console.error('Calculation error:', err);
       this.showError('Ocorreu um erro ao calcular. Por favor, tente novamente.', null);
+    } finally {
+      this.setLoading(false);
+    }
+  }
+
+  private setLoading(isLoading: boolean): void {
+    this.isCalculating = isLoading;
+    this.calcularBtn.disabled = isLoading;
+    
+    if (isLoading) {
+      this.calcularBtn.setAttribute('aria-busy', 'true');
+      this.calcularBtn.innerHTML = `
+        <svg class="icon-sm loading-spinner" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.25"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round">
+            <animate attributeName="stroke-dasharray" from="0 60" to="60 0" dur="1s" repeatCount="indefinite"/>
+          </path>
+        </svg>
+        <span>Calculando...</span>
+      `;
+    } else {
+      this.calcularBtn.removeAttribute('aria-busy');
+      this.calcularBtn.innerHTML = `
+        <i data-lucide="calculator" class="icon-sm" aria-hidden="true"></i>
+        <span>Calcular Rescisão</span>
+      `;
+      const lucide = window.lucide;
+      if (lucide) {
+        lucide.createIcons({ nodes: [this.calcularBtn] });
+      }
     }
   }
 
@@ -288,6 +486,12 @@ export class UIAdapter {
     // Accessibility
     this.announceResults(resultado);
 
+    // Success flash
+    this.totalCard.classList.add('calc-flash');
+    setTimeout(() => {
+      this.totalCard.classList.remove('calc-flash');
+    }, 600);
+
     // Re-instantiate Lucide icons only on new elements
     const lucide = window.lucide;
     if (lucide) {
@@ -314,6 +518,16 @@ export class UIAdapter {
     this.setDonutArc(this.dSaldo, saldoArc, saldoOffset);
     this.setDonutArc(this.dMulta, multaArc, multaOffset);
     this.setDonutArc(this.dProp, propArc, propOffset);
+
+    // Add data attributes for tooltips
+    const formatValue = (cents: number) => (cents / 100).toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    this.dSaldo.setAttribute('data-value', formatValue(saldo));
+    this.dMulta.setAttribute('data-value', formatValue(multa));
+    this.dProp.setAttribute('data-value', formatValue(prop));
   }
 
   private setDonutArc(el: SVGCircleElement, value: number, offset: number): void {
