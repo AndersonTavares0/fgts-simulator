@@ -9,6 +9,7 @@
       content="Simulador de FGTS e rescisão trabalhista — Projeto de Extensão UNINTER. Cálculo preciso com base na CLT."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -49,13 +50,18 @@
 
         <!-- Formulário -->
         <form id="fgtsForm" autocomplete="off" novalidate>
+          <!-- Passo 1: Dados essenciais -->
           <div class="form-section">
-            <p class="form-section-label">Dados do contrato</p>
+            <div class="form-section-header">
+              <span class="form-section-number">1</span>
+              <p class="form-section-label">Dados essenciais</p>
+            </div>
 
             <div class="field-group">
               <label class="field-label" for="salario">
+                <span class="field-label-text">Salário Bruto</span>
+                <span class="required-indicator" aria-required="true">*</span>
                 <i data-lucide="banknote" class="icon-xs" aria-hidden="true"></i>
-                Salário Bruto
               </label>
               <div class="input-wrapper">
                 <span class="input-prefix">R$</span>
@@ -67,6 +73,7 @@
                   step="0.01"
                   placeholder="3.000,00"
                   aria-describedby="salario-help"
+                  aria-required="true"
                   class="field-input has-prefix"
                 />
               </div>
@@ -78,29 +85,33 @@
             <div class="field-row">
               <div class="field-group">
                 <label class="field-label" for="inicio">
+                  <span class="field-label-text">Início</span>
+                  <span class="required-indicator" aria-required="true">*</span>
                   <i data-lucide="calendar-plus" class="icon-xs" aria-hidden="true"></i>
-                  Início
                 </label>
                 <input
                   id="inicio"
                   name="inicio"
                   type="date"
-                  class="field-input"
                   aria-describedby="inicio-help"
+                  aria-required="true"
+                  class="field-input"
                 />
                 <span id="inicio-help" class="sr-only">Data de início do contrato</span>
               </div>
               <div class="field-group">
                 <label class="field-label" for="termino">
+                  <span class="field-label-text">Término</span>
+                  <span class="required-indicator" aria-required="true">*</span>
                   <i data-lucide="calendar-minus" class="icon-xs" aria-hidden="true"></i>
-                  Término
                 </label>
                 <input
                   id="termino"
                   name="termino"
                   type="date"
-                  class="field-input"
                   aria-describedby="termino-help"
+                  aria-required="true"
+                  class="field-input"
                 />
                 <span id="termino-help" class="sr-only">Data de término do contrato</span>
               </div>
@@ -108,8 +119,9 @@
 
             <div class="field-group">
               <label class="field-label" for="motivo">
+                <span class="field-label-text">Motivo da saída</span>
+                <span class="required-indicator" aria-required="true">*</span>
                 <i data-lucide="file-text" class="icon-xs" aria-hidden="true"></i>
-                Motivo da saída
               </label>
               <div class="select-wrapper">
                 <select
@@ -117,6 +129,7 @@
                   name="motivo"
                   class="field-input"
                   aria-describedby="motivo-help"
+                  aria-required="true"
                 >
                   <option value="dispensa_sem_causa">Dispensa sem justa causa</option>
                   <option value="demissao_voluntaria">Demissão voluntária</option>
@@ -132,6 +145,9 @@
               <span id="motivo-help" class="sr-only"
                 >Selecione o motivo do encerramento do contrato</span
               >
+              <div id="multaBadge" class="multa-badge bg-gray-500" aria-live="polite">
+                Multa: 0%
+              </div>
               <div class="health-info-box" id="healthDocsInfo" style="display: none" role="note" aria-label="Documentos necessários para saque saúde">
                 <i data-lucide="file-text" class="icon-xs"></i>
                 <div class="health-info-content">
@@ -162,9 +178,12 @@
               </div>
           </div>
 
-          <!-- Opções adicionais -->
+          <!-- Passo 2: Opções avançadas -->
           <div class="form-section">
-            <p class="form-section-label">Incluir verbas proporcionais</p>
+            <div class="form-section-header">
+              <span class="form-section-number">2</span>
+              <p class="form-section-label">Opções avançadas</p>
+            </div>
             <div class="options-grid">
               <label class="option-toggle">
                 <input id="incluir13" type="checkbox" checked />
@@ -193,19 +212,69 @@
               aria-label="Calcular valores de rescisão e FGTS"
             >
               <i data-lucide="calculator" class="icon-sm" aria-hidden="true"></i>
-              Calcular Rescisão
+              <span>Calcular Rescisão</span>
             </button>
             <button
-              id="explicar"
+              id="accordionBtn"
               class="btn-ghost"
               type="button"
               aria-label="Entender como os valores são calculados"
+              aria-expanded="false"
+              aria-controls="accordionContent"
             >
               <i data-lucide="info" class="icon-sm" aria-hidden="true"></i>
               Como funciona?
             </button>
           </div>
         </form>
+
+        <!-- ═══ ACCORDION "COMO FUNCIONA" ═══ -->
+        <div class="accordion-section">
+          <div
+            id="accordionContent"
+            class="accordion-content"
+            style="display: none"
+            role="region"
+            aria-labelledby="accordionBtn"
+          >
+            <div class="accordion-body">
+              <div class="explain-item">
+                <div class="explain-icon bg-teal"><i data-lucide="piggy-bank" class="icon-sm"></i></div>
+                <div>
+                  <strong>Saldo FGTS</strong>
+                  <p>
+                    Salário Bruto × 8% × meses trabalhados, com correção monetária (TR + 3% a.a. ou IPCA
+                    conforme ADI 5090).
+                  </p>
+                </div>
+              </div>
+              <div class="explain-item">
+                <div class="explain-icon bg-blue"><i data-lucide="shield" class="icon-sm"></i></div>
+                <div>
+                  <strong>Multa Rescisória</strong>
+                  <p>
+                    40% para dispensa sem justa causa; 20% para acordo comum (Art. 484-A CLT); 0% para
+                    demissão voluntária e justa causa.
+                  </p>
+                </div>
+              </div>
+              <div class="explain-item">
+                <div class="explain-icon bg-amber"><i data-lucide="gift" class="icon-sm"></i></div>
+                <div>
+                  <strong>13º Proporcional</strong>
+                  <p>Salário × (meses trabalhados no ano ÷ 12). Limitado a 12 avos.</p>
+                </div>
+              </div>
+              <div class="explain-item">
+                <div class="explain-icon bg-purple"><i data-lucide="sun" class="icon-sm"></i></div>
+                <div>
+                  <strong>Férias Proporcionais + 1/3</strong>
+                  <p>Salário × (meses ÷ 12) + um terço constitucional adicional.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Badge do projeto -->
         <div class="sidebar-footer">
@@ -223,13 +292,21 @@
         <!-- Estado vazio (antes do cálculo) -->
         <div class="empty-state" id="emptyState" aria-live="polite">
           <div class="empty-icon" aria-hidden="true">
-            <i data-lucide="bar-chart-3"></i>
+            <i data-lucide="bar-chart-3" aria-hidden="true"></i>
           </div>
           <p class="empty-title">Pronto para simular</p>
           <p class="empty-desc">
-            Preencha os dados do contrato ao lado e clique em
-            <strong>Calcular Rescisão</strong> para ver o resultado detalhado.
+            Preencha os dados do contrato ao lado para ver o resultado detalhado.
           </p>
+          <button
+            id="exampleBtn"
+            class="btn-secondary"
+            type="button"
+            aria-label="Carregar exemplo de simulação"
+          >
+            <i data-lucide="sparkles" class="icon-sm" aria-hidden="true"></i>
+            Ver exemplo
+          </button>
         </div>
 
         <!-- Resultados (visíveis após cálculo) -->
@@ -251,12 +328,18 @@
 
           <!-- Cards de métricas principais -->
           <div class="metrics-grid">
-            <div class="metric-card accent" role="status" aria-label="Total a receber">
+            <div class="metric-card accent featured" role="status" aria-label="Total a receber">
               <div class="metric-icon bg-accent" aria-hidden="true">
                 <i data-lucide="wallet" class="icon-sm"></i>
               </div>
               <div class="metric-body">
-                <span class="metric-label">Total a Receber</span>
+                <div class="metric-label-row">
+                  <span class="metric-label">Total a Receber</span>
+                  <span class="warning-tooltip-wrapper">
+                    <i data-lucide="alert-triangle" class="icon-xs warning-icon" aria-hidden="true" title="Valor estimado — consulte um advogado trabalhista"></i>
+                    <span class="warning-tooltip" role="tooltip">Valor estimado</span>
+                  </span>
+                </div>
                 <span class="metric-value" id="total">—</span>
               </div>
             </div>
@@ -292,7 +375,7 @@
                 role="img"
                 aria-label="Gráfico de distribuição dos valores"
               >
-                <title>Distribuição dos valores rescisórios</title>
+                <defs></defs>
                 <!-- Faixas do donut (order: bg > saldo > multa > props) -->
                 <circle class="donut-bg" cx="100" cy="100" r="78" />
                 <circle
@@ -303,6 +386,9 @@
                   r="78"
                   stroke-dasharray="0 490"
                   stroke-dashoffset="122.5"
+                  tabindex="0"
+                  role="graphics-symbol"
+                  aria-label="Saldo FGTS"
                 />
                 <circle
                   class="donut-multa"
@@ -312,6 +398,9 @@
                   r="78"
                   stroke-dasharray="0 490"
                   stroke-dashoffset="122.5"
+                  tabindex="0"
+                  role="graphics-symbol"
+                  aria-label="Multa Rescisória"
                 />
                 <circle
                   class="donut-prop"
@@ -321,6 +410,9 @@
                   r="78"
                   stroke-dasharray="0 490"
                   stroke-dashoffset="122.5"
+                  tabindex="0"
+                  role="graphics-symbol"
+                  aria-label="Verbas Proporcionais"
                 />
                 <!-- Buraco central -->
                 <circle class="donut-hole" cx="100" cy="100" r="56" />
@@ -337,19 +429,22 @@
                 </text>
               </svg>
 
+              <!-- Tooltip do donut -->
+              <div id="donutTooltip" class="donut-tooltip" role="tooltip" aria-hidden="true"></div>
+
               <!-- Legenda -->
               <div class="donut-legend">
-                <div class="legend-item">
+                <div class="legend-item" role="checkbox" aria-checked="true" tabindex="0" data-legend="saldo">
                   <span class="legend-dot saldo"></span>
                   <span class="legend-text">Saldo FGTS</span>
                   <span class="legend-pct" id="pct-saldo">—</span>
                 </div>
-                <div class="legend-item">
+                <div class="legend-item" role="checkbox" aria-checked="true" tabindex="0" data-legend="multa">
                   <span class="legend-dot multa"></span>
                   <span class="legend-text">Multa Rescisória</span>
                   <span class="legend-pct" id="pct-multa">—</span>
                 </div>
-                <div class="legend-item">
+                <div class="legend-item" role="checkbox" aria-checked="true" tabindex="0" data-legend="prop">
                   <span class="legend-dot prop"></span>
                   <span class="legend-text">Verbas Proporcionais</span>
                   <span class="legend-pct" id="pct-prop">—</span>
@@ -399,68 +494,8 @@
       </main>
     </div>
 
-    <!-- ═══ MODAL ═══ -->
-    <div
-      class="modal-overlay"
-      id="modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      style="display: none"
-    >
-      <div class="modal-card">
-        <div class="modal-header">
-          <h2 id="modal-title">Como os valores são calculados</h2>
-          <button id="closeModal" class="modal-close" aria-label="Fechar modal">
-            <i data-lucide="x" class="icon-sm"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="explain-item">
-            <div class="explain-icon bg-teal"><i data-lucide="piggy-bank" class="icon-sm"></i></div>
-            <div>
-              <strong>Saldo FGTS</strong>
-              <p>
-                Salário Bruto × 8% × meses trabalhados, com correção monetária (TR + 3% a.a. ou IPCA
-                conforme ADI 5090).
-              </p>
-            </div>
-          </div>
-          <div class="explain-item">
-            <div class="explain-icon bg-blue"><i data-lucide="shield" class="icon-sm"></i></div>
-            <div>
-              <strong>Multa Rescisória</strong>
-              <p>
-                40% para dispensa sem justa causa; 20% para acordo comum (Art. 484-A CLT); 0% para
-                demissão voluntária e justa causa.
-              </p>
-            </div>
-          </div>
-          <div class="explain-item">
-            <div class="explain-icon bg-amber"><i data-lucide="gift" class="icon-sm"></i></div>
-            <div>
-              <strong>13º Proporcional</strong>
-              <p>Salário × (meses trabalhados no ano ÷ 12). Limitado a 12 avos.</p>
-            </div>
-          </div>
-          <div class="explain-item">
-            <div class="explain-icon bg-purple"><i data-lucide="sun" class="icon-sm"></i></div>
-            <div>
-              <strong>Férias Proporcionais + 1/3</strong>
-              <p>Salário × (meses ÷ 12) + um terço constitucional adicional.</p>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-primary" id="closeModal2" style="width: auto; padding: 10px 24px">
-            Entendido
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- TypeScript Entry Point (Vite compila automaticamente) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.460.0"></script>
     <script type="module" src="/main.ts"></script>
     <script>
       // Lucide icons initialization (após DOM load)
