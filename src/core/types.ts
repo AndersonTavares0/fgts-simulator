@@ -135,48 +135,10 @@ export class Money {
     return this._value.isZero();
   }
 
-  greaterThan(other: Money): boolean {
-    return this._value.greaterThan(other._value);
-  }
-
-  equals(other: Money): boolean {
-    return this._value.equals(other._value);
-  }
-
   /** Formata para BRL (R$ 1.234,56) */
   toBRL(): string {
     return brlFormatter.format(this.reais);
   }
-}
-
-// ─── Template Literal Types para validação de formato ─────────────────────
-export type YYYYMMDD = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
-
-export type DataISO = YYYYMMDD;
-
-// ─── Type Guards ──────────────────────────────────────────────────────────────
-export function isDataISO(value: unknown): value is DataISO {
-  if (typeof value !== 'string') return false;
-  const regex = /^\d{4}-\d{2}-\d{2}$/;
-  if (!regex.test(value)) return false;
-
-  const parts = value.split('-');
-  const year = parseInt(parts[0]!, 10);
-  const month = parseInt(parts[1]!, 10);
-  const day = parseInt(parts[2]!, 10);
-
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
-
-const TIPOS_RESCISAO_SET = new Set<string>(Object.values(TipoRescisao));
-
-export function isTipoRescisao(value: unknown): value is TipoRescisao {
-  return TIPOS_RESCISAO_SET.has(value as string);
 }
 
 export interface IndicesCorrecao {

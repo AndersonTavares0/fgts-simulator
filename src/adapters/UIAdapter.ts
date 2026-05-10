@@ -39,6 +39,8 @@ export class UIAdapter {
   private saqueAniversarioEl!: HTMLInputElement;
   private isAprendizEl!: HTMLInputElement;
   private isDomesticoEl!: HTMLInputElement;
+  private aprendiaOption!: HTMLElement;
+  private domesticoOption!: HTMLElement;
   private healthDocsInfo!: HTMLElement;
   private exampleBtn!: HTMLButtonElement | null;
   private multaBadge!: HTMLElement | null;
@@ -60,6 +62,9 @@ export class UIAdapter {
   private dSaldo!: SVGCircleElement;
   private dMulta!: SVGCircleElement;
   private dProp!: SVGCircleElement;
+  private dpSaldo!: SVGCircleElement;
+  private dpMulta!: SVGCircleElement;
+  private dpProp!: SVGCircleElement;
 
   private pctSaldo!: HTMLElement;
   private pctMulta!: HTMLElement;
@@ -76,7 +81,6 @@ export class UIAdapter {
   init(): void {
     this.bindElements();
     this.bindEvents();
-    this.bindModalEvents();
     this.resultsLiveRegion = document.getElementById('results-live-region');
   }
 
@@ -92,6 +96,8 @@ export class UIAdapter {
     this.saqueAniversarioEl = document.getElementById('saqueAniversario') as HTMLInputElement;
     this.isAprendizEl = document.getElementById('isAprendiz') as HTMLInputElement;
     this.isDomesticoEl = document.getElementById('isDomestico') as HTMLInputElement;
+    this.aprendiaOption = this.isAprendizEl.closest('.option-toggle') as HTMLElement;
+    this.domesticoOption = this.isDomesticoEl.closest('.option-toggle') as HTMLElement;
     this.healthDocsInfo = document.getElementById('healthDocsInfo')!;
     this.exampleBtn = document.getElementById('exampleBtn') as HTMLButtonElement | null;
     this.multaBadge = document.getElementById('multaBadge') as HTMLElement | null;
@@ -114,6 +120,10 @@ export class UIAdapter {
     this.dMulta = document.getElementById('d-multa') as unknown as SVGCircleElement;
     this.dProp = document.getElementById('d-prop') as unknown as SVGCircleElement;
 
+    this.dpSaldo = document.getElementById('dp-saldo') as unknown as SVGCircleElement;
+    this.dpMulta = document.getElementById('dp-multa') as unknown as SVGCircleElement;
+    this.dpProp = document.getElementById('dp-prop') as unknown as SVGCircleElement;
+
     this.pctSaldo = document.getElementById('pct-saldo')!;
     this.pctMulta = document.getElementById('pct-multa')!;
     this.pctProp = document.getElementById('pct-prop')!;
@@ -131,7 +141,7 @@ export class UIAdapter {
 
     this.salarioEl.addEventListener('input', (e) => this.handleCurrencyMask(e));
 
-    // Real-time calculation on blur/change
+    // Real-time calculation on blur/change (non-exclusive inputs only)
     const inputs = [
       this.salarioEl,
       this.inicioEl,
@@ -139,14 +149,35 @@ export class UIAdapter {
       this.motivoEl,
       this.incluir13El,
       this.incluirFeriasEl,
-      this.saqueAniversarioEl,
-      this.isAprendizEl,
-      this.isDomesticoEl,
     ];
 
     inputs.forEach((input) => {
       input.addEventListener('blur', () => this.handleCalcular());
       input.addEventListener('change', () => this.handleCalcular());
+    });
+
+    // Contract type mutual exclusivity (CLT constraint)
+    this.isAprendizEl.addEventListener('change', () => {
+      if (this.isAprendizEl.checked) {
+        this.enforceMutualExclusion(this.isDomesticoEl, this.domesticoOption);
+      } else {
+        this.enableOption(this.domesticoOption);
+      }
+      this.handleCalcular();
+    });
+
+    this.isDomesticoEl.addEventListener('change', () => {
+      if (this.isDomesticoEl.checked) {
+        this.enforceMutualExclusion(this.isAprendizEl, this.aprendiaOption);
+      } else {
+        this.enableOption(this.aprendiaOption);
+      }
+      this.handleCalcular();
+    });
+
+    // Saque-Aniversário: trigger UI recalculation
+    this.saqueAniversarioEl.addEventListener('change', () => {
+      this.handleCalcular();
     });
 
     // Show/hide medical info box based on selected reason
@@ -191,6 +222,8 @@ export class UIAdapter {
     this.saqueAniversarioEl.checked = false;
     this.isAprendizEl.checked = false;
     this.isDomesticoEl.checked = false;
+    this.enableOption(this.aprendiaOption);
+    this.enableOption(this.domesticoOption);
     this.healthDocsInfo.style.display = 'none';
     this.updateMultaBadge();
     this.handleCalcular();
@@ -225,6 +258,29 @@ export class UIAdapter {
 
     this.multaBadge.className = `multa-badge ${colorClass}`;
     this.multaBadge.textContent = text;
+  }
+
+  /** CLT constraint: contract types Aprendiz (2%) and Doméstico (3.2%) are mutually exclusive */
+  private enforceMutualExclusion(targetCheckbox: HTMLInputElement, targetOption: HTMLElement): void {
+    targetCheckbox.checked = false;
+    targetOption.style.opacity = '0.45';
+    targetOption.style.pointerEvents = 'none';
+    targetOption.setAttribute('aria-disabled', 'true');
+  }
+
+  /** Re-enable a previously excluded contract type option */
+  private enableOption(option: HTMLElement): void {
+    option.style.opacity = '';
+    option.style.pointerEvents = '';
+    option.removeAttribute('aria-disabled');
+  }
+
+  /** Validate contract type constraints before calculation */
+  private validateContractConstraints(): string | null {
+    if (this.isAprendizEl.checked && this.isDomesticoEl.checked) {
+      return 'Contrato de Aprendizagem e Trabalhador Doméstico são mutuamente exclusivos.';
+    }
+    return null;
   }
 
   private toggleAccordion(): void {
@@ -298,10 +354,10 @@ export class UIAdapter {
 
     // Interactive legend toggles
     const legendItems = document.querySelectorAll('.legend-item[data-legend]');
-    const segmentMap: Record<string, SVGCircleElement> = {
-      saldo: this.dSaldo,
-      multa: this.dMulta,
-      prop: this.dProp,
+    const segmentMap: Record<string, SVGCircleElement[]> = {
+      saldo: [this.dSaldo, this.dpSaldo],
+      multa: [this.dMulta, this.dpMulta],
+      prop: [this.dProp, this.dpProp],
     };
 
     legendItems.forEach((item) => {
@@ -309,12 +365,17 @@ export class UIAdapter {
         const legend = item.getAttribute('data-legend');
         if (!legend || !segmentMap[legend]) return;
 
-        const circle = segmentMap[legend];
+        const circles = segmentMap[legend];
+        if (!circles) return;
+
+        const firstCircle = circles[0];
+        if (!firstCircle) return;
+
         const isChecked = item.getAttribute('aria-checked') === 'true';
         const newChecked = !isChecked;
 
         item.setAttribute('aria-checked', String(newChecked));
-        circle.classList.toggle('donut-segment-hidden', !newChecked);
+        circles.forEach((c) => c.classList.toggle('donut-segment-hidden', !newChecked));
       });
 
       item.addEventListener('keydown', (e: Event) => {
@@ -327,11 +388,6 @@ export class UIAdapter {
     });
   }
 
-  private bindModalEvents(): void {
-    // Modal functionality replaced with inline accordion
-    // No modal events needed anymore
-  }
-
   // ── Validation & Calculation ─────────────────────────────────
 
   private handleCalcular(): void {
@@ -341,6 +397,13 @@ export class UIAdapter {
 
     try {
       this.clearErrors();
+
+      // Guard: enforce legal constraints before calculation
+      const constraintError = this.validateContractConstraints();
+      if (constraintError) {
+        this.showError(constraintError, null);
+        return;
+      }
 
       // Parse and validate salary
       const salario = FormatAdapter.parseMonetaryInput(this.salarioEl.value);
@@ -519,6 +582,10 @@ export class UIAdapter {
     this.setDonutArc(this.dMulta, multaArc, multaOffset);
     this.setDonutArc(this.dProp, propArc, propOffset);
 
+    this.setDonutArc(this.dpSaldo, saldoArc, saldoOffset);
+    this.setDonutArc(this.dpMulta, multaArc, multaOffset);
+    this.setDonutArc(this.dpProp, propArc, propOffset);
+
     // Add data attributes for tooltips
     const formatValue = (cents: number) => (cents / 100).toLocaleString('pt-BR', {
       minimumFractionDigits: 2,
@@ -584,6 +651,13 @@ export class UIAdapter {
       valorSaqueAnualEl.textContent = resultado.saqueAniversario.valorSaque.toBRL();
     } else if (infoBox) {
       infoBox.style.display = 'none';
+    }
+
+    // Saque-Aniversário restriction warning (Art. 20-D, Lei 8.036/90)
+    const restrictionBox = document.getElementById('saqueAniversarioRestriction');
+    if (restrictionBox) {
+      restrictionBox.style.display =
+        resultado.saqueAniversario ? 'flex' : 'none';
     }
   }
 

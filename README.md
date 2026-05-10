@@ -39,7 +39,7 @@ O sistema consiste em uma ferramenta de simulação trabalhista que permite ao u
 * **8 Modalidades de Rescisão** — Enum exaustivo com multas diferenciadas (40%, 20%, 0%)
 * **Saque por Doença Grave** — Liberação integral de 100% do saldo (Lei 8.036/90)
 * **Saque-Aniversário** — Tabela oficial de 7 faixas com parcela fixa
-* **43 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
+* **58 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
 * **Acessibilidade WCAG 2.1 AA** — ARIA labels, live regions, navegação por teclado
 
 ---
@@ -66,8 +66,7 @@ src/
 │   └── ThemeAdapter.ts           # Tema claro/escuro com persistência
 ├── main.ts                       # Entry point (bootstrapper)
 ├── index.html                    # UI Dashboard
-├── css/                          # Estilos (inalterado)
-└── js/                           # JS legado (mantido para referência)
+└── css/                          # Estilos
 ```
 
 ### Hierarquia de Classes
@@ -156,27 +155,20 @@ Na rescisão, o optante **não saca o saldo** (fica retido), mas **recebe a mult
 
 ## Testes Automatizados
 
-O projeto inclui **43 testes automatizados** executados com **Vitest**:
+O projeto inclui **58 testes automatizados** executados com **Vitest**:
 
 ```bash
-npm test          # Executa todos os testes
-npm run test:watch  # Modo watch (desenvolvimento)
+npm test              # Executa todos os testes
+npm run test:watch    # Modo watch (desenvolvimento)
+npm run test:coverage # Relatório de cobertura (threshold 80%)
 ```
 
 ### Cobertura de Cenários
 
-| Suite | Testes | Validação |
-|-------|--------|-----------|
-| Money Value Object | 6 | Precisão centesimal, IEEE 754, formatação BRL |
-| Depósito Mensal | 3 | Alíquota 8% CLT, 2% Aprendiz, input zero |
-| Juros Compostos | 3 | Acumulação 12 e 60 meses, meses zero |
-| Multa Rescisória | 7 | 40%, 20%, 0% para cada tipo de rescisão |
-| Doença Grave | 4 | 100% liberação para câncer, HIV, terminal |
-| ADI 5090 (TR/IPCA) | 2 | IPCA substituto quando TR=0, TR dominante |
-| Saque-Aniversário | 4 | Faixas extremas, impacto na rescisão |
-| Integração Completa | 4 | Rescisão com verbas, saque-aniv., doença grave |
-| Validação de Inputs | 6 | Salário zero, datas invertidas, período >50 anos |
-| Verbas Proporcionais | 4 | 13º, férias+1/3, limites, negativos |
+| Arquivo | Testes | Escopo |
+|---------|--------|--------|
+| `calculator.test.ts` | 41 | Money VO, depósito, juros, multas (7 tipos), doença grave, ADI 5090, saque-aniversário, integração completa, validação, verbas proporcionais |
+| `legal-boundary.test.ts` | 17 | Doença grave (5), Acordo 484-A (3), Integridade de multas (3), Tipos de contrato (4: CLT 8%, Aprendiz 2%, Doméstico 3.2%) |
 
 ---
 
@@ -198,12 +190,17 @@ npm install
 ### Scripts Disponíveis
 
 ```bash
-npm run dev           # Inicia servidor Vite com HMR
-npm run build         # Type-check + build para produção (dist/)
-npm run preview       # Preview do build de produção
-npm test              # Executa testes (Vitest)
-npm run test:watch    # Testes em modo watch
-npm run typecheck     # Verificação de tipos (tsc --noEmit)
+npm run dev             # Inicia servidor Vite com HMR
+npm run build           # Type-check + build para produção (dist/)
+npm run preview         # Preview do build de produção
+npm test                # Executa testes (Vitest)
+npm run test:watch      # Testes em modo watch
+npm run test:coverage   # Relatório de cobertura (80% threshold)
+npm run typecheck       # Verificação de tipos (tsc --noEmit)
+npm run lint            # ESLint
+npm run lint:fix        # ESLint com correção automática
+npm run format          # Prettier
+npm run format:check    # Verificação de formatação
 ```
 
 ---
@@ -222,10 +219,9 @@ PROJETO-FGTS/
 │   │   └── services/        # Services (cálculos puros)
 │   ├── adapters/            # Adapter Layer (UI/Formato)
 │   ├── css/                 # Estilos (CSS Variables)
-│   └── js/                  # JS legado (referência)
 ├── tests/unit/              # Testes automatizados
-│   ├── calculator.test.ts   # Suíte TS (43 testes)
-│   └── calculator.test.js   # Suíte JS legado
+│   ├── calculator.test.ts   # Suíte principal (41 testes)
+│   └── legal-boundary.test.ts # Limites legais (17 testes)
 ├── docs/                    # Documentação técnica
 ├── tsconfig.json            # Configuração TypeScript (strict)
 ├── vite.config.ts           # Configuração Vite + Vitest

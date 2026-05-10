@@ -23,6 +23,7 @@
     <!-- Live region para leitores de tela -->
     <div id="results-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
     <div id="theme-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    <div id="theme-fade-overlay" class="theme-fade-overlay" aria-hidden="true"></div>
 
     <div class="app-shell">
       <!-- ═══ SIDEBAR / PAINEL DE ENTRADA ═══ -->
@@ -282,6 +283,16 @@
             <i data-lucide="graduation-cap" class="icon-xs" aria-hidden="true"></i>
             Extensão Universitária · UNINTER
           </span>
+          <a
+            href="https://github.com/AndersonTavares0/Projeto-FGTS"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="github-link"
+            aria-label="Repositório do projeto no GitHub"
+          >
+            <i data-lucide="github" class="icon-sm"></i>
+            <span>Código-fonte</span>
+          </a>
         </div>
       </aside>
 
@@ -375,7 +386,19 @@
                 role="img"
                 aria-label="Gráfico de distribuição dos valores"
               >
-                <defs></defs>
+                <defs>
+                  <!-- WCAG 2.2: padrões de textura para suporte a daltonismo -->
+                  <pattern id="pattern-saldo" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="8" stroke="var(--donut-saldo)" stroke-width="2" opacity="0.35" />
+                  </pattern>
+                  <pattern id="pattern-multa" width="6" height="6" patternUnits="userSpaceOnUse">
+                    <circle cx="3" cy="3" r="1.5" fill="var(--donut-multa)" opacity="0.40" />
+                  </pattern>
+                  <pattern id="pattern-prop" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+                    <line x1="0" y1="0" x2="0" y2="7" stroke="var(--donut-prop)" stroke-width="1.5" opacity="0.35" />
+                    <line x1="0" y1="0" x2="7" y2="0" stroke="var(--donut-prop)" stroke-width="1.5" opacity="0.35" />
+                  </pattern>
+                </defs>
                 <!-- Faixas do donut (order: bg > saldo > multa > props) -->
                 <circle class="donut-bg" cx="100" cy="100" r="78" />
                 <circle
@@ -414,6 +437,10 @@
                   role="graphics-symbol"
                   aria-label="Verbas Proporcionais"
                 />
+                <!-- Overlays de textura WCAG (pattern-fill circles seguem os mesmos dash-arrays) -->
+                <circle class="donut-pattern-overlay" id="dp-saldo" cx="100" cy="100" r="78" stroke-dasharray="0 490" stroke-dashoffset="122.5" fill="none" />
+                <circle class="donut-pattern-overlay" id="dp-multa" cx="100" cy="100" r="78" stroke-dasharray="0 490" stroke-dashoffset="122.5" fill="none" />
+                <circle class="donut-pattern-overlay" id="dp-prop" cx="100" cy="100" r="78" stroke-dasharray="0 490" stroke-dashoffset="122.5" fill="none" />
                 <!-- Buraco central -->
                 <circle class="donut-hole" cx="100" cy="100" r="56" />
                 <!-- Label central -->
@@ -464,6 +491,11 @@
                 <p>Saque Aniversário Estimado: <strong id="valorSaqueAnual">—</strong></p>
               </div>
 
+              <div id="saqueAniversarioRestriction" class="info-box restriction-warning" style="display: none">
+                <i data-lucide="alert-triangle" class="icon-xs"></i>
+                <p><strong>Atenção:</strong> Com o Saque-Aniversário ativo, você <strong>não pode sacar o saldo integral do FGTS</strong> na rescisão. Apenas a multa rescisória (40%/20%) permanece disponível para saque imediato.</p>
+              </div>
+
               <!-- Barra de progresso proporcional -->
               <div class="progress-bar-section">
                 <p class="progress-label">Distribuição proporcional</p>
@@ -471,7 +503,6 @@
                   class="progress-bar"
                   role="img"
                   aria-label="Barra de proporção dos valores"
-                  id="progressBar"
                 >
                   <div class="progress-saldo" id="bar-saldo" style="width: 0%"></div>
                   <div class="progress-multa" id="bar-multa" style="width: 0%"></div>

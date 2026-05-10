@@ -1,8 +1,9 @@
 /* Shell da Aplicação */
 .app-shell {
   display: grid;
-  grid-template-columns: var(--sidebar-w) 1fr;
-  min-height: 100vh;
+  grid-template-columns: var(--sidebar-w-min) 1fr;
+  min-height: 100dvh;
+  max-width: 100%;
 }
 
 @media (max-width: 900px) {
@@ -130,4 +131,27 @@
   gap: 6px;
   font-size: 11px;
   color: var(--text-muted);
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  opacity: 0.65;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.github-link:hover,
+.github-link:focus-visible {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.github-link svg {
+  width: 16px;
+  height: 16px;
 }

@@ -17,162 +17,91 @@
 
 Este documento descreve a arquitetura técnica e as decisões de implementação do **Simulador de Rescisão e FGTS**, uma ferramenta educacional desenvolvida como parte de um projeto de extensão universitária do curso de **Engenharia de Software da UNINTER**. O sistema tem como objetivo demonstrar a tradução precisa de requisitos legais da Consolidação das Leis do Trabalho (CLT) em código funcional, mantendo rigor técnico e conformidade com boas práticas de desenvolvimento.
 
-**Versão Atual**: 1.1 (Conformidade Legal Avançada)
-**Última Atualização**: 05/05/2026
+**Versão Atual**: 2.0 (TypeScript + DDD)
+**Última Atualização**: 09/05/2026
 **Status**: Produção - Projeto de Extensão Universitária
 
 ---
 
 ## Arquitetura de Dados
 
-### Estratégia de Manipulação Monetária com Inteiros
+### Estratégia de Manipulação Monetária com Money (Decimal.js)
 
-Para evitar as imprecisões inerentes ao padrão de ponto flutuante IEEE 754, o sistema adota uma arquitetura baseada em **aritmética inteira** para todas as operações monetárias. Esta decisão técnica elimina erros de arredondamento cumulativos que poderiam comprometer a exatidão dos cálculos trabalhistas.
+Para evitar as imprecisões inerentes ao padrão de ponto flutuante IEEE 754, o sistema utiliza o Value Object `Money` que encapsula `Decimal.js` com precisão 20 dígitos e arredondamento `ROUND_HALF_EVEN` (Banker's rounding). Esta decisão elimina erros de arredondamento cumulativos que poderiam comprometer a exatidão dos cálculos trabalhistas.
 
 #### Implementação Técnica
 
-Todos os valores monetários são convertidos e armazenados como **inteiros representando centavos**. Por exemplo:
+O Value Object `Money` em `src/core/types.ts` oferece:
 
-| Valor Real (BRL) | Representação Interna (centavos) |
-|------------------|----------------------------------|
-| R$ 1.250,50      | `125050`                         |
-| R$ 3.000,00      | `300000`                         |
-| R$ 0,99          | `99`                             |
+```typescript
+// Construtores seguros — preferir fromReais para inputs humanos
+Money.fromReais(1250.50);   // R$ 1.250,50  → Decimal 1250.5
+Money.fromCents(125050);    // 125050 centavos → Decimal 1250.5
 
-#### Funções de Conversão
+// Operações imutáveis — retornam nova instância Money
+money.add(outro);           // Soma
+money.subtract(outro);      // Subtração
+money.multiply(fator);      // Multiplicação por escalar
+money.percentage(40);       // 40% do valor
+money.divide(3);            // Divisão
 
-```javascript
-/**
- * Converte valor monetário (string ou float) para inteiro em centavos.
- * Ex: "1250.50" -> 125050, 1250.5 -> 125050
- */
-function toCents(value) {
-  if (typeof value === 'string') {
-    const cleaned = value.replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
-    value = parseFloat(cleaned);
-  }
-  if (isNaN(value)) return 0;
-  return Math.round(value * 100);
-}
-
-/**
- * Formata inteiro em centavos para string monetária BRL
- * Ex: 125050 -> "R$ 1.250,50"
- */
-function formatBRLFromCents(cents) {
-  const formatter = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-  return formatter.format(cents / 100);
-}
+// Consultas
+money.toBRL();              // "R$ 1.250,50"
+money.isPositive();         // Validação de positividade
+money.toString();           // Representação decimal bruta
 ```
 
 #### Vantagens desta Abordagem
 
-- **Precisão Garantida**: Elimina erros como `0.1 + 0.2 !== 0.3` comuns em ponto flutuante
-- **Arredondamento Controlado**: Uso explícito de `Math.round()` em cada operação crítica
-- **Consistência**: Todas as funções de cálculo retornam inteiros em centavos
-- **Compatibilidade**: A formatação final utiliza `Intl.NumberFormat` para exibição correta no padrão brasileiro
+- **Precisão Garantida**: Decimal.js opera com inteiros internamente, eliminando erros IEEE 754
+- **Imutabilidade**: Cada operação retorna nova instância, prevenindo efeitos colaterais
+- **Type Safety**: TypeScript garante que apenas `Money` trafega entre serviços
+- **Arredondamento Padronizado**: `ROUND_HALF_EVEN` (norma contábil brasileira) em todas as operações
+- **Consistência**: Todos os serviços recebem e retornam `Money`, nunca `number`
 
 ---
 
 ## Organização do Código
 
-### Estrutura de Módulos
-
-O projeto adota uma organização por responsabilidade, com módulos independentes que facilitam a manutenção e o teste isolado:
+A v2.0 foi reescrita em TypeScript seguindo Domain-Driven Design (DDD). A arquitetura separa o código em três camadas:
 
 ```
-src/js/
-├── script.js         # Orquestrador principal (UI e eventos)
-├── calculator.js     # Módulo de cálculos (regras CLT puras)
-├── validation.js     # Validação e sanitização de entradas
-└── theme-manager.js  # Gerenciamento de temas (persistência)
+src/
+├── core/                    # DOMAIN LAYER — regras de negócio puras
+│   ├── types.ts             # Enums, interfaces, Value Object Money
+│   ├── entities/
+│   │   └── ContratoTrabalho.ts
+│   └── services/
+│       ├── FGTSCalculatorService.ts
+│       ├── CorrecaoMonetariaService.ts
+│       ├── MultaService.ts
+│       ├── SaqueAniversarioService.ts
+│       └── DoencaGraveService.ts
+├── adapters/                # ADAPTER LAYER — UI, formatação, tema
+│   ├── UIAdapter.ts
+│   ├── FormatAdapter.ts
+│   └── ThemeAdapter.ts
+├── main.ts                  # Entry point
+├── index.html               # Dashboard
+├── css/                     # Estilos (CSS variables + modules)
+└── types/                   # Declarações de tipos
+    └── lucide.d.ts
 ```
 
-### Responsabilidades por Módulo
+### Camadas e Responsabilidades
 
-#### 1. `calculator.js` - Módulo de Cálculo FGTS
-**Função**: Concentra exclusivamente lógica matemática de cálculos trabalhistas
-
-```javascript
-const FGTSCalculator = {
-  calcularDepositoMensal(salarioCents),
-  calcularSaldoFGTS(salarioCents, meses),
-  calcularMultaRescisoria(saldoCents, motivo),
-  calcularDecimoTerceiro(salarioCents, meses),
-  calcularFeriasProporcionais(salarioCents, meses)
-};
-```
-
-**Características**:
-- Funções puras (sem efeitos colaterais)
-- Sem dependência de DOM ou elementos HTML
-- Testável isoladamente
-- Documentação JSDoc completa
-
-#### 2. `validation.js` - Módulo de Validação
-**Função**: Validação, sanitização e normalização de dados de entrada
-
-```javascript
-const ValidationModule = {
-  validarSalario(valor),
-  validarData(data),
-  validarPeriodo(inicio, fim),
-  sanitizarEntrada(texto),
-  calcularMesesTrabalhados(inicio, termino)
-};
-```
-
-**Validações Implementadas**:
-- Salário: R$ 0,01 a R$ 1.000.000,00 (limite técnico)
-- Datas: Formato YYYY-MM-DD válido
-- Período: Data de início anterior à data de fim
-- Campos obrigatórios preenchidos
-
-#### 3. `theme-manager.js` - Gerenciador de Temas
-**Função**: Gerenciamento de temas com persistência em localStorage
-
-```javascript
-const ThemeManager = {
-  iniciar(toggleButton),
-  aplicarTema(tema),
-  getTemaAtual()
-};
-```
-
-**Recursos**:
-- Persistência entre sessões
-- Detecção de preferência do sistema operacional
-- Transições suaves CSS
-- Acessibilidade (focus visible)
-
-#### 4. `script.js` - Orquestrador Principal
-**Função**: Coordenação entre módulos e manipulação do DOM
-
-```javascript
-// Importa módulos especializados
-import { FGTSCalculator } from './calculator.js';
-import { ValidationModule } from './validation.js';
-import { ThemeManager } from './theme-manager.js';
-
-// Orquestra fluxos sem conter lógica de negócio
-function inicializarApp() {
-  ThemeManager.iniciar();
-  configurarEventListeners();
-}
-```
-
-### Benefícios desta Organização
-
-| Benefício | Descrição |
-|-----------|-----------|
-| **Testabilidade** | Cada módulo pode ser testado isoladamente |
-| **Manutenibilidade** | Alterações localizadas não afetam outros módulos |
-| **Reusabilidade** | Módulos podem ser importados em outros projetos |
-| **Legibilidade** | Código organizado por responsabilidade |
-| **Escalabilidade** | Novas funcionalidades adicionadas sem refatoração massiva |
+| Camada | Classe | Responsabilidade |
+|--------|--------|------------------|
+| **Value Object** | `Money` | Precisão centesimal com Decimal.js, operações imutáveis |
+| **Entity** | `ContratoTrabalho` | Validação de contrato, cálculo de meses |
+| **Service** | `FGTSCalculatorService` | Orquestrador central |
+| **Service** | `CorrecaoMonetariaService` | Juros TR/IPCA + ADI 5090 |
+| **Service** | `MultaService` | Multas por tipo de rescisão |
+| **Service** | `SaqueAniversarioService` | 7 faixas oficiais |
+| **Service** | `DoencaGraveService` | Saque integral 100% |
+| **Adapter** | `UIAdapter` | Binding DOM + eventos |
+| **Adapter** | `FormatAdapter` | Formatação BRL, parsing |
+| **Adapter** | `ThemeAdapter` | Tema claro/escuro (localStorage) |
 
 ---
 
@@ -186,14 +115,10 @@ Conforme Artigo 15 da Lei nº 8.036/1990, o empregador deve depositar mensalment
 
 **Importante**: Não há teto para o depósito do FGTS. O percentual de 8% incide sobre 100% do salário bruto, independentemente do valor.
 
-```javascript
-/**
- * Calcula depósito mensal do FGTS (8%) usando aritmética inteira.
- * @param {number} salarioCents - Salário em centavos
- * @returns {number} - Depósito mensal em centavos
- */
-function calcularDepositoMensal(salarioCents) {
-  return Math.round((salarioCents * 8) / 100);
+```typescript
+// Pseudocódigo conceitual — implementação real usa Money (Decimal.js)
+function calcularDepositoMensal(salario: Money): Money {
+  return salario.percentage(8); // 8% do salário bruto
 }
 ```
 
@@ -207,14 +132,10 @@ function calcularDepositoMensal(salarioCents) {
 
 Em casos de dispensa sem justa causa, o empregador deve pagar uma multa equivalente a **40% do saldo total do FGTS** acumulado durante o contrato de trabalho, conforme Artigo 18 da Lei nº 8.036/1990.
 
-```javascript
-/**
- * Calcula multa rescisória de 40% sobre o saldo do FGTS.
- * @param {number} saldoCents - Saldo do FGTS em centavos
- * @returns {number} - Multa em centavos
- */
-function calcularMulta(saldoCents) {
-  return Math.round((saldoCents * 40) / 100);
+```typescript
+// Pseudocódigo conceitual — implementação real usa Money (Decimal.js)
+function calcularMulta(saldo: Money, tipo: TipoRescisao): Money {
+  return saldo.percentage(MultaService.percentualPara(tipo)); // 40%, 20% ou 0%
 }
 ```
 
@@ -224,29 +145,19 @@ O sistema também calcula verbas rescisórias complementares quando solicitado p
 
 #### 13º Salário Proporcional
 
-```javascript
-/**
- * Calcula 13º salário proporcional em centavos.
- * @param {number} salarioCents - Salário em centavos
- * @param {number} meses - Meses trabalhados no ano
- * @returns {number} - 13º proporcional em centavos
- */
-function calcularDecimoTerceiro(salarioCents, meses) {
-  return Math.round((salarioCents * meses) / 12);
+```typescript
+// Pseudocódigo conceitual — implementação real usa Money (Decimal.js)
+function calcularDecimoTerceiro(salario: Money, meses: number): Money {
+  return salario.multiply(meses).divide(12);
 }
 ```
 
 #### Férias Proporcionais + 1/3 Constitucional
 
-```javascript
-/**
- * Calcula férias proporcionais + 1/3 constitucional em centavos.
- * @param {number} salarioCents - Salário em centavos
- * @param {number} meses - Meses trabalhados
- * @returns {number} - Férias + 1/3 em centavos
- */
-function calcularFerias(salarioCents, meses) {
-  return Math.round((salarioCents * meses * 4) / 36);
+```typescript
+// Pseudocódigo conceitual — implementação real usa Money (Decimal.js)
+function calcularFerias(salario: Money, meses: number): Money {
+  return salario.multiply(meses).multiply(4).divide(36); // + 1/3 constitucional
 }
 ```
 
@@ -302,38 +213,23 @@ A implementação está alinhada aos princípios da **Lei Geral de Proteção de
 
 ### Validação e Sanitização de Entradas
 
-O módulo `validation.js` implementa proteções contra entradas maliciosas ou inconsistentes:
+O projeto implementa validação em múltiplas camadas:
 
-```javascript
-/**
- * Sanitiza entrada de texto removendo caracteres potencialmente perigosos
- * @param {string} input - Texto a ser sanitizado
- * @returns {string} - Texto limpo
- */
-function sanitizarEntrada(input) {
-  return input
-    .replace(/[<>\"\'&]/g, '')
-    .trim();
-}
-```
-
-**Validações Implementadas**:
-- Intervalos numéricos válidos (salário positivo, dentro de limites técnicos)
-- Datas em formato correto e cronologicamente consistentes
-- Prevenção contra XSS via sanitização de strings
-- Tratamento de erros com feedback amigável ao usuário
+| Proteção | Implementação | Camada |
+|----------|---------------|--------|
+| Salário zero ou negativo | `Money.isPositive()` retorna false → cálculo retorna zero | Service |
+| Salário acima de R$ 1M | `ContratoTrabalho.validar()` rejeita com mensagem de erro | Entity |
+| Datas futuras inválidas | `FormatAdapter.parseDate()` valida componentes da data | Adapter |
+| Período invertido | `dataTermino < dataInicio` → validação rejeita | Entity |
+| Período > 50 anos | Limite de 18.250 dias → proteção contra overflow | Entity |
+| Input não-numérico | `FormatAdapter.parseMonetaryInput()` sanitiza e valida | Adapter |
+| IEEE 754 float errors | `Money(Decimal.js)` — todas as operações em Decimal | Value Object |
+| Tipo de rescisão inválido | `Record<TipoRescisao, ...>` — TypeScript garante exaustividade | Type System |
+| XSS / Injection | Input sanitizado: `replace(/[R$\s]/g, '')` antes de parse | Adapter |
 
 ### Isolamento de Escopo
 
-O código JavaScript utiliza módulos com escopo próprio (IIFE pattern), prevenindo poluição do escopo global e conflitos com outras bibliotecas:
-
-```javascript
-const FGTSCalculator = (function() {
-  'use strict';
-  // Código do módulo com escopo isolado
-  return { /* API pública */ };
-})();
-```
+O código TypeScript utiliza módulos ES nativos com `verbatimModuleSyntax: true`, prevenindo poluição do escopo global e garantindo que apenas tipos sejam importados como tipo:
 
 ---
 
@@ -410,8 +306,8 @@ O sistema de temas utiliza **CSS Variables centralizadas em `:root`**, proporcio
 ### Feedback Visual Imediato
 
 - Atualização dinâmica dos resultados sem recarregamento da página
-- Gráfico donut com variáveis CSS atualizadas em tempo real
-- Modal explicativo para contextualização dos cálculos
+- Gráfico donut interativo com variáveis CSS atualizadas em tempo real
+- Accordion explicativo inline para contextualização dos cálculos
 - Validações com mensagens claras em caso de erro de preenchimento
 
 ---
@@ -422,91 +318,30 @@ O sistema de temas utiliza **CSS Variables centralizadas em `:root`**, proporcio
 
 O código segue boas práticas de desenvolvimento para facilitar a manutenção futura:
 
-#### Funções Puras e Especializadas
+#### Serviços Especializados
 
-Cada função tem responsabilidade única e bem definida:
+Cada serviço tem responsabilidade única e bem definida, seguindo o princípio Single Responsibility (SOLID):
 
-| Módulo | Função | Responsabilidade | Entrada | Saída |
-|--------|--------|------------------|---------|-------|
-| `calculator` | `toCents()` | Conversão monetária | String ou Number | Integer (centavos) |
-| `calculator` | `formatBRLFromCents()` | Formatação BRL | Integer (centavos) | String formatada |
-| `calculator` | `calcularDepositoMensal()` | Depósito 8% | Centavos | Centavos |
-| `calculator` | `calcularMulta()` | Multa 40% | Centavos | Centavos |
-| `calculator` | `calcularDecimoTerceiro()` | 13º proporcional | Centavos, meses | Centavos |
-| `calculator` | `calcularFerias()` | Férias + 1/3 | Centavos, meses | Centavos |
-| `validation` | `validarSalario()` | Validação salário | Valor | Boolean + erros |
-| `validation` | `validarData()` | Validação data | String | Boolean + erros |
-| `validation` | `sanitizarEntrada()` | Sanitização | String | String limpa |
-| `theme-manager` | `alternarTema()` | Toggle tema | - | - |
-| `theme-manager` | `aplicarTema()` | Aplicar tema | String | - |
+| Serviço | Método Principal | Responsabilidade | Entrada | Saída |
+|---------|-----------------|------------------|---------|-------|
+| `FGTSCalculatorService` | `calcular()` | Orquestração completa | `ContratoTrabalho`, opções | `ResultadoRescisao` |
+| `CorrecaoMonetariaService` | `calcularSaldoComCorrecao()` | Juros TR+3% com piso IPCA | `Money`, meses, taxas | `Money` (saldo corrigido) |
+| `MultaService` | `calcular()` | Multa por tipo de rescisão | `Money` (saldo), `TipoRescisao`, `Money` (total depósitos) | `ResultadoMulta` |
+| `SaqueAniversarioService` | `calcularParcela()` | Parcela por faixa oficial | `Money` (saldo) | `ResultadoSaqueAniversario` |
+| `DoencaGraveService` | `avaliar()` | Elegibilidade + saque integral | `Money` (saldo), doença | `Money`, elegibilidade |
+| `ContratoTrabalho` | `validar()` | Validação de contrato | Dados do formulário | Erros ou contrato válido |
+| `FormatAdapter` | `parseMonetaryInput()` | Sanitização e parsing BRL | String do input | `Money` |
+| `FormatAdapter` | `parseDate()` | Validação de data | String YYYY-MM-DD | `Date` |
+| `ThemeAdapter` | `aplicarTema()` | Tema claro/escuro persistente | String | - |
 
 #### Separação de Responsabilidades
 
-A separação das funções de cálculo permite:
+A arquitetura DDD em camadas permite:
 
-- **Testabilidade Individual**: Cada função pode ser testada isoladamente
-- **Reusabilidade**: Funções podem ser importadas em outros módulos
-- **Manutenção Facilitada**: Alterações em uma regra não afetam outras
-- **Documentação Inline**: JSDoc comments descrevem parâmetros e retorno
-
-```javascript
-/**
- * Calcula depósito mensal do FGTS (8%) usando aritmética inteira.
- * @param {number} salarioCents - Salário em centavos
- * @returns {number} - Total depositado em centavos
- */
-function calcularDepositoMensal(salarioCents) { ... }
-```
-
----
-
-## Considerações Finais
-
-Esta documentação reflete a arquitetura simplificada do Simulador FGTS, com foco em:
-
-1. **Eficiência**: CSS Variables centralizadas, código organizado por responsabilidade
-2. **Precisão**: Aritmética de centavos para evitar erros de ponto flutuante
-3. **Acessibilidade**: Conformidade WCAG 2.1 AA com recursos de tecnologia assistiva
-4. **Manutenibilidade**: Funções puras, documentação clara e separação de concerns
-
-O projeto continua evoluindo como ferramenta educacional de extensão universitária, mantendo o equilíbrio entre simplicidade pragmática e rigor técnico necessário para cálculos trabalhistas precisos.
-
-### Separação de Camadas
-
-O projeto adota separação clássica de camadas:
-
-- **HTML**: Estrutura semântica e conteúdo
-- **CSS**: Estilização e temas (variáveis CSS)
-- **JavaScript**: Lógica de negócio e manipulação do DOM (módulos separados)
-
-### Código Comentado e Documentado
-
-Todas as funções críticas possuem comentários explicativos em português, facilitando:
-
-- Onboarding de novos desenvolvedores
-- Revisão de código por pares
-- Auditoria de conformidade legal
-- Extensão futura das funcionalidades
-
-### Integração Contínua (CI/CD)
-
-O projeto inclui esteira automatizada no GitHub Actions:
-
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run ESLint
-        run: npm run lint
-      - name: Run Unit Tests (Vitest)
-        run: npm test
-```
-
-**Benefícios**:
-- Detecção precoce de erros
-- Garantia de qualidade antes do deploy
-- Documentação executável dos padrões do projeto
+- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (58 testes)
+- **Reusabilidade**: `Money` é o único Value Object que transita entre todas as camadas
+- **Manutenção Facilitada**: Alterações em uma regra não afetam outras — ex: adicionar novo tipo de rescisão requer apenas atualizar `MultaService`
+- **Type Safety**: TypeScript com `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` previne erros em tempo de compilação
 
 ---
 
@@ -514,12 +349,12 @@ jobs:
 
 Este projeto demonstra como requisitos legais complexos podem ser traduzidos em implementações de software precisas e confiáveis. A combinação de:
 
-1. **Arquitetura de dados baseada em inteiros** para precisão monetária absoluta
-2. **Arquitetura modular SOLID** para manutenibilidade e testabilidade
-3. **Implementação fiel das regras da CLT** com validação jurídica implícita
+1. **Value Object `Money` com Decimal.js** para precisão monetária absoluta
+2. **Arquitetura DDD com serviços especializados** para manutenibilidade e testabilidade
+3. **Implementação fiel das regras da CLT** com enum exaustivo de 8 tipos de rescisão
 4. **Compromisso com privacidade** através de processamento client-side
 5. **Acessibilidade inclusiva WCAG 2.1 AA** seguindo padrões internacionais
-6. **Código manutenível** com documentação abrangente e CI/CD
+6. **TypeScript strict** com cobertura de 80% em 58 testes automatizados
 
 Resulta em uma ferramenta educacional robusta que serve tanto como recurso de aprendizado para estudantes quanto como referência de boas práticas de desenvolvimento para projetos de engenharia de software.
 
@@ -528,11 +363,37 @@ Resulta em uma ferramenta educacional robusta que serve tanto como recurso de ap
 Este projeto de extensão universitária contribui para:
 - **Literacia Financeira**: Democratização do acesso a informações trabalhistas
 - **Inclusão Digital**: Ferramenta acessível para pessoas com deficiência
-- **Ensino de Engenharia**: Estudo de caso prático de aplicação de princípios SOLID
+- **Ensino de Engenharia**: Estudo de caso prático de DDD, Decimal.js e SOLID
 - **Responsabilidade Social**: Software gratuito para conscientização de direitos
 
 ---
 
 **Projeto de Extensão Universitária - UNINTER**
 Curso de Engenharia de Software
-Documento Técnico Versão 1.0 (Refatorada)
+Documento Técnico Versão 2.0 (TypeScript + DDD)
+
+### Integração Contínua (CI/CD)
+
+O projeto inclui esteira automatizada no GitHub Actions (`.github/workflows/static.yml`):
+
+```yaml
+jobs:
+  build-and-deploy:
+    steps:
+      - name: Type Check
+        run: npm run typecheck
+      - name: Unit Tests (Vitest)
+        run: npm test
+      - name: Production Build
+        run: npm run build
+      - name: Deploy to GitHub Pages
+        ...
+```
+
+**Pipeline**: `npm ci` → `typecheck` → `test` → `build` → deploy para GitHub Pages
+
+**Benefícios**:
+- Detecção precoce de erros de tipo e lógica
+- Garantia de qualidade antes do deploy
+- Deploy automático ao dar push em `main`
+- Threshold de cobertura: 80% (lines, branches, functions, statements)

@@ -103,14 +103,4 @@ export class CorrecaoMonetariaService {
       taxaEfetivaAnual: taxaEfetiva,
     };
   }
-
-  /** Retorna a taxa mensal de juros legais (3% a.a. convertida) */
-  static get jurosMensal(): Decimal {
-    return JUROS_MENSAL;
-  }
-
-  /** Retorna a TR estimada mensal padrão */
-  static get trEstimadaMensal(): Decimal {
-    return TR_ESTIMADA_MENSAL;
-  }
 }
