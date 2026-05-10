@@ -5,12 +5,6 @@
 
 import { Money, TipoRescisao } from '../core/types';
 
-// ─── Formatters em cache para performance ────────────────────────────────────
-const brlFormatter = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-});
-
 const dateFullFormatter = new Intl.DateTimeFormat('pt-BR', {
   weekday: 'long',
   day: 'numeric',
@@ -55,16 +49,6 @@ const LABELS_RESCISAO: Record<TipoRescisao, { label: string; cssClass: string }>
 };
 
 export class FormatAdapter {
-  /** Formata Money para string BRL (R$ 1.234,56) */
-  static formatBRL(money: Money): string {
-    return money.toBRL();
-  }
-
-  /** Formata centavos brutos para BRL */
-  static formatCentsBRL(cents: number): string {
-    return brlFormatter.format(cents / 100);
-  }
-
   /** Calcula percentual formatado (ex: "45.2%") */
   static formatPercent(part: number, total: number): string {
     if (total <= 0) return '0%';

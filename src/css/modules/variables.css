@@ -7,112 +7,129 @@
 }
 
 :root {
-  /* Cores Base (Dark Mode Padrão) */
-  --bg-base: #070c12;
-  --bg-surface: #0d1620;
-  --bg-elevated: #131f2e;
-  --bg-hover: #1a2840;
-  --bg-input: #0a1219;
+  /* ═══ Fundos — Deep Sapphire Navy ═══ */
+  --bg-base: #060b14;
+  --bg-surface: #0c1526;
+  --bg-elevated: #111d34;
+  --bg-hover: #182a48;
+  --bg-input: #080e1c;
 
-  /* Bordas */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-mid: rgba(255, 255, 255, 0.11);
-  --border-focus: #00d17a;
+  /* ═══ Bordas ═══ */
+  --border-subtle: rgba(255, 255, 255, 0.055);
+  --border-mid: rgba(255, 255, 255, 0.10);
+  --border-focus: #22d3a0;
 
-  /* Textos */
-  --text-primary: #e2edf5;
-  --text-secondary: #7a9ab8;
-  --text-muted: #4a6680;
-  --text-on-accent: #030e09;
+  /* ═══ Textos — Cool White / Blue-Gray ═══ */
+  --text-primary: #e0ecfa;
+  --text-secondary: #8099bb;
+  --text-muted: #4f6788;
+  --text-on-accent: #021010;
 
-  /* Acentos e Cores de Destaque */
-  --accent: #00d17a;
-  --accent-dim: rgba(0, 209, 122, 0.12);
-  --accent-glow: rgba(0, 209, 122, 0.25);
+  /* ═══ Acento Principal — Vibrant Emerald ═══ */
+  --accent: #22d3a0;
+  --accent-dim: rgba(34, 211, 160, 0.10);
+  --accent-glow: rgba(34, 211, 160, 0.22);
 
-  --teal: #00bfa5;
-  --teal-dim: rgba(0, 191, 165, 0.12);
+  /* ═══ Cores Semânticas ═══ */
+  --teal: #14b8a6;
+  --teal-dim: rgba(20, 184, 166, 0.10);
 
-  --blue: #3b8fe0;
-  --blue-dim: rgba(59, 143, 224, 0.12);
+  --blue: #4da8ff;
+  --blue-dim: rgba(77, 168, 255, 0.10);
 
-  --amber: #f0a418;
-  --amber-dim: rgba(240, 164, 24, 0.12);
+  --amber: #f5b940;
+  --amber-dim: rgba(245, 185, 64, 0.10);
 
-  --purple: #9b7aea;
-  --purple-dim: rgba(155, 122, 234, 0.12);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167, 139, 250, 0.10);
 
   --danger: #f87171;
-  --danger-dim: rgba(248, 113, 113, 0.15);
+  --danger-dim: rgba(248, 113, 113, 0.12);
 
-  /* Gráfico Donut */
-  --donut-saldo: #00d17a;
-  --donut-multa: #3b8fe0;
-  --donut-prop: #f0a418;
-  --donut-bg: rgba(255, 255, 255, 0.05);
+  /* ═══ Donut Chart ═══ */
+  --donut-saldo: #22d3a0;
+  --donut-multa: #4da8ff;
+  --donut-prop: #f5b940;
+  --donut-bg: rgba(255, 255, 255, 0.04);
 
-  /* Dimensões e Layout */
+  /* ═══ Dimensões ═══ */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-xl: 22px;
   --radius-full: 999px;
-  --sidebar-w: 340px;
+  --sidebar-w-min: clamp(280px, 30vw, 380px);
 
-  /* Transições e Fontes */
+  /* ═══ Tipografia Fluida ═══ */
+  --fs-hero-value: clamp(22px, 2vw + 6px, 28px);
+  --fs-metric-value: clamp(16px, 1.5vw + 4px, 20px);
+  --fs-result-title: clamp(17px, 2.5vw + 4px, 26px);
+  --fs-body: clamp(12px, 1vw + 6px, 14px);
+  --fs-label: clamp(11px, 0.8vw + 4px, 13px);
+  --fs-caption: 11px;
+  --fs-button: clamp(13px, 1vw + 4px, 15px);
+
+  /* ═══ Espaçamento Fluido ═══ */
+  --pad-panel: clamp(16px, 4vw, 40px);
+  --pad-card: clamp(16px, 1.5vw + 4px, 22px);
+  --pad-card-featured: clamp(20px, 2vw + 4px, 26px);
+
+  /* ═══ Transições & Fontes ═══ */
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   --font-ui: 'Outfit', system-ui, sans-serif;
   --font-mono: 'DM Mono', monospace;
 }
 
+/* ═══ Transição global de tema ═══ */
 :root,
 [data-theme='dark'],
 [data-theme='light'] {
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
+/* ═══ Tema Claro — Cool White / Slate ═══ */
 [data-theme='light'] {
-  --bg-base: #f0f4f8;
+  --bg-base: #f2f5f9;
   --bg-surface: #ffffff;
-  --bg-elevated: #f7fafb;
-  --bg-hover: #edf2f7;
+  --bg-elevated: #f8f9fc;
+  --bg-hover: #edf1f7;
   --bg-input: #ffffff;
 
-  --border-subtle: rgba(0, 0, 0, 0.07);
-  --border-mid: rgba(0, 0, 0, 0.12);
-  --border-focus: #009e5a;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-mid: rgba(0, 0, 0, 0.10);
+  --border-focus: #1ab887;
 
-  --text-primary: #0f1e2e;
-  --text-secondary: #4a6680;
-  --text-muted: #8aaac4;
+  --text-primary: #0d1b2e;
+  --text-secondary: #4a6280;
+  --text-muted: #8a9ebb;
   --text-on-accent: #ffffff;
 
-  --accent: #009e5a;
-  --accent-dim: rgba(0, 158, 90, 0.1);
-  --accent-glow: rgba(0, 158, 90, 0.2);
+  --accent: #1ab887;
+  --accent-dim: rgba(26, 184, 135, 0.08);
+  --accent-glow: rgba(26, 184, 135, 0.18);
 
-  --teal: #00897b;
-  --teal-dim: rgba(0, 137, 123, 0.1);
+  --teal: #0d9488;
+  --teal-dim: rgba(13, 148, 136, 0.08);
 
-  --blue: #1e6ec8;
-  --blue-dim: rgba(30, 110, 200, 0.1);
+  --blue: #2979d4;
+  --blue-dim: rgba(41, 121, 212, 0.08);
 
-  --amber: #c97c00;
-  --amber-dim: rgba(201, 124, 0, 0.1);
+  --amber: #d4860a;
+  --amber-dim: rgba(212, 134, 10, 0.08);
 
-  --purple: #7048c8;
-  --purple-dim: rgba(112, 72, 200, 0.1);
+  --purple: #7c5cdf;
+  --purple-dim: rgba(124, 92, 223, 0.08);
 
   --danger: #dc2626;
-  --danger-dim: rgba(220, 38, 38, 0.1);
+  --danger-dim: rgba(220, 38, 38, 0.08);
 
-  --donut-saldo: #009e5a;
-  --donut-multa: #1e6ec8;
-  --donut-prop: #c97c00;
-  --donut-bg: rgba(0, 0, 0, 0.06);
+  --donut-saldo: #1ab887;
+  --donut-multa: #2979d4;
+  --donut-prop: #d4860a;
+  --donut-bg: rgba(0, 0, 0, 0.05);
 }

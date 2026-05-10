@@ -68,13 +68,30 @@ export class ThemeAdapter {
   }
 
   private applyTheme(theme: Theme): void {
-    document.documentElement.setAttribute('data-theme', theme);
+    const overlay = document.getElementById('theme-fade-overlay');
 
-    if (this.toggleButton) {
-      const iconName = theme === 'dark' ? 'sun' : 'moon';
-      this.toggleButton.innerHTML = `<i data-lucide="${iconName}" class="icon-sm"></i>`;
-      this.toggleButton.setAttribute('aria-pressed', String(theme === 'dark'));
-      window.lucide?.createIcons({ nodes: [this.toggleButton] });
+    const apply = () => {
+      document.documentElement.setAttribute('data-theme', theme);
+
+      if (this.toggleButton) {
+        const iconName = theme === 'dark' ? 'sun' : 'moon';
+        this.toggleButton.innerHTML = `<i data-lucide="${iconName}" class="icon-sm"></i>`;
+        this.toggleButton.setAttribute('aria-pressed', String(theme === 'dark'));
+        window.lucide?.createIcons({ nodes: [this.toggleButton] });
+      }
+
+      if (overlay) {
+        requestAnimationFrame(() => {
+          overlay.classList.remove('active');
+        });
+      }
+    };
+
+    if (overlay) {
+      overlay.classList.add('active');
+      setTimeout(() => apply(), 100);
+    } else {
+      apply();
     }
   }
 

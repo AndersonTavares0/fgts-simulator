@@ -76,14 +76,4 @@ export class MultaService {
       fundamentoLegal: regra.fundamento,
     };
   }
-
-  /** Verifica se o tipo de rescisão dá direito à multa */
-  static temDireitoMulta(tipoRescisao: TipoRescisao): boolean {
-    return (REGRAS_MULTA[tipoRescisao]?.percentual ?? 0) > 0;
-  }
-
-  /** Retorna o percentual de multa para um tipo de rescisão */
-  static getPercentual(tipoRescisao: TipoRescisao): number {
-    return REGRAS_MULTA[tipoRescisao]?.percentual ?? 0;
-  }
 }
