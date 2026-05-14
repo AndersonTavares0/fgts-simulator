@@ -422,12 +422,28 @@ describe('ContratoTrabalho — Validação de Inputs', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('deve calcular meses trabalhados com regra CLT dos 15 dias', () => {
+  it('deve calcular meses trabalhados com regra CLT dos 15 dias (12 meses)', () => {
     const meses = ContratoTrabalho.calcularMesesTrabalhados(
       new Date(2024, 0, 1),
       new Date(2025, 0, 1),
     );
     expect(meses).toBe(12);
+  });
+
+  it('deve retornar 0 meses para contrato < 15 dias (Art. 146 CLT)', () => {
+    const meses = ContratoTrabalho.calcularMesesTrabalhados(
+      new Date(2024, 5, 1),
+      new Date(2024, 5, 10), // 10 dias
+    );
+    expect(meses).toBe(0);
+  });
+
+  it('deve retornar 1 mês para contrato de 15 dias exatos', () => {
+    const meses = ContratoTrabalho.calcularMesesTrabalhados(
+      new Date(2024, 5, 1),
+      new Date(2024, 5, 15),
+    );
+    expect(meses).toBe(1);
   });
 });
 
