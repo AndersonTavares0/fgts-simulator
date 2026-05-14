@@ -92,7 +92,7 @@ export class ContratoTrabalho {
     const meses = Math.floor(totalDays / 30);
     const diasRestantes = totalDays % 30;
     
-    return diasRestantes >= DIAS_MINIMO_MES_COMPLETO ? meses + 1 : Math.max(1, meses);
+    return diasRestantes >= DIAS_MINIMO_MES_COMPLETO ? meses + 1 : Math.max(0, meses);
   }
 
 }
