@@ -28,11 +28,11 @@ const REGRAS_MULTA = {
   },
   [TipoRescisao.DOENCA_GRAVE]: {
     percentual: 0,
-    fundamento: 'Saque autorizado (Art. 20, XIII, Lei 8.036/90) sem multa rescisória',
+    fundamento: 'Art. 20, XIII, Lei 8.036/90 — Saque integral (isento de multa patronal)',
   },
   [TipoRescisao.APOSENTADORIA]: {
     percentual: 0,
-    fundamento: 'Extinção do contrato / Saque autorizado (Art. 20, III, Lei 8.036/90) sem multa',
+    fundamento: 'Art. 20, III, Lei 8.036/90 — Saque integral (isento de multa patronal)',
   },
   [TipoRescisao.FALECIMENTO]: {
     percentual: 0,
