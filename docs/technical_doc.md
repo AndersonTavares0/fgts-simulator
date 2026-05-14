@@ -48,7 +48,7 @@ money.divide(3);            // Divisão
 // Consultas
 money.toBRL();              // "R$ 1.250,50"
 money.isPositive();         // Validação de positividade
-money.toString();           // Representação decimal bruta
+money.cents;                // Número de centavos (125050)
 ```
 
 #### Vantagens desta Abordagem
@@ -372,7 +372,7 @@ Cada serviço tem responsabilidade única e bem definida, seguindo o princípio 
 
 A arquitetura DDD em camadas permite:
 
-- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (59 testes)
+- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (61 testes)
 - **Reusabilidade**: `Money` é o único Value Object que transita entre todas as camadas
 - **Manutenção Facilitada**: Alterações em uma regra não afetam outras — ex: adicionar novo tipo de rescisão requer apenas atualizar `MultaService`
 - **Type Safety**: TypeScript com `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` previne erros em tempo de compilação
@@ -388,7 +388,7 @@ Este projeto demonstra como requisitos legais complexos podem ser traduzidos em 
 3. **Implementação fiel das regras da CLT** com enum exaustivo de 8 tipos de rescisão
 4. **Compromisso com privacidade** através de processamento client-side
 5. **Acessibilidade inclusiva WCAG 2.1 AA** seguindo padrões internacionais
-6. **TypeScript strict** com cobertura de 80% em 59 testes automatizados
+6. **TypeScript strict** com cobertura de 80% em 61 testes automatizados
 
 Resulta em uma ferramenta educacional robusta que serve tanto como recurso de aprendizado para estudantes quanto como referência de boas práticas de desenvolvimento para projetos de engenharia de software.
 

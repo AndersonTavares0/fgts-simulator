@@ -42,7 +42,7 @@
 - Entry point (`src/main.ts`): initializes `ThemeAdapter` and `UIAdapter` on DOMContentLoaded
 
 ## Testing
-- Test suite: Vitest (59 unit tests) in `tests/unit/`
+- Test suite: Vitest (61 unit tests) in `tests/unit/`
 - Test file pattern: `tests/**/*.test.ts`
 - Coverage provider: v8 with 80% threshold on lines/branches/functions/statements
 - UI-dependent tests require `jsdom` environment (configured in vite.config.ts)

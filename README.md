@@ -40,7 +40,7 @@ O sistema consiste em uma ferramenta de simulação trabalhista que permite ao u
 * **8 Modalidades de Rescisão** — Enum exaustivo com multas diferenciadas (40%, 20%, 0%)
 * **Saque por Doença Grave** — Liberação integral de 100% do saldo (Lei 8.036/90)
 * **Saque-Aniversário** — Tabela oficial de 7 faixas com parcela fixa
-* **59 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
+* **61 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
 * **Acessibilidade WCAG 2.1 AA** — ARIA labels, live regions, navegação por teclado
 * **Conformidade LGPD** — Política de privacidade, consentimento para dados sensíveis, banner de transparência
 
@@ -157,7 +157,7 @@ Na rescisão, o optante **não saca o saldo** (fica retido), mas **recebe a mult
 
 ## Testes Automatizados
 
-O projeto inclui **59 testes automatizados** executados com **Vitest**:
+O projeto inclui **61 testes automatizados** executados com **Vitest**:
 
 ```bash
 npm test              # Executa todos os testes
@@ -169,7 +169,7 @@ npm run test:coverage # Relatório de cobertura (threshold 80%)
 
 | Arquivo | Testes | Escopo |
 |---------|--------|--------|
-| `calculator.test.ts` | 44 | Money VO, depósito, juros, multas (7 tipos), doença grave, ADI 5090, saque-aniversário, integração completa, validação, verbas proporcionais |
+| `calculator.test.ts` | 46 | Money VO, depósito, juros, multas (7 tipos), doença grave, ADI 5090, saque-aniversário, integração completa, validação, verbas proporcionais |
 | `legal-boundary.test.ts` | 15 | Doença grave (5), Acordo 484-A (3), Integridade de multas (3), Tipos de contrato (4: CLT 8%, Aprendiz 2%, Doméstico FGTS 8% + reserva 3.2%) |
 
 ---
@@ -222,8 +222,8 @@ PROJETO-FGTS/
 │   ├── adapters/            # Adapter Layer (UI/Formato)
 │   ├── css/                 # Estilos (CSS Variables)
 ├── tests/unit/              # Testes automatizados
-│   ├── calculator.test.ts   # Suíte principal (41 testes)
-│   └── legal-boundary.test.ts # Limites legais (17 testes)
+│   ├── calculator.test.ts   # Suíte principal (46 testes)
+│   └── legal-boundary.test.ts # Limites legais (15 testes)
 ├── docs/                    # Documentação técnica
 ├── tsconfig.json            # Configuração TypeScript (strict)
 ├── vite.config.ts           # Configuração Vite + Vitest
