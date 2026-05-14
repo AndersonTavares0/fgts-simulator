@@ -40,13 +40,6 @@ export class ContratoTrabalho {
     return ContratoTrabalho.calcularMesesTrabalhados(this.dataInicio, this.dataTermino);
   }
 
-  /** FGTS rate according to contract type */
-  get aliquotaFGTS(): number {
-    if (this.tipoContrato === TipoContrato.APRENDIZ) return 2;
-    if (this.tipoContrato === TipoContrato.DOMESTICO) return 3.2;
-    return 8;
-  }
-
   /** Reusable static validation */
   static validar(params: {
     salarioBruto: Money;
@@ -80,7 +73,7 @@ export class ContratoTrabalho {
     }
 
     const diffDays = Math.ceil(
-      Math.abs(params.dataTermino.getTime() - params.dataInicio.getTime()) / (1000 * 60 * 60 * 24),
+      (params.dataTermino.getTime() - params.dataInicio.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (diffDays > MAX_ANOS_CONTRATO * 365) {
       return { valid: false, error: `Período máximo permitido: ${MAX_ANOS_CONTRATO} anos.` };
@@ -93,32 +86,13 @@ export class ContratoTrabalho {
   static calcularMesesTrabalhados(inicio: Date, termino: Date): number {
     if (!inicio || !termino || termino < inicio) return 0;
 
-    const y1 = inicio.getFullYear();
-    const m1 = inicio.getMonth();
-    const d1 = inicio.getDate();
-    const y2 = termino.getFullYear();
-    const m2 = termino.getMonth();
-    const d2 = termino.getDate();
-
-    let mesesCompletos = (y2 - y1) * 12 + (m2 - m1);
-
-    if (d2 < d1) {
-      mesesCompletos--;
-    }
-
-    if (d2 >= DIAS_MINIMO_MES_COMPLETO && d2 < d1) {
-      mesesCompletos++;
-    } else if (d2 < DIAS_MINIMO_MES_COMPLETO && d2 < d1) {
-      const fracaoMes = this.calcularFracaoMes(d2, m2, y2);
-      return Math.max(0, parseFloat((mesesCompletos + 1 + fracaoMes).toFixed(2)));
-    }
-
-    return Math.max(0, mesesCompletos);
+    const diffTime = Math.abs(termino.getTime() - inicio.getTime());
+    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    
+    const meses = Math.floor(totalDays / 30);
+    const diasRestantes = totalDays % 30;
+    
+    return diasRestantes >= DIAS_MINIMO_MES_COMPLETO ? meses + 1 : Math.max(1, meses);
   }
 
-  /** Calculates month fraction based on day and month */
-  private static calcularFracaoMes(dia: number, mes: number, ano: number): number {
-    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-    return dia / diasNoMes;
-  }
 }

@@ -6,7 +6,7 @@
  * Este é o ponto de entrada principal para todo cálculo financeiro.
  */
 
-import { Money, TipoContrato } from '../types';
+import { Money, TipoContrato, TipoRescisao } from '../types';
 import type {
   ParametrosCalculo,
   ResultadoRescisao,
@@ -22,8 +22,10 @@ import { DoencaGraveService } from './DoencaGraveService';
 const ALIQUOTA = {
   [TipoContrato.CLT_PADRAO]: 8,
   [TipoContrato.APRENDIZ]: 2,
-  [TipoContrato.DOMESTICO]: 3.2,
+  [TipoContrato.DOMESTICO]: 8,
 } satisfies Record<TipoContrato, number>;
+
+const ALIQUOTA_MULTA_DOMESTICO = 3.2;
 
 export class FGTSCalculatorService {
   /**
@@ -44,10 +46,14 @@ export class FGTSCalculatorService {
   }
 
   /**
-   * Calcula 13º salário proporcional
+   * Calcula 13º salário proporcional (Lei 4.090/62, Art. 146 CLT).
+   *
+   * IMPORTANTE: O parâmetro `mesesTrabalhados` deve ser pré-processado com a
+   * regra dos 15 dias (fração ≥ 15 dias = 1 avo adicional), conforme
+   * ContratoTrabalho.calcularMesesTrabalhados().
    *
    * @param salarioBruto Salário bruto
-   * @param mesesTrabalhados Meses trabalhados no ano (máximo 12)
+   * @param mesesTrabalhados Meses trabalhados no ano, já ajustados pela regra dos 15 dias (máximo 12)
    */
   static calcularDecimoTerceiro(salarioBruto: Money, mesesTrabalhados: number): Money {
     if (!salarioBruto.isPositive() || mesesTrabalhados <= 0) return Money.zero();
@@ -56,10 +62,14 @@ export class FGTSCalculatorService {
   }
 
   /**
-   * Calcula férias proporcionais + 1/3 constitucional
+   * Calcula férias proporcionais + 1/3 constitucional (Art. 146 CLT, Art. 7º, XVII CF/88).
+   *
+   * IMPORTANTE: O parâmetro `mesesTrabalhados` deve ser pré-processado com a
+   * regra dos 15 dias (fração ≥ 15 dias = 1 avo adicional), conforme
+   * ContratoTrabalho.calcularMesesTrabalhados().
    *
    * @param salarioBruto Salário bruto
-   * @param mesesTrabalhados Meses trabalhados (máximo 12)
+   * @param mesesTrabalhados Meses trabalhados, já ajustados pela regra dos 15 dias (máximo 12)
    */
   static calcularFeriasProporcionais(salarioBruto: Money, mesesTrabalhados: number): Money {
     if (!salarioBruto.isPositive() || mesesTrabalhados <= 0) return Money.zero();
@@ -100,9 +110,39 @@ export class FGTSCalculatorService {
 
     const saldoBase = correcao.saldoCorrigido;
 
-    // 3. Multa rescisória (must be 40% of TOTAL HISTORICAL DEPOSITS - Art. 18, Lei 8.036/1990)
-    const baseCalculoMulta = params.depositoHistoricoTotal ?? saldoBase;
-    const multa = MultaService.calcular(baseCalculoMulta, tipoRescisao);
+    // 3. Multa rescisória
+    let multa: import('../types').ResultadoMulta;
+    if (tipoContrato === TipoContrato.DOMESTICO) {
+      const valorAcumuladoMulta = salarioBruto
+        .percentage(ALIQUOTA_MULTA_DOMESTICO)
+        .multiply(mesesTrabalhados);
+
+      // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal)
+      // §2º: Aposentadoria, Falecimento e Pedido de Demissão → valor retorna ao empregador
+      let valorMultaDomestico: Money;
+      let fundamentoDomestico: string;
+
+      if (tipoRescisao === TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA) {
+        valorMultaDomestico = valorAcumuladoMulta;
+        fundamentoDomestico = 'Art. 22, LC 150/2015 — 100% da reserva de indenização';
+      } else if (tipoRescisao === TipoRescisao.ACORDO_COMUM) {
+        valorMultaDomestico = valorAcumuladoMulta.percentage(50);
+        fundamentoDomestico = 'Art. 22 c/c Art. 484-A CLT — 50% da reserva de indenização';
+      } else {
+        valorMultaDomestico = Money.zero();
+        fundamentoDomestico = 'Art. 22, §2º, LC 150/2015 — Reserva retorna ao empregador';
+      }
+
+      multa = {
+        percentualAplicado: 0,
+        valorMulta: valorMultaDomestico,
+        baseCalculo: valorAcumuladoMulta,
+        fundamentoLegal: fundamentoDomestico,
+      };
+    } else {
+      const baseCalculoMulta = params.depositoHistoricoTotal ?? saldoBase;
+      multa = MultaService.calcular(baseCalculoMulta, tipoRescisao);
+    }
 
     // 4. Verbas proporcionais
     const decimoTerceiro = incluirDecimoTerceiro
