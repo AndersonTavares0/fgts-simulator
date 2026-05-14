@@ -18,7 +18,7 @@
 Este documento descreve a arquitetura técnica e as decisões de implementação do **Simulador de Rescisão e FGTS**, uma ferramenta educacional desenvolvida como parte de um projeto de extensão universitária do curso de **Engenharia de Software da UNINTER**. O sistema tem como objetivo demonstrar a tradução precisa de requisitos legais da Consolidação das Leis do Trabalho (CLT) em código funcional, mantendo rigor técnico e conformidade com boas práticas de desenvolvimento.
 
 **Versão Atual**: 2.0 (TypeScript + DDD)
-**Última Atualização**: 09/05/2026
+**Última Atualização**: 14/05/2026
 **Status**: Produção - Projeto de Extensão Universitária
 
 ---
@@ -128,9 +128,12 @@ function calcularDepositoMensal(salario: Money): Money {
 3. Arredonda o resultado para o centavo mais próximo
 4. Retorna o valor do depósito mensal
 
-### Multa Rescisória (40%)
+### Multa Rescisória (40%, 20% ou 0%)
 
-Em casos de dispensa sem justa causa, o empregador deve pagar uma multa equivalente a **40% do saldo total do FGTS** acumulado durante o contrato de trabalho, conforme Artigo 18 da Lei nº 8.036/1990.
+A multa varia conforme a modalidade de rescisão:
+- **40%** — Dispensa sem justa causa (Art. 18, §1º, Lei 8.036/1990)
+- **20%** — Acordo comum (Art. 484-A, §1º, CLT) e culpa recíproca (Art. 484 CLT)
+- **0%** — Demissão voluntária, justa causa, aposentadoria, falecimento e doença grave (saques integrais sem multa patronal)
 
 ```typescript
 // Pseudocódigo conceitual — implementação real usa Money (Decimal.js)
@@ -179,8 +182,19 @@ Quando optante pelo **Saque Aniversário**, o sistema aplica as regras oficiais 
 
 2.  **Impacto na Rescisão**:
     *   O trabalhador **mantém o saldo retido** na conta (saldoFinal = 0 no saque imediato).
-    *   A **Multa Rescisória de 40%** é paga integralmente sobre o total de depósitos.
+    *   A **Multa Rescisória** (40% ou 20% conforme o tipo) é paga integralmente sobre o total de depósitos.
     *   O sistema exibe o valor da próxima parcela anual estimada.
+
+### Regra Especial: Trabalhador Doméstico (LC 150/2015)
+
+O trabalhador doméstico possui regras distintas:
+
+1. **Depósito mensal FGTS**: 8% do salário (igual CLT padrão)
+2. **Reserva de indenização mensal**: 3,2% adicionais (Art. 22, LC 150/2015)
+3. **Multa na rescisão**: Calculada sobre o *saldo acumulado da reserva de 3,2%*, não pelo `MultaService`:
+   - Dispensa sem justa causa → 100% da reserva acumulada
+   - Acordo comum → 50% da reserva acumulada
+   - Demais modalidades → R$ 0,00 (reserva retorna ao empregador, §2º, Art. 22)
 
 ### Juros e Correção Monetária (Art. 13 da Lei 8.036/1990)
 
@@ -358,7 +372,7 @@ Cada serviço tem responsabilidade única e bem definida, seguindo o princípio 
 
 A arquitetura DDD em camadas permite:
 
-- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (58 testes)
+- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (59 testes)
 - **Reusabilidade**: `Money` é o único Value Object que transita entre todas as camadas
 - **Manutenção Facilitada**: Alterações em uma regra não afetam outras — ex: adicionar novo tipo de rescisão requer apenas atualizar `MultaService`
 - **Type Safety**: TypeScript com `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` previne erros em tempo de compilação
@@ -374,7 +388,7 @@ Este projeto demonstra como requisitos legais complexos podem ser traduzidos em 
 3. **Implementação fiel das regras da CLT** com enum exaustivo de 8 tipos de rescisão
 4. **Compromisso com privacidade** através de processamento client-side
 5. **Acessibilidade inclusiva WCAG 2.1 AA** seguindo padrões internacionais
-6. **TypeScript strict** com cobertura de 80% em 58 testes automatizados
+6. **TypeScript strict** com cobertura de 80% em 59 testes automatizados
 
 Resulta em uma ferramenta educacional robusta que serve tanto como recurso de aprendizado para estudantes quanto como referência de boas práticas de desenvolvimento para projetos de engenharia de software.
 
