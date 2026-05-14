@@ -1,0 +1,310 @@
+/* ============================================================
+   LGPD — Privacy Banner, Modal & Consent Components
+   ============================================================ */
+
+/* ─── Privacy Banner ─────────────────────────────────────── */
+
+.privacy-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-subtle);
+  padding: 12px var(--pad-panel);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  animation: slide-up 0.3s ease;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.privacy-banner-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.privacy-banner-content i {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.privacy-banner-text {
+  flex: 1;
+  font-size: var(--fs-label);
+  color: var(--text-secondary);
+}
+
+.privacy-banner-text p {
+  margin: 0;
+}
+
+.privacy-banner-text strong {
+  color: var(--text-primary);
+}
+
+.privacy-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transition);
+}
+
+.privacy-link:hover {
+  color: var(--teal);
+}
+
+.btn-dismiss {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.btn-dismiss:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-mid);
+}
+
+/* ─── Privacy Modal ──────────────────────────────────────── */
+
+.privacy-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.privacy-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.privacy-modal-content {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  width: min(90vw, 680px);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  animation: modal-enter 0.25s ease;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.privacy-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pad-card);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.privacy-modal-header h2 {
+  font-size: var(--fs-metric-value);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.btn-close-modal:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.privacy-modal-body {
+  padding: var(--pad-card);
+  overflow-y: auto;
+  font-size: var(--fs-body);
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.privacy-modal-body h3 {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 20px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.privacy-modal-body h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.privacy-modal-body p {
+  margin: 8px 0;
+}
+
+.privacy-modal-body ul {
+  margin: 8px 0 8px 20px;
+  padding: 0;
+}
+
+.privacy-modal-body li {
+  margin: 4px 0;
+}
+
+.privacy-modal-body code {
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--accent);
+}
+
+.privacy-modal-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.privacy-modal-body a:hover {
+  color: var(--teal);
+}
+
+.privacy-modal-footer-text {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ─── LGPD Consent Box (Health Data) ─────────────────────── */
+
+.lgpd-consent-box {
+  background: var(--danger-dim);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.lgpd-consent-box i {
+  color: var(--danger);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.lgpd-consent-content {
+  flex: 1;
+}
+
+.lgpd-consent-content p {
+  margin: 4px 0;
+  font-size: var(--fs-caption);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.lgpd-consent-content strong {
+  color: var(--text-primary);
+}
+
+.lgpd-consent-checkbox {
+  margin-top: 8px;
+}
+
+.lgpd-consent-checkbox .toggle-label {
+  font-size: var(--fs-caption);
+  color: var(--text-primary);
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .privacy-banner {
+    padding: 10px 12px;
+  }
+
+  .privacy-banner-content {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .privacy-banner-text {
+    font-size: 11px;
+  }
+
+  .privacy-modal-content {
+    width: 95vw;
+    max-height: 90vh;
+  }
+
+  .privacy-modal-header {
+    padding: 12px;
+  }
+
+  .privacy-modal-header h2 {
+    font-size: 15px;
+  }
+
+  .privacy-modal-body {
+    padding: 12px;
+  }
+}

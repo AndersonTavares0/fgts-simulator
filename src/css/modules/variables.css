@@ -16,7 +16,7 @@
 
   /* ═══ Bordas ═══ */
   --border-subtle: rgba(255, 255, 255, 0.055);
-  --border-mid: rgba(255, 255, 255, 0.10);
+  --border-mid: rgba(255, 255, 255, 0.1);
   --border-focus: #22d3a0;
 
   /* ═══ Textos — Cool White / Blue-Gray ═══ */
@@ -27,21 +27,21 @@
 
   /* ═══ Acento Principal — Vibrant Emerald ═══ */
   --accent: #22d3a0;
-  --accent-dim: rgba(34, 211, 160, 0.10);
+  --accent-dim: rgba(34, 211, 160, 0.1);
   --accent-glow: rgba(34, 211, 160, 0.22);
 
   /* ═══ Cores Semânticas ═══ */
   --teal: #14b8a6;
-  --teal-dim: rgba(20, 184, 166, 0.10);
+  --teal-dim: rgba(20, 184, 166, 0.1);
 
   --blue: #4da8ff;
-  --blue-dim: rgba(77, 168, 255, 0.10);
+  --blue-dim: rgba(77, 168, 255, 0.1);
 
   --amber: #f5b940;
-  --amber-dim: rgba(245, 185, 64, 0.10);
+  --amber-dim: rgba(245, 185, 64, 0.1);
 
   --purple: #a78bfa;
-  --purple-dim: rgba(167, 139, 250, 0.10);
+  --purple-dim: rgba(167, 139, 250, 0.1);
 
   --danger: #f87171;
   --danger-dim: rgba(248, 113, 113, 0.12);
@@ -101,7 +101,7 @@
   --bg-input: #ffffff;
 
   --border-subtle: rgba(0, 0, 0, 0.06);
-  --border-mid: rgba(0, 0, 0, 0.10);
+  --border-mid: rgba(0, 0, 0, 0.1);
   --border-focus: #1ab887;
 
   --text-primary: #0d1b2e;

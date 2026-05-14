@@ -200,16 +200,36 @@ O sistema opera exclusivamente no navegador do usuário (**client-side**), garan
 - **Funcionamento Offline**: Após o carregamento inicial, todos os cálculos são realizados localmente
 - **Ausência de Backend**: Não há banco de dados, API ou armazenamento em nuvem que possa ser comprometido
 
-### Conformidade com Proteção de Dados
+### Conformidade com a LGPD (Lei nº 13.709/2018)
 
-A implementação está alinhada aos princípios da **Lei Geral de Proteção de Dados (LGPD)**:
+O projeto implementa medidas específicas de conformidade com a Lei Geral de Proteção de Dados:
 
 | Princípio LGPD | Implementação no Projeto |
 |----------------|--------------------------|
-| Minimização de Dados | Apenas dados estritamente necessários para o cálculo são solicitados |
-| Finalidade Específica | Dados usados exclusivamente para simulação educativa |
-| Segurança | Processamento local elimina riscos de vazamento em transmissão |
-| Transparência | Avisos claros sobre a natureza educativa dos resultados |
+| **Minimização de Dados** (Art. 6, III) | Apenas dados estritamente necessários para o cálculo são solicitados |
+| **Finalidade Específica** (Art. 6, I) | Dados usados exclusivamente para simulação educativa |
+| **Transparência** (Art. 6, VI) | Banner de privacidade + modal com política completa |
+| **Segurança** (Art. 6, VII) | Processamento local elimina riscos de vazamento em transmissão |
+| **Consentimento** (Art. 7, I) | Consentimento explícito para dados sensíveis de saúde (Art. 11) |
+| **Direitos do Titular** (Art. 18) | Política de privacidade detalha todos os direitos e como exercê-los |
+
+### Implementações Técnicas LGPD
+
+1. **Banner de Privacidade** — Aviso fixo no rodapé informando sobre processamento local
+2. **Modal de Política de Privacidade** — Documento completo acessível via link "Saiba mais"
+3. **Consentimento para Dados Sensíveis** — Checkbox explícito obrigatório para simulação de doença grave (dados de saúde, Art. 5, II)
+4. **Bloqueio de Cálculo sem Consentimento** — O sistema impede cálculos com dados de saúde sem consentimento prévio
+5. **Arquivo POLICY-LGPD.md** — Política de privacidade completa no repositório
+
+### Dados Coletados
+
+| Dado | Categoria | Finalidade | Base Legal |
+|------|-----------|------------|------------|
+| Salário bruto | Pessoal | Cálculo FGTS/verbas | Consentimento (Art. 7, I) |
+| Datas de contrato | Pessoal | Cálculo de meses | Consentimento (Art. 7, I) |
+| Motivo da rescisão | Pessoal | Multa correta | Consentimento (Art. 7, I) |
+| **Doença grave** | **Sensível** (Art. 5, II) | Saque integral | **Consentimento específico** (Art. 11, I) |
+| Preferência de tema | Preferência | UX | Legítimo interesse (Art. 7, IX) |
 
 ### Validação e Sanitização de Entradas
 

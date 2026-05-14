@@ -6,10 +6,7 @@
  * Este é o ponto de entrada principal para todo cálculo financeiro.
  */
 
-import {
-  Money,
-  TipoContrato,
-} from '../types';
+import { Money, TipoContrato } from '../types';
 import type {
   ParametrosCalculo,
   ResultadoRescisao,

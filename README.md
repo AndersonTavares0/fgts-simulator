@@ -20,6 +20,7 @@
 - [Instalação e Uso](#instalação-e-uso)
 - [Estrutura do Repositório](#estrutura-do-repositório)
 - [Proteções contra Inputs Inválidos](#proteções-contra-inputs-inválidos)
+- [Privacidade e LGPD](#privacidade-e-lgpd)
 - [Roadmap](#roadmap-futuras-melhorias)
 - [Aviso Legal](#aviso-legal)
 
@@ -41,6 +42,7 @@ O sistema consiste em uma ferramenta de simulação trabalhista que permite ao u
 * **Saque-Aniversário** — Tabela oficial de 7 faixas com parcela fixa
 * **58 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
 * **Acessibilidade WCAG 2.1 AA** — ARIA labels, live regions, navegação por teclado
+* **Conformidade LGPD** — Política de privacidade, consentimento para dados sensíveis, banner de transparência
 
 ---
 
@@ -247,6 +249,19 @@ O sistema implementa múltiplas camadas de validação:
 | **Tipo de rescisão inválido** | `Record<TipoRescisao, ...>` — TypeScript garante exaustividade | Type System |
 | **Arredondamento** | `Decimal.ROUND_HALF_EVEN` (Banker's rounding) — norma contábil | Config |
 | **XSS / Injection** | Input sanitizado: `replace(/[R$\s]/g, '')` antes de parse | Adapter |
+
+---
+
+## Privacidade e LGPD
+
+Este simulador está em conformidade com a **Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018)**:
+
+- **Processamento 100% local** — Nenhum dado é enviado a servidores externos
+- **Consentimento explícito** — Dados sensíveis de saúde requerem consentimento específico
+- **Transparência** — Banner de privacidade + política completa acessível na interface
+- **Direitos do titular** — Política detalha acesso, correção, eliminação e portabilidade
+
+📄 **[Política de Privacidade Completa (POLICY-LGPD.md)](POLICY-LGPD.md)**
 
 ---
 

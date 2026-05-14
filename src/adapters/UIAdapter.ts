@@ -77,6 +77,13 @@ export class UIAdapter {
   private resultsLiveRegion: HTMLElement | null = null;
   private isCalculating = false;
 
+  // LGPD components
+  private privacyBanner: HTMLElement | null = null;
+  private privacyModal: HTMLElement | null = null;
+  private privacyModalBackdrop: HTMLElement | null = null;
+  private doencaGraveConsent: HTMLElement | null = null;
+  private doencaGraveConsentCheck: HTMLInputElement | null = null;
+
   /** Initializes the adapter, capturing DOM references and binding events */
   init(): void {
     this.bindElements();
@@ -131,6 +138,15 @@ export class UIAdapter {
     this.barSaldo = document.getElementById('bar-saldo')!;
     this.barMulta = document.getElementById('bar-multa')!;
     this.barProp = document.getElementById('bar-prop')!;
+
+    // LGPD components
+    this.privacyBanner = document.getElementById('privacyBanner');
+    this.privacyModal = document.getElementById('privacyModal');
+    this.privacyModalBackdrop = document.getElementById('privacyModalBackdrop');
+    this.doencaGraveConsent = document.getElementById('doencaGraveConsent');
+    this.doencaGraveConsentCheck = document.getElementById(
+      'doencaGraveConsentCheck',
+    ) as HTMLInputElement | null;
   }
 
   private bindEvents(): void {
@@ -180,10 +196,17 @@ export class UIAdapter {
       this.handleCalcular();
     });
 
-    // Show/hide medical info box based on selected reason
+    // Show/hide medical info box and consent based on selected reason
     this.motivoEl.addEventListener('change', () => {
       const isDoencaGrave = this.motivoEl.value === 'doenca_grave';
       this.healthDocsInfo.style.display = isDoencaGrave ? 'flex' : 'none';
+      if (this.doencaGraveConsent) {
+        this.doencaGraveConsent.style.display = isDoencaGrave ? 'flex' : 'none';
+        // Reset consent when switching away from disease
+        if (!isDoencaGrave && this.doencaGraveConsentCheck) {
+          this.doencaGraveConsentCheck.checked = false;
+        }
+      }
       this.updateMultaBadge();
     });
 
@@ -195,6 +218,9 @@ export class UIAdapter {
 
     // Donut chart interactions
     this.bindDonutInteractions();
+
+    // LGPD privacy banner and modal
+    this.bindPrivacyComponents();
   }
 
   private handleCurrencyMask(e: Event): void {
@@ -214,7 +240,7 @@ export class UIAdapter {
   private loadExample(): void {
     this.salarioEl.value = '3.000,00';
     this.inicioEl.value = '2022-01-01';
-    const today = (new Date().toISOString().split('T')[0] ?? '');
+    const today = new Date().toISOString().split('T')[0] ?? '';
     this.terminoEl.value = today;
     this.motivoEl.value = 'dispensa_sem_causa';
     this.incluir13El.checked = true;
@@ -225,6 +251,12 @@ export class UIAdapter {
     this.enableOption(this.aprendiaOption);
     this.enableOption(this.domesticoOption);
     this.healthDocsInfo.style.display = 'none';
+    if (this.doencaGraveConsent) {
+      this.doencaGraveConsent.style.display = 'none';
+    }
+    if (this.doencaGraveConsentCheck) {
+      this.doencaGraveConsentCheck.checked = false;
+    }
     this.updateMultaBadge();
     this.handleCalcular();
   }
@@ -261,7 +293,10 @@ export class UIAdapter {
   }
 
   /** CLT constraint: contract types Aprendiz (2%) and Doméstico (3.2%) are mutually exclusive */
-  private enforceMutualExclusion(targetCheckbox: HTMLInputElement, targetOption: HTMLElement): void {
+  private enforceMutualExclusion(
+    targetCheckbox: HTMLInputElement,
+    targetOption: HTMLElement,
+  ): void {
     targetCheckbox.checked = false;
     targetOption.style.opacity = '0.45';
     targetOption.style.pointerEvents = 'none';
@@ -388,6 +423,87 @@ export class UIAdapter {
     });
   }
 
+  // ── LGPD Privacy Components ───────────────────────────────
+
+  private bindPrivacyComponents(): void {
+    const PRIVACY_DISMISSED_KEY = 'fgts_privacy_dismissed';
+
+    // Check if banner was previously dismissed
+    try {
+      if (localStorage.getItem(PRIVACY_DISMISSED_KEY) === 'true' && this.privacyBanner) {
+        this.privacyBanner.style.display = 'none';
+      }
+    } catch {
+      /* localStorage unavailable */
+    }
+
+    // Dismiss banner
+    document.getElementById('dismissPrivacyBanner')?.addEventListener('click', () => {
+      if (this.privacyBanner) {
+        this.privacyBanner.style.display = 'none';
+        try {
+          localStorage.setItem(PRIVACY_DISMISSED_KEY, 'true');
+        } catch {
+          /* localStorage unavailable */
+        }
+      }
+    });
+
+    // Open privacy modal
+    document.getElementById('privacyLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.openPrivacyModal();
+    });
+
+    // Close modal
+    document.getElementById('closePrivacyModal')?.addEventListener('click', () => {
+      this.closePrivacyModal();
+    });
+
+    // Close modal on backdrop click
+    this.privacyModalBackdrop?.addEventListener('click', () => {
+      this.closePrivacyModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.privacyModal?.style.display !== 'none') {
+        this.closePrivacyModal();
+      }
+    });
+  }
+
+  private openPrivacyModal(): void {
+    if (!this.privacyModal) return;
+    this.privacyModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // Focus trap: focus the close button
+    const closeBtn = document.getElementById('closePrivacyModal');
+    closeBtn?.focus();
+
+    // Re-initialize Lucide icons in modal
+    const lucide = window.lucide;
+    if (lucide) {
+      const newIcons = this.privacyModal.querySelectorAll('[data-lucide]:not(.lucide-initialized)');
+      if (newIcons.length > 0) {
+        lucide.createIcons({ nodes: Array.from(newIcons) });
+        newIcons.forEach((el) => el.classList.add('lucide-initialized'));
+      }
+    }
+  }
+
+  private closePrivacyModal(): void {
+    if (!this.privacyModal) return;
+    this.privacyModal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  /** Checks if user has consented to health data processing */
+  private hasHealthConsent(): boolean {
+    return this.doencaGraveConsentCheck?.checked ?? false;
+  }
+
   // ── Validation & Calculation ─────────────────────────────────
 
   private handleCalcular(): void {
@@ -402,6 +518,16 @@ export class UIAdapter {
       const constraintError = this.validateContractConstraints();
       if (constraintError) {
         this.showError(constraintError, null);
+        return;
+      }
+
+      // LGPD: Check health data consent for disease grave
+      const motivoValue = this.motivoEl.value;
+      if (motivoValue === 'doenca_grave' && !this.hasHealthConsent()) {
+        this.showError(
+          'Para simular saque por doença grave, é necessário consentir com o tratamento dos seus dados de saúde (LGPD Art. 11).',
+          this.doencaGraveConsent,
+        );
         return;
       }
 
@@ -437,7 +563,6 @@ export class UIAdapter {
       const mesesTrabalhados = ContratoTrabalho.calcularMesesTrabalhados(inicio, termino);
 
       // Map reason
-      const motivoValue = this.motivoEl.value;
       const tipoRescisao = MOTIVO_MAP[motivoValue] ?? TipoRescisao.DEMISSAO_VOLUNTARIA;
 
       // Detect contract type (CLT, Apprentice, or Domestic)
@@ -475,7 +600,7 @@ export class UIAdapter {
   private setLoading(isLoading: boolean): void {
     this.isCalculating = isLoading;
     this.calcularBtn.disabled = isLoading;
-    
+
     if (isLoading) {
       this.calcularBtn.setAttribute('aria-busy', 'true');
       this.calcularBtn.innerHTML = `
@@ -587,10 +712,11 @@ export class UIAdapter {
     this.setDonutArc(this.dpProp, propArc, propOffset);
 
     // Add data attributes for tooltips
-    const formatValue = (cents: number) => (cents / 100).toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    const formatValue = (cents: number) =>
+      (cents / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 
     this.dSaldo.setAttribute('data-value', formatValue(saldo));
     this.dMulta.setAttribute('data-value', formatValue(multa));
@@ -656,8 +782,7 @@ export class UIAdapter {
     // Saque-Aniversário restriction warning (Art. 20-D, Lei 8.036/90)
     const restrictionBox = document.getElementById('saqueAniversarioRestriction');
     if (restrictionBox) {
-      restrictionBox.style.display =
-        resultado.saqueAniversario ? 'flex' : 'none';
+      restrictionBox.style.display = resultado.saqueAniversario ? 'flex' : 'none';
     }
   }
 

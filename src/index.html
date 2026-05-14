@@ -149,7 +149,39 @@
               <div id="multaBadge" class="multa-badge bg-gray-500" aria-live="polite">
                 Multa: 0%
               </div>
-              <div class="health-info-box" id="healthDocsInfo" style="display: none" role="note" aria-label="Documentos necessários para saque saúde">
+              <div
+                id="doencaGraveConsent"
+                class="lgpd-consent-box"
+                style="display: none"
+                role="alert"
+                aria-label="Consentimento para tratamento de dados de saúde"
+              >
+                <i data-lucide="shield-alert" class="icon-xs"></i>
+                <div class="lgpd-consent-content">
+                  <p><strong>Consentimento para dados sensíveis (LGPD Art. 11)</strong></p>
+                  <p>
+                    A seleção de doença grave envolve o tratamento de
+                    <strong>dados sensíveis de saúde</strong>. Seus dados são processados
+                    exclusivamente no seu navegador e
+                    <strong>nunca são enviados a servidores externos</strong>. Ao prosseguir, você
+                    consente com o uso temporário dessas informações apenas para fins de simulação.
+                  </p>
+                  <label class="option-toggle lgpd-consent-checkbox">
+                    <input id="doencaGraveConsentCheck" type="checkbox" />
+                    <span class="toggle-track" aria-hidden="true"></span>
+                    <span class="toggle-label"
+                      >Concordo com o tratamento dos meus dados de saúde para esta simulação</span
+                    >
+                  </label>
+                </div>
+              </div>
+              <div
+                class="health-info-box"
+                id="healthDocsInfo"
+                style="display: none"
+                role="note"
+                aria-label="Documentos necessários para saque saúde"
+              >
                 <i data-lucide="file-text" class="icon-xs"></i>
                 <div class="health-info-content">
                   <p><strong>Documentos necessários para Saque-Saúde:</strong></p>
@@ -163,20 +195,20 @@
               </div>
             </div>
 
-              <div class="field-group">
-                <label class="option-toggle">
-                  <input id="isAprendiz" type="checkbox" />
-                  <span class="toggle-track" aria-hidden="true"></span>
-                  <span class="toggle-label">Contrato de Aprendizagem (2%)</span>
-                </label>
-              </div>
-              <div class="field-group">
-                <label class="option-toggle">
-                  <input id="isDomestico" type="checkbox" />
-                  <span class="toggle-track" aria-hidden="true"></span>
-                  <span class="toggle-label">Trabalhador Doméstico (3,2%)</span>
-                </label>
-              </div>
+            <div class="field-group">
+              <label class="option-toggle">
+                <input id="isAprendiz" type="checkbox" />
+                <span class="toggle-track" aria-hidden="true"></span>
+                <span class="toggle-label">Contrato de Aprendizagem (2%)</span>
+              </label>
+            </div>
+            <div class="field-group">
+              <label class="option-toggle">
+                <input id="isDomestico" type="checkbox" />
+                <span class="toggle-track" aria-hidden="true"></span>
+                <span class="toggle-label">Trabalhador Doméstico (3,2%)</span>
+              </label>
+            </div>
           </div>
 
           <!-- Passo 2: Opções avançadas -->
@@ -240,12 +272,14 @@
           >
             <div class="accordion-body">
               <div class="explain-item">
-                <div class="explain-icon bg-teal"><i data-lucide="piggy-bank" class="icon-sm"></i></div>
+                <div class="explain-icon bg-teal">
+                  <i data-lucide="piggy-bank" class="icon-sm"></i>
+                </div>
                 <div>
                   <strong>Saldo FGTS</strong>
                   <p>
-                    Salário Bruto × 8% × meses trabalhados, com correção monetária (TR + 3% a.a. ou IPCA
-                    conforme ADI 5090).
+                    Salário Bruto × 8% × meses trabalhados, com correção monetária (TR + 3% a.a. ou
+                    IPCA conforme ADI 5090).
                   </p>
                 </div>
               </div>
@@ -254,8 +288,8 @@
                 <div>
                   <strong>Multa Rescisória</strong>
                   <p>
-                    40% para dispensa sem justa causa; 20% para acordo comum (Art. 484-A CLT); 0% para
-                    demissão voluntária e justa causa.
+                    40% para dispensa sem justa causa; 20% para acordo comum (Art. 484-A CLT); 0%
+                    para demissão voluntária e justa causa.
                   </p>
                 </div>
               </div>
@@ -347,7 +381,12 @@
                 <div class="metric-label-row">
                   <span class="metric-label">Total a Receber</span>
                   <span class="warning-tooltip-wrapper">
-                    <i data-lucide="alert-triangle" class="icon-xs warning-icon" aria-hidden="true" title="Valor estimado — consulte um advogado trabalhista"></i>
+                    <i
+                      data-lucide="alert-triangle"
+                      class="icon-xs warning-icon"
+                      aria-hidden="true"
+                      title="Valor estimado — consulte um advogado trabalhista"
+                    ></i>
                     <span class="warning-tooltip" role="tooltip">Valor estimado</span>
                   </span>
                 </div>
@@ -388,15 +427,51 @@
               >
                 <defs>
                   <!-- WCAG 2.2: padrões de textura para suporte a daltonismo -->
-                  <pattern id="pattern-saldo" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                    <line x1="0" y1="0" x2="0" y2="8" stroke="var(--donut-saldo)" stroke-width="2" opacity="0.35" />
+                  <pattern
+                    id="pattern-saldo"
+                    width="8"
+                    height="8"
+                    patternUnits="userSpaceOnUse"
+                    patternTransform="rotate(45)"
+                  >
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="8"
+                      stroke="var(--donut-saldo)"
+                      stroke-width="2"
+                      opacity="0.35"
+                    />
                   </pattern>
                   <pattern id="pattern-multa" width="6" height="6" patternUnits="userSpaceOnUse">
                     <circle cx="3" cy="3" r="1.5" fill="var(--donut-multa)" opacity="0.40" />
                   </pattern>
-                  <pattern id="pattern-prop" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-                    <line x1="0" y1="0" x2="0" y2="7" stroke="var(--donut-prop)" stroke-width="1.5" opacity="0.35" />
-                    <line x1="0" y1="0" x2="7" y2="0" stroke="var(--donut-prop)" stroke-width="1.5" opacity="0.35" />
+                  <pattern
+                    id="pattern-prop"
+                    width="7"
+                    height="7"
+                    patternUnits="userSpaceOnUse"
+                    patternTransform="rotate(-45)"
+                  >
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="7"
+                      stroke="var(--donut-prop)"
+                      stroke-width="1.5"
+                      opacity="0.35"
+                    />
+                    <line
+                      x1="0"
+                      y1="0"
+                      x2="7"
+                      y2="0"
+                      stroke="var(--donut-prop)"
+                      stroke-width="1.5"
+                      opacity="0.35"
+                    />
                   </pattern>
                 </defs>
                 <!-- Faixas do donut (order: bg > saldo > multa > props) -->
@@ -438,9 +513,36 @@
                   aria-label="Verbas Proporcionais"
                 />
                 <!-- Overlays de textura WCAG (pattern-fill circles seguem os mesmos dash-arrays) -->
-                <circle class="donut-pattern-overlay" id="dp-saldo" cx="100" cy="100" r="78" stroke-dasharray="0 490" stroke-dashoffset="122.5" fill="none" />
-                <circle class="donut-pattern-overlay" id="dp-multa" cx="100" cy="100" r="78" stroke-dasharray="0 490" stroke-dashoffset="122.5" fill="none" />
-                <circle class="donut-pattern-overlay" id="dp-prop" cx="100" cy="100" r="78" stroke-dasharray="0 490" stroke-dashoffset="122.5" fill="none" />
+                <circle
+                  class="donut-pattern-overlay"
+                  id="dp-saldo"
+                  cx="100"
+                  cy="100"
+                  r="78"
+                  stroke-dasharray="0 490"
+                  stroke-dashoffset="122.5"
+                  fill="none"
+                />
+                <circle
+                  class="donut-pattern-overlay"
+                  id="dp-multa"
+                  cx="100"
+                  cy="100"
+                  r="78"
+                  stroke-dasharray="0 490"
+                  stroke-dashoffset="122.5"
+                  fill="none"
+                />
+                <circle
+                  class="donut-pattern-overlay"
+                  id="dp-prop"
+                  cx="100"
+                  cy="100"
+                  r="78"
+                  stroke-dasharray="0 490"
+                  stroke-dashoffset="122.5"
+                  fill="none"
+                />
                 <!-- Buraco central -->
                 <circle class="donut-hole" cx="100" cy="100" r="56" />
                 <!-- Label central -->
@@ -461,17 +563,35 @@
 
               <!-- Legenda -->
               <div class="donut-legend">
-                <div class="legend-item" role="checkbox" aria-checked="true" tabindex="0" data-legend="saldo">
+                <div
+                  class="legend-item"
+                  role="checkbox"
+                  aria-checked="true"
+                  tabindex="0"
+                  data-legend="saldo"
+                >
                   <span class="legend-dot saldo"></span>
                   <span class="legend-text">Saldo FGTS</span>
                   <span class="legend-pct" id="pct-saldo">—</span>
                 </div>
-                <div class="legend-item" role="checkbox" aria-checked="true" tabindex="0" data-legend="multa">
+                <div
+                  class="legend-item"
+                  role="checkbox"
+                  aria-checked="true"
+                  tabindex="0"
+                  data-legend="multa"
+                >
                   <span class="legend-dot multa"></span>
                   <span class="legend-text">Multa Rescisória</span>
                   <span class="legend-pct" id="pct-multa">—</span>
                 </div>
-                <div class="legend-item" role="checkbox" aria-checked="true" tabindex="0" data-legend="prop">
+                <div
+                  class="legend-item"
+                  role="checkbox"
+                  aria-checked="true"
+                  tabindex="0"
+                  data-legend="prop"
+                >
                   <span class="legend-dot prop"></span>
                   <span class="legend-text">Verbas Proporcionais</span>
                   <span class="legend-pct" id="pct-prop">—</span>
@@ -491,19 +611,23 @@
                 <p>Saque Aniversário Estimado: <strong id="valorSaqueAnual">—</strong></p>
               </div>
 
-              <div id="saqueAniversarioRestriction" class="info-box restriction-warning" style="display: none">
+              <div
+                id="saqueAniversarioRestriction"
+                class="info-box restriction-warning"
+                style="display: none"
+              >
                 <i data-lucide="alert-triangle" class="icon-xs"></i>
-                <p><strong>Atenção:</strong> Com o Saque-Aniversário ativo, você <strong>não pode sacar o saldo integral do FGTS</strong> na rescisão. Apenas a multa rescisória (40%/20%) permanece disponível para saque imediato.</p>
+                <p>
+                  <strong>Atenção:</strong> Com o Saque-Aniversário ativo, você
+                  <strong>não pode sacar o saldo integral do FGTS</strong> na rescisão. Apenas a
+                  multa rescisória (40%/20%) permanece disponível para saque imediato.
+                </p>
               </div>
 
               <!-- Barra de progresso proporcional -->
               <div class="progress-bar-section">
                 <p class="progress-label">Distribuição proporcional</p>
-                <div
-                  class="progress-bar"
-                  role="img"
-                  aria-label="Barra de proporção dos valores"
-                >
+                <div class="progress-bar" role="img" aria-label="Barra de proporção dos valores">
                   <div class="progress-saldo" id="bar-saldo" style="width: 0%"></div>
                   <div class="progress-multa" id="bar-multa" style="width: 0%"></div>
                   <div class="progress-prop" id="bar-prop" style="width: 0%"></div>
@@ -523,6 +647,150 @@
           </div>
         </div>
       </main>
+    </div>
+
+    <!-- ═══ BARRA DE PRIVACIDADE LGPD ═══ -->
+    <div
+      id="privacyBanner"
+      class="privacy-banner"
+      role="banner"
+      aria-label="Aviso de privacidade LGPD"
+    >
+      <div class="privacy-banner-content">
+        <i data-lucide="shield-check" class="icon-sm" aria-hidden="true"></i>
+        <div class="privacy-banner-text">
+          <p>
+            <strong>Privacidade protegida (LGPD):</strong> Todos os dados são processados
+            <strong>apenas no seu navegador</strong>. Nenhuma informação é enviada a servidores
+            externos. <a href="#" id="privacyLink" class="privacy-link">Saiba mais</a>
+          </p>
+        </div>
+        <button
+          id="dismissPrivacyBanner"
+          class="btn-dismiss"
+          type="button"
+          aria-label="Fechar aviso de privacidade"
+        >
+          <i data-lucide="x" class="icon-xs" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ MODAL DE POLÍTICA DE PRIVACIDADE ═══ -->
+    <div
+      id="privacyModal"
+      class="privacy-modal"
+      style="display: none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="privacyModalTitle"
+    >
+      <div class="privacy-modal-backdrop" id="privacyModalBackdrop"></div>
+      <div class="privacy-modal-content">
+        <div class="privacy-modal-header">
+          <h2 id="privacyModalTitle">Política de Privacidade — LGPD</h2>
+          <button
+            id="closePrivacyModal"
+            class="btn-close-modal"
+            type="button"
+            aria-label="Fechar política de privacidade"
+          >
+            <i data-lucide="x" class="icon-sm" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="privacy-modal-body">
+          <h3>1. Controlador dos Dados</h3>
+          <p>
+            Este projeto é desenvolvido como atividade acadêmica de Extensão Universitária pelo
+            autor <strong>Anderson Tavares</strong>, vinculado ao Centro Universitário Internacional
+            <strong>UNINTER</strong>.
+          </p>
+
+          <h3>2. Dados Coletados e Finalidade</h3>
+          <p>
+            Este simulador coleta <strong>exclusivamente</strong> os dados necessários para o
+            cálculo das estimativas de FGTS e rescisão trabalhista:
+          </p>
+          <ul>
+            <li><strong>Salário bruto</strong> — base para cálculo de depósitos e verbas</li>
+            <li><strong>Datas de início e término</strong> — cálculo de meses trabalhados</li>
+            <li><strong>Motivo da rescisão</strong> — aplicação da multa correta</li>
+            <li><strong>Tipo de contrato</strong> — definição da alíquota FGTS</li>
+            <li>
+              <strong>Dados de saúde (doença grave)</strong> — dado sensível (LGPD Art. 5, II),
+              tratado com consentimento explícito (Art. 11) apenas para simulação
+            </li>
+          </ul>
+
+          <h3>3. Base Legal</h3>
+          <p>
+            O tratamento de dados baseia-se no <strong>consentimento do titular</strong> (LGPD Art.
+            7, I) e no <strong>legítimo interesse</strong> de fornecer uma ferramenta educacional
+            (Art. 7, IX). Dados sensíveis de saúde são tratados mediante
+            <strong>consentimento específico</strong> (Art. 11, I).
+          </p>
+
+          <h3>4. Processamento Local</h3>
+          <p>
+            <strong
+              >Todos os cálculos são realizados exclusivamente no navegador do usuário
+              (client-side).</strong
+            >
+            Nenhum dado é transmitido, armazenado ou processado em servidores externos. Após o
+            fechamento da página, os dados de simulação são descartados.
+          </p>
+
+          <h3>5. Armazenamento Mínimo</h3>
+          <p>
+            A única persistência realizada é a <strong>preferência de tema</strong> (claro/escuro)
+            no <code>localStorage</code> do navegador, sem qualquer relação com dados pessoais ou de
+            simulação.
+          </p>
+
+          <h3>6. Direitos do Titular (LGPD Art. 18)</h3>
+          <p>Você tem direito a:</p>
+          <ul>
+            <li><strong>Acesso</strong> — saber quais dados são tratados</li>
+            <li><strong>Correção</strong> — retificar dados incompletos ou desatualizados</li>
+            <li>
+              <strong>Eliminação</strong> — solicitar a exclusão de dados (não aplicável, pois nada
+              é armazenado em servidor)
+            </li>
+            <li><strong>Portabilidade</strong> — transferir dados a outro serviço</li>
+            <li>
+              <strong>Revogação do consentimento</strong> — a qualquer momento, basta fechar a
+              página
+            </li>
+          </ul>
+
+          <h3>7. Segurança</h3>
+          <p>
+            A arquitetura <strong>client-side</strong> elimina riscos de vazamento em transmissão ou
+            armazenamento em nuvem. Não há backend, banco de dados ou API.
+          </p>
+
+          <h3>8. Cookies e Tecnologias Similares</h3>
+          <p>
+            Este site utiliza apenas <code>localStorage</code> para persistir a preferência de tema.
+            Não utiliza cookies de rastreamento, analytics ou publicidade.
+          </p>
+
+          <h3>9. Contato</h3>
+          <p>
+            Para questões sobre privacidade, entre em contato através do
+            <a
+              href="https://github.com/AndersonTavares0/Projeto-FGTS"
+              target="_blank"
+              rel="noopener noreferrer"
+              >repositório do projeto no GitHub</a
+            >.
+          </p>
+
+          <p class="privacy-modal-footer-text">
+            Última atualização: Maio de 2026 · Em conformidade com a Lei nº 13.709/2018 (LGPD)
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- TypeScript Entry Point (Vite compila automaticamente) -->

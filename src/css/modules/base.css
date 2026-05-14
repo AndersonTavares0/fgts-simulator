@@ -1,10 +1,16 @@
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
-input, select, button, textarea, [role="button"] {
+input,
+select,
+button,
+textarea,
+[role='button'] {
   touch-action: manipulation;
 }
 
