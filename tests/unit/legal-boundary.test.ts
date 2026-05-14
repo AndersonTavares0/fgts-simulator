@@ -52,7 +52,7 @@ describe('Legal Boundary Tests - Serious Illness (Doença Grave)', () => {
     });
   });
 
-  it('should calculate full resignation with Serious Illness (100% balance + 40% fine)', () => {
+  it('should calculate full resignation with Serious Illness (100% balance, no fine)', () => {
     const result = FGTSCalculatorService.calcularRescisao({
       salarioBruto: Money.fromReais(3000),
       mesesTrabalhados: 24,
@@ -65,7 +65,7 @@ describe('Legal Boundary Tests - Serious Illness (Doença Grave)', () => {
     });
 
     expect(result.saldoFinal.isPositive()).toBe(true);
-    expect(result.multaFinal.isPositive()).toBe(true);
+    expect(result.multaFinal.cents).toBe(0);
     expect(result.doencaGrave).not.toBeNull();
     expect(result.doencaGrave?.percentualLiberado).toBe(100);
   });
@@ -157,15 +157,14 @@ describe('Legal Boundary Tests - Contract Types', () => {
     expect(deposito.reais).toBe(60);
   });
 
-  it('should apply 3.2% deposit for Domestic workers (Lei 5.859/1972)', () => {
-    const salario = Money.fromReais(3000);
+  it('should apply 8% deposit for Domestic workers + 3.2% multa (LC 150/2015)', () => {
     const deposito = FGTSCalculatorService.calcularDepositoMensal(
-      salario,
+      Money.fromReais(3000),
       TipoContrato.DOMESTICO,
     );
 
-    // 3.2% of 3000 = 96
-    expect(deposito.reais).toBe(96);
+    // 8% of 3000 = 240
+    expect(deposito.reais).toBe(240);
   });
 
   it('should include domestic worker contract type in enum', () => {

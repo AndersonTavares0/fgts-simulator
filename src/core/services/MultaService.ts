@@ -27,16 +27,16 @@ const REGRAS_MULTA = {
     fundamento: 'Art. 484, CLT — Súmula 14 TST',
   },
   [TipoRescisao.DOENCA_GRAVE]: {
-    percentual: 40,
-    fundamento: 'Art. 18, §1º c/c Art. 20, XIII, Lei 8.036/1990',
+    percentual: 0,
+    fundamento: 'Saque autorizado (Art. 20, XIII, Lei 8.036/90) sem multa rescisória',
   },
   [TipoRescisao.APOSENTADORIA]: {
-    percentual: 40,
-    fundamento: 'Art. 18, §1º, Lei 8.036/1990',
+    percentual: 0,
+    fundamento: 'Extinção do contrato / Saque autorizado (Art. 20, III, Lei 8.036/90) sem multa',
   },
   [TipoRescisao.FALECIMENTO]: {
-    percentual: 40,
-    fundamento: 'Art. 18, §1º c/c Art. 20, IV, Lei 8.036/1990',
+    percentual: 0,
+    fundamento: 'Art. 20, IV, Lei 8.036/90 — Saque por dependentes (isento de multa patronal)',
   },
   [TipoRescisao.DEMISSAO_VOLUNTARIA]: {
     percentual: 0,
@@ -57,16 +57,6 @@ export class MultaService {
    */
   static calcular(saldoFGTS: Money, tipoRescisao: TipoRescisao): ResultadoMulta {
     const regra = REGRAS_MULTA[tipoRescisao];
-
-    if (!regra) {
-      return {
-        percentualAplicado: 0,
-        valorMulta: Money.zero(),
-        baseCalculo: saldoFGTS,
-        fundamentoLegal: 'Tipo de rescisão não reconhecido',
-      };
-    }
-
     const valorMulta = regra.percentual > 0 ? saldoFGTS.percentage(regra.percentual) : Money.zero();
 
     return {

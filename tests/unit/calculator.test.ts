@@ -167,15 +167,25 @@ describe('MultaService — Multa sobre Saldo Total Histórico', () => {
     expect(resultado.valorMulta.cents).toBe(0);
   });
 
-  it('deve aplicar 40% para doença grave', () => {
+  it('deve retornar 0% para doença grave (evento de saque, sem multa patronal)', () => {
     const resultado = MultaService.calcular(saldo, TipoRescisao.DOENCA_GRAVE);
-    expect(resultado.percentualAplicado).toBe(40);
-    expect(resultado.valorMulta.cents).toBe(40000);
+    expect(resultado.percentualAplicado).toBe(0);
+    expect(resultado.valorMulta.cents).toBe(0);
+    expect(resultado.fundamentoLegal).toContain('Art. 20');
   });
 
-  it('deve aplicar 40% para falecimento (herdeiros recebem)', () => {
+  it('deve retornar 0% para aposentadoria (evento de saque, sem multa patronal)', () => {
+    const resultado = MultaService.calcular(saldo, TipoRescisao.APOSENTADORIA);
+    expect(resultado.percentualAplicado).toBe(0);
+    expect(resultado.valorMulta.cents).toBe(0);
+    expect(resultado.fundamentoLegal).toContain('Art. 20');
+  });
+
+  it('deve retornar 0% para falecimento (evento de saque, sem multa patronal)', () => {
     const resultado = MultaService.calcular(saldo, TipoRescisao.FALECIMENTO);
-    expect(resultado.percentualAplicado).toBe(40);
+    expect(resultado.percentualAplicado).toBe(0);
+    expect(resultado.valorMulta.cents).toBe(0);
+    expect(resultado.fundamentoLegal).toContain('Art. 20');
   });
 });
 
@@ -335,8 +345,9 @@ describe('FGTSCalculatorService.calcularRescisao — Integração', () => {
     expect(resultado.doencaGrave).not.toBeNull();
     expect(resultado.doencaGrave!.percentualLiberado).toBe(100);
     expect(resultado.saldoFinal.isPositive()).toBe(true);
-    // Multa de 40% (doença grave = dispensa equiparada)
-    expect(resultado.multa.percentualAplicado).toBe(40);
+    // Doença grave é evento de saque, sem multa patronal (Art. 20, XIII, Lei 8.036/90)
+    expect(resultado.multa.percentualAplicado).toBe(0);
+    expect(resultado.multaFinal.cents).toBe(0);
   });
 
   it('deve reter saldo com saque-aniversário mas manter multa', () => {

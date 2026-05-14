@@ -48,7 +48,7 @@ export class DoencaGraveService {
       saldoDisponivel: saldoFGTS, // 100% liberado
       percentualLiberado: 100,
       tipoDoenca,
-      fundamentoLegal: info?.fundamento ?? 'Lei 8.036/90, Art. 20, XIII',
+      fundamentoLegal: info.fundamento,
     };
   }
 
@@ -59,6 +59,6 @@ export class DoencaGraveService {
 
   /** Retorna a descrição da doença */
   static getDescricao(tipo: TipoDoencaGrave): string {
-    return DOENCAS_QUALIFICADAS[tipo]?.descricao ?? 'Doença grave não especificada';
+    return DOENCAS_QUALIFICADAS[tipo].descricao;
   }
 }
