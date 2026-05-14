@@ -26,23 +26,25 @@
   - `src/main.ts` – entry point (bootstrapper)
   - `src/index.html` – UI dashboard (Vite root)
 - Key services:
-  - `FGTSCalculatorService` – orchestrator
-  - `CorrecaoMonetariaService` – TR/IPCA + ADI 5090
-  - `MultaService` – rescisão multas (0%, 20%, 40%)
-  - `SaqueAniversarioService` – 7 faixas oficiais
-  - `DoencaGraveService` – 100% saque para doenças graves
+  - `FGTSCalculatorService` – orchestrator; also has domestic worker logic (LC 150/2015, 3.2% monthly reserve)
+  - `CorrecaoMonetariaService` – TR/IPCA + ADI 5090 (compares annual rates: `(1+TR+3%)^12-1` vs `(1+IPCA)^12-1`)
+  - `MultaService` – rescisão multas (40% dispensa sem justa causa; 20% acordo comum/culpa recíproca; 0% demais)
+  - `SaqueAniversarioService` – 7 faixas oficiais Caixa
+  - `DoencaGraveService` – 100% saque para doenças graves (câncer, HIV/AIDS, terminal)
 - Value Object: `Money` (uses Decimal.js for financial precision)
   - **Critical**: All monetary operations use cents internally to avoid IEEE 754 errors
   - Constructors: `Money.fromCents(12345)` and `Money.fromReais(123.45)` — prefer `fromReais` for human inputs
   - Global Decimal.js config: precision 20, rounding ROUND_HALF_EVEN (Banker's)
   - Immutable operations: `.add()`, `.subtract()`, `.multiply()`, `.divide()`, `.percentage()`, `.isPositive()`, `.toBRL()`
+- `FormatAdapter` has critical helpers: `parseMonetaryInput(string → Money)`, `parseDate(YYYY-MM-DD → Date)`, `getRescisaoLabel`
+- Domestic worker (TipoContrato.DOMESTICO): FGTS deposit 8%, separate 3.2% monthly indenização reserve (LC 150/2015, Art. 22). Multa calculation bypasses MultaService entirely — handled directly in `FGTSCalculatorService.calcularRescisao`
+- **15-day CLT rule**: `ContratoTrabalho.calcularMesesTrabalhados` applies it. `calcularDecimoTerceiro` and `calcularFeriasProporcionais` trust the caller to pre-process months with this rule — if passing months directly, apply `dias >= 15 → +1 avo` yourself
 - Entry point (`src/main.ts`): initializes `ThemeAdapter` and `UIAdapter` on DOMContentLoaded
 
 ## Testing
-- Test suite: Vitest (~58 unit tests) in `tests/unit/`
+- Test suite: Vitest (59 unit tests) in `tests/unit/`
 - Test file pattern: `tests/**/*.test.ts`
 - Coverage provider: v8 with 80% threshold on lines/branches/functions/statements
-- `calculator.test.js` is a **legacy JS test** that is still included in the suite
 - UI-dependent tests require `jsdom` environment (configured in vite.config.ts)
 
 ## Code Quality
