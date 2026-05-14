@@ -51,7 +51,7 @@ export enum TipoContrato {
   CLT_PADRAO = 'clt_padrao',
   /** Contrato de Aprendizagem — alíquota de 2% (Lei 10.097/2000) */
   APRENDIZ = 'aprendiz',
-  /** Trabalhador doméstico — alíquota de 3,2% (Lei 5.859/1972) */
+  /** Trabalhador doméstico — FGTS 8% + reserva indenização 3,2% mensal (LC 150/2015) */
   DOMESTICO = 'domestico',
 }
 
