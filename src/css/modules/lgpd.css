@@ -275,6 +275,35 @@
   color: var(--text-primary);
 }
 
+/* ─── Footer Privacy Button ──────────────────────────────── */
+
+.footer-privacy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  color: var(--text-muted);
+  font-size: var(--fs-caption);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all var(--transition);
+  width: 100%;
+  justify-content: center;
+}
+
+.footer-privacy-btn:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.footer-privacy-btn i {
+  color: inherit;
+}
+
 /* ─── Responsive ─────────────────────────────────────────── */
 
 @media (max-width: 640px) {

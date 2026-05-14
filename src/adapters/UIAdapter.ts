@@ -455,6 +455,11 @@ export class UIAdapter {
       this.openPrivacyModal();
     });
 
+    // Open privacy modal from footer button
+    document.getElementById('footerPrivacyBtn')?.addEventListener('click', () => {
+      this.openPrivacyModal();
+    });
+
     // Close modal
     document.getElementById('closePrivacyModal')?.addEventListener('click', () => {
       this.closePrivacyModal();
