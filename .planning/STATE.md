@@ -7,13 +7,13 @@
 See: `.planning/PROJECT.md` (updated 2026-05-14)
 
 **Core value:** Trabalhadores brasileiros CLT podem calcular estimativas confiáveis de seus direitos trabalhistas de graça, sem sair do navegador, sem enviar dados pessoais a servidores externos.
-**Current focus:** Phase 1 — INSS sobre Rescisão
+**Current focus:** Phase 2 — IRRF sobre Rescisão
 
 ## Phase State
 
 | # | Phase | Status | Plans | Progress |
 |---|-------|--------|-------|----------|
-| 1 | INSS sobre Rescisão | ○ Pending | 0/0 | 0% |
+| 1 | INSS sobre Rescisão | ✓ Complete | 3/3 | 100% |
 | 2 | IRRF sobre Rescisão | ○ Pending | 0/0 | 0% |
 | 3 | Aviso Prévio e Horas Extras | ○ Pending | 0/0 | 0% |
 | 4 | Adicional Noturno e Salário Maternidade | ○ Pending | 0/0 | 0% |
