@@ -591,6 +591,7 @@ export class UIAdapter {
         incluirFerias: this.incluirFeriasEl.checked,
         saqueAniversario: this.saqueAniversarioEl.checked,
         depositoHistoricoTotal,
+        calcularINSS: true,
       });
 
       this.updateUI(resultado);
@@ -743,6 +744,15 @@ export class UIAdapter {
       },
       { label: '13º Proporcional', value: resultado.decimoTerceiro, color: 'var(--donut-prop)' },
       { label: 'Férias Proporcionais + ⅓', value: resultado.ferias, color: 'var(--amber)' },
+      ...(resultado.inss
+        ? [
+            {
+              label: `INSS (${resultado.inss.faixaDescricao})`,
+              value: resultado.inss.valorINSS,
+              color: 'var(--danger)',
+            },
+          ]
+        : []),
       {
         label: `Correção Estimada (${resultado.correcao.indexadorUtilizado}+3%)`,
         value: resultado.detalhes.correcaoEstimada,

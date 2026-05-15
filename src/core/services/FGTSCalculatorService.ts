@@ -14,6 +14,7 @@ import type {
   ResultadoDoencaGrave,
 } from '../types';
 import { CorrecaoMonetariaService } from './CorrecaoMonetariaService';
+import { INSSService } from './INSSService';
 import { MultaService } from './MultaService';
 import { SaqueAniversarioService } from './SaqueAniversarioService';
 import { DoencaGraveService } from './DoencaGraveService';
@@ -96,6 +97,7 @@ export class FGTSCalculatorService {
       saqueAniversario,
       doencaGrave,
       indicesCorrecao,
+      calcularINSS,
     } = params;
 
     // 1. Depósito mensal
@@ -153,7 +155,10 @@ export class FGTSCalculatorService {
       ? this.calcularFeriasProporcionais(salarioBruto, mesesTrabalhados)
       : Money.zero();
 
-    // 5. Saque-Aniversário
+    // 5. INSS
+    const resultadoINSS = calcularINSS ? INSSService.calcular(salarioBruto) : null;
+
+    // 6. Saque-Aniversário
     let resultadoSaqueAniversario: ResultadoSaqueAniversario | null = null;
     let saldoFinal = saldoBase;
     let multaFinal = multa.valorMulta;
@@ -165,7 +170,7 @@ export class FGTSCalculatorService {
       multaFinal = impacto.multaFinal;
     }
 
-    // 6. Doença Grave
+    // 7. Doença Grave
     let resultadoDoencaGrave: ResultadoDoencaGrave | null = null;
     if (doencaGrave) {
       resultadoDoencaGrave = DoencaGraveService.calcular(saldoBase, doencaGrave);
@@ -173,12 +178,14 @@ export class FGTSCalculatorService {
       saldoFinal = saldoBase;
     }
 
-    // 7. Total
+    // 8. Total
     const total = saldoFinal.add(multaFinal).add(decimoTerceiro).add(ferias);
 
-    // 8. Correção estimada (diferença entre saldo corrigido e depósitos brutos)
+    // 9. Correção estimada (diferença entre saldo corrigido e depósitos brutos)
     const depositosBrutos = depositoMensal.multiply(mesesTrabalhados);
     const correcaoEstimada = saldoBase.subtract(depositosBrutos);
+
+    const salarioLiquido = resultadoINSS?.salarioLiquido ?? salarioBruto;
 
     return {
       saldoBase,
@@ -188,6 +195,7 @@ export class FGTSCalculatorService {
       ferias,
       saqueAniversario: resultadoSaqueAniversario,
       doencaGrave: resultadoDoencaGrave,
+      inss: resultadoINSS,
       saldoFinal,
       multaFinal,
       total,
@@ -198,6 +206,7 @@ export class FGTSCalculatorService {
         tipoContrato,
         saqueAniversarioAtivo: saqueAniversario,
         correcaoEstimada,
+        salarioLiquido,
       },
     };
   }
