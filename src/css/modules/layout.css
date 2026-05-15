@@ -1,4 +1,4 @@
-/* Shell da Aplicação */
+/* ═══ Shell da Aplicação ═══ */
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-w-min) 1fr;
@@ -13,10 +13,12 @@
   }
 }
 
-/* Sidebar Container */
+/* ═══ Sidebar Container ═══ */
 .sidebar {
-  background: var(--bg-surface);
-  border-right: 1px solid var(--border-subtle);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -24,7 +26,9 @@
   height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
-  transition: background var(--transition-slow);
+  transition:
+    background var(--transition-slow),
+    border-color var(--transition-slow);
 }
 
 .sidebar::-webkit-scrollbar {
@@ -41,34 +45,44 @@
     position: static;
     height: auto;
     border-right: none;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--bg-surface);
   }
 }
 
-/* Header da Sidebar */
+/* ═══ Header da Sidebar ═══ */
 .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 22px;
+  padding: 22px 24px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .brand-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--accent-dim);
-  border: 1px solid rgba(0, 209, 122, 0.2);
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--accent-dim), rgba(34, 211, 160, 0.18));
+  border: 1px solid rgba(34, 211, 160, 0.25);
   border-radius: var(--radius-md);
   display: grid;
   place-items: center;
   color: var(--accent);
+  transition: all var(--transition);
+  box-shadow: 0 2px 8px rgba(34, 211, 160, 0.1);
+}
+
+.brand:hover .brand-icon {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-glow);
 }
 
 .brand-text {
@@ -78,9 +92,22 @@
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.04em;
+  background: linear-gradient(135deg, var(--text-primary), var(--accent));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Desabilita gradiente no alto contraste para legibilidade */
+@media (prefers-contrast: more) {
+  .brand-name {
+    background: none;
+    -webkit-text-fill-color: var(--text-primary);
+    color: var(--text-primary);
+  }
 }
 
 .brand-sub {
@@ -90,13 +117,13 @@
   text-transform: uppercase;
 }
 
-/* Theme Toggle Button */
+/* ═══ Theme Toggle Button ═══ */
 .theme-toggle {
   background: var(--bg-elevated);
   border: 1px solid var(--border-mid);
   border-radius: var(--radius-full);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -116,19 +143,28 @@
 .theme-toggle:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-dim);
+  transform: rotate(15deg);
 }
 
-/* Rodapé da Sidebar */
+.theme-toggle:active {
+  transform: rotate(15deg) scale(0.92);
+}
+
+/* ═══ Rodapé da Sidebar ═══ */
 .sidebar-footer {
   margin-top: auto;
-  padding: 16px 22px;
+  padding: 18px 24px;
   border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .badge-project {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 11px;
   color: var(--text-muted);
 }
@@ -136,21 +172,23 @@
 .github-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 8px;
   font-size: 12px;
   color: var(--text-muted);
   text-decoration: none;
-  opacity: 0.65;
+  opacity: 0.7;
   transition:
     opacity 0.2s,
-    color 0.2s;
+    color 0.2s,
+    transform 0.2s;
+  padding: 6px 0;
 }
 
 .github-link:hover,
 .github-link:focus-visible {
   opacity: 1;
   color: var(--text-primary);
+  transform: translateX(2px);
 }
 
 .github-link svg {

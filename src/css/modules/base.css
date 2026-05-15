@@ -1,9 +1,19 @@
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   transition:
     background-color 0.2s ease,
     color 0.2s ease;
+  scroll-behavior: smooth;
+}
+
+/* Respeita preferência do sistema por smooth scroll */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 input,
@@ -14,6 +24,7 @@ textarea,
   touch-action: manipulation;
 }
 
+/* ═══ Reduced Motion — Acessibilidade ═══ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -37,7 +48,32 @@ body {
     color var(--transition-slow);
 }
 
-/* Acessibilidade */
+/* ═══ Seleção de Texto ═══ */
+::selection {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+/* ═══ Scrollbar Custom ═══ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-mid);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ═══ Acessibilidade ═══ */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -57,39 +93,52 @@ body {
   z-index: 9999;
   background: var(--accent);
   color: var(--text-on-accent);
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: var(--radius-md);
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   font-size: 14px;
   transition: top var(--transition);
+  box-shadow: var(--shadow-lg);
 }
 
 .skip-link:focus {
   top: 8px;
 }
 
+/* ═══ Focus Visible — Anel de foco universal ═══ */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2.5px solid var(--accent);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
 
-/* Helpers & Animações Globais */
+/* Alto contraste: anel mais espesso */
+@media (prefers-contrast: more) {
+  :focus-visible {
+    outline-width: 3px;
+    outline-offset: 4px;
+  }
+}
+
+/* ═══ Helpers & Ícones ═══ */
 .icon-xs {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 .icon-sm {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
+/* ═══ Animações Globais ═══ */
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -97,7 +146,45 @@ body {
   }
 }
 
-/* Theme fade overlay */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes subtle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px var(--accent-glow);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ═══ Theme Fade Overlay ═══ */
 .theme-fade-overlay {
   position: fixed;
   inset: 0;

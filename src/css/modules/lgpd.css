@@ -10,19 +10,28 @@
   left: 0;
   right: 0;
   z-index: 9998;
-  background: var(--bg-elevated);
-  border-top: 1px solid var(--border-subtle);
-  padding: 12px var(--pad-panel);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  animation: slide-up 0.3s ease;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-top: 1px solid var(--glass-border);
+  padding: 14px var(--pad-panel);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
+  animation: slide-up 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme='light'] .privacy-banner {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 @keyframes slide-up {
   from {
     transform: translateY(100%);
+    opacity: 0;
   }
   to {
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
@@ -31,7 +40,7 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .privacy-banner-content i {
@@ -56,8 +65,9 @@
 .privacy-link {
   color: var(--accent);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
   transition: color var(--transition);
+  font-weight: 500;
 }
 
 .privacy-link:hover {
@@ -69,13 +79,15 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  padding: 6px;
+  padding: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition);
   flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .btn-dismiss:hover {
@@ -96,39 +108,31 @@
   animation: fade-in 0.2s ease;
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 .privacy-modal-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .privacy-modal-content {
   position: relative;
   background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  width: min(90vw, 680px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  width: min(90vw, 700px);
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
-  animation: modal-enter 0.25s ease;
+  box-shadow: var(--shadow-xl);
+  animation: modal-enter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes modal-enter {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(10px);
+    transform: scale(0.92) translateY(16px);
   }
   to {
     opacity: 1;
@@ -146,7 +150,7 @@
 
 .privacy-modal-header h2 {
   font-size: var(--fs-metric-value);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
@@ -156,12 +160,14 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
-  padding: 6px;
+  padding: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition);
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .btn-close-modal:hover {
@@ -174,15 +180,15 @@
   overflow-y: auto;
   font-size: var(--fs-body);
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .privacy-modal-body h3 {
   font-size: var(--fs-label);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
-  margin: 20px 0 8px;
-  padding-top: 12px;
+  margin: 22px 0 8px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -202,12 +208,12 @@
 }
 
 .privacy-modal-body li {
-  margin: 4px 0;
+  margin: 6px 0;
 }
 
 .privacy-modal-body code {
   background: var(--bg-input);
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 0.9em;
@@ -217,7 +223,7 @@
 .privacy-modal-body a {
   color: var(--accent);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
 
 .privacy-modal-body a:hover {
@@ -239,10 +245,11 @@
   background: var(--danger-dim);
   border: 1px solid rgba(248, 113, 113, 0.25);
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: 14px;
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-top: 10px;
+  animation: fade-in-up 0.3s ease;
 }
 
 .lgpd-consent-box i {
@@ -259,7 +266,7 @@
   margin: 4px 0;
   font-size: var(--fs-caption);
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .lgpd-consent-content strong {
@@ -267,7 +274,7 @@
 }
 
 .lgpd-consent-checkbox {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .lgpd-consent-checkbox .toggle-label {
@@ -280,11 +287,11 @@
 .footer-privacy-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: transparent;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
   color: var(--text-muted);
   font-size: var(--fs-caption);
   font-family: var(--font-ui);
@@ -292,6 +299,7 @@
   transition: all var(--transition);
   width: 100%;
   justify-content: center;
+  min-height: 36px;
 }
 
 .footer-privacy-btn:hover {
@@ -308,12 +316,12 @@
 
 @media (max-width: 640px) {
   .privacy-banner {
-    padding: 10px 12px;
+    padding: 12px 14px;
   }
 
   .privacy-banner-content {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
   }
 
   .privacy-banner-text {
@@ -323,17 +331,18 @@
   .privacy-modal-content {
     width: 95vw;
     max-height: 90vh;
+    border-radius: var(--radius-lg);
   }
 
   .privacy-modal-header {
-    padding: 12px;
+    padding: 14px;
   }
 
   .privacy-modal-header h2 {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .privacy-modal-body {
-    padding: 12px;
+    padding: 14px;
   }
 }

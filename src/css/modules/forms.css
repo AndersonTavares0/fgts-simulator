@@ -1,5 +1,7 @@
+/* ═══ FORM SECTIONS ═══ */
+
 .form-section {
-  padding: 20px 22px 0;
+  padding: 22px 24px 0;
 }
 
 .form-section:last-of-type {
@@ -10,21 +12,22 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .form-section-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: var(--accent-dim);
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, var(--accent-dim), rgba(34, 211, 160, 0.2));
   color: var(--accent);
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
+  border: 1px solid rgba(34, 211, 160, 0.15);
 }
 
 .form-section-label {
@@ -36,21 +39,30 @@
   margin-bottom: 0;
 }
 
+/* ═══ FIELD GROUPS ═══ */
+
 .field-group {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+fieldset.field-row {
+  border: none;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
 }
 
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 480px) {
   .field-row {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 14px;
   }
 }
 
@@ -61,7 +73,7 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .field-label-text {
@@ -75,30 +87,38 @@
   line-height: 1;
 }
 
+/* ═══ INPUT FIELDS ═══ */
+
 .field-input {
   width: 100%;
   background: var(--bg-input);
   color: var(--text-primary);
-  border: 1px solid var(--border-mid);
+  border: 1.5px solid var(--border-mid);
   border-radius: var(--radius-md);
-  padding: 13px 14px;
+  padding: 14px 16px;
   font-size: var(--fs-body);
   font-family: var(--font-ui);
   transition: all var(--transition);
   appearance: none;
   -webkit-appearance: none;
-  min-height: 44px;
+  min-height: 48px;
   box-sizing: border-box;
 }
 
 .field-input:hover {
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--bg-elevated);
+}
+
+[data-theme='light'] .field-input:hover {
+  border-color: rgba(0, 0, 0, 0.18);
+  background: var(--bg-elevated);
 }
 
 .field-input:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 3px var(--accent-glow), var(--shadow-sm);
 }
 
 .field-input::placeholder {
@@ -117,7 +137,7 @@ input[type='date'].field-input {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .select-wrapper {
@@ -133,45 +153,49 @@ input[type='date'].field-input {
 }
 
 .field-input.has-prefix {
-  padding-left: 12px;
+  padding-left: 14px;
   flex: 1;
   min-width: 0;
 }
 
 .select-arrow {
   position: absolute;
-  right: 12px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
+  transition: transform var(--transition);
 }
 
 select.field-input {
-  padding-right: 32px;
+  padding-right: 36px;
   cursor: pointer;
 }
 
-/* Multa Badge */
+/* ═══ MULTA BADGE ═══ */
+
 .multa-badge {
   display: inline-flex;
   align-items: center;
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 600;
-  margin-top: 8px;
-  transition: all var(--transition);
+  margin-top: 10px;
+  transition: all var(--transition-spring);
 }
 
 .multa-badge.bg-green-500 {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), rgba(34, 211, 160, 0.85));
   color: var(--text-on-accent);
+  box-shadow: 0 2px 12px rgba(34, 211, 160, 0.3);
 }
 
 .multa-badge.bg-yellow-500 {
-  background: var(--amber);
+  background: linear-gradient(135deg, var(--amber), rgba(245, 185, 64, 0.85));
   color: #1a0a00;
+  box-shadow: 0 2px 12px rgba(245, 185, 64, 0.2);
 }
 
 .multa-badge.bg-gray-500 {
@@ -180,7 +204,8 @@ select.field-input {
   border: 1px solid var(--border-mid);
 }
 
-/* Toggles e Checkboxes */
+/* ═══ TOGGLES & CHECKBOXES ═══ */
+
 .options-grid {
   display: flex;
   flex-direction: column;
@@ -190,12 +215,12 @@ select.field-input {
 .option-toggle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
-  padding: 10px 12px;
-  min-height: 44px;
+  padding: 12px 14px;
+  min-height: 48px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid var(--border-subtle);
   transition: all var(--transition);
   box-sizing: border-box;
 }
@@ -214,10 +239,10 @@ select.field-input {
 
 .toggle-track {
   flex-shrink: 0;
-  width: 32px;
-  height: 18px;
+  width: 36px;
+  height: 20px;
   background: var(--bg-elevated);
-  border: 1px solid var(--border-mid);
+  border: 1.5px solid var(--border-mid);
   border-radius: var(--radius-full);
   position: relative;
   transition: all var(--transition);
@@ -226,13 +251,13 @@ select.field-input {
 .toggle-track::after {
   content: '';
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: var(--text-muted);
   border-radius: 50%;
   top: 2px;
   left: 2px;
-  transition: all var(--transition);
+  transition: all var(--transition-spring);
 }
 
 .option-toggle input:checked + .toggle-track {
@@ -242,11 +267,12 @@ select.field-input {
 
 .option-toggle input:checked + .toggle-track::after {
   background: var(--accent);
-  transform: translateX(14px);
+  transform: translateX(16px);
+  box-shadow: 0 0 8px rgba(34, 211, 160, 0.4);
 }
 
 .option-toggle input:focus-visible + .toggle-track {
-  outline: 2px solid var(--accent);
+  outline: 2.5px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -254,18 +280,20 @@ select.field-input {
   font-size: 13px;
   color: var(--text-secondary);
   font-weight: 500;
+  transition: color var(--transition);
 }
 
 .option-toggle input:checked ~ .toggle-label {
   color: var(--text-primary);
 }
 
-/* Botões */
+/* ═══ BUTTONS ═══ */
+
 .form-actions {
-  padding: 20px 22px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .btn-primary,
@@ -274,7 +302,7 @@ select.field-input {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
   border-radius: var(--radius-lg);
   font-family: var(--font-ui);
@@ -283,37 +311,54 @@ select.field-input {
 }
 
 .btn-primary {
-  padding: 14px 20px;
-  min-height: 44px;
-  background: var(--accent);
+  padding: 16px 22px;
+  min-height: 48px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
   color: var(--text-on-accent);
   border: none;
   font-size: var(--fs-button);
   font-weight: 700;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 16px rgba(34, 211, 160, 0.3);
+  letter-spacing: 0.02em;
 }
 
-.btn-primary::after {
+.btn-primary::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: transparent;
-  transition: background var(--transition);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity var(--transition);
 }
 
-.btn-primary:hover::after {
-  background: rgba(255, 255, 255, 0.1);
+.btn-primary:hover::before {
+  opacity: 1;
+  animation: shimmer 1.5s ease infinite;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(34, 211, 160, 0.4);
+  transform: translateY(-1px);
 }
 
 .btn-primary:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(34, 211, 160, 0.2);
 }
 
 .btn-primary:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .loading-spinner {
@@ -334,11 +379,11 @@ select.field-input {
 }
 
 .btn-secondary {
-  padding: 13px 20px;
-  min-height: 44px;
+  padding: 14px 22px;
+  min-height: 48px;
   background: var(--bg-elevated);
   color: var(--text-primary);
-  border: 1px solid var(--border-mid);
+  border: 1.5px solid var(--border-mid);
   font-size: var(--fs-body);
   font-weight: 600;
 }
@@ -346,14 +391,20 @@ select.field-input {
 .btn-secondary:hover {
   border-color: var(--accent);
   background: var(--accent-dim);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
 }
 
 .btn-ghost {
-  padding: 12px 20px;
-  min-height: 44px;
+  padding: 14px 22px;
+  min-height: 48px;
   background: transparent;
   color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid var(--border-subtle);
   font-size: var(--fs-body);
   font-weight: 500;
 }
@@ -364,14 +415,16 @@ select.field-input {
   background: var(--bg-hover);
 }
 
-/* Erros inline */
+/* ═══ INLINE ERRORS ═══ */
+
 .error-message {
   font-size: 12px;
   color: var(--danger);
-  margin-top: 5px;
+  margin-top: 6px;
   display: flex;
   align-items: center;
   gap: 4px;
+  animation: fade-in-up 0.2s ease;
 }
 
 .field-input[aria-invalid='true'] {
@@ -379,7 +432,8 @@ select.field-input {
   box-shadow: 0 0 0 3px var(--danger-dim) !important;
 }
 
-/* Health Info Box (Saque Doença Grave) */
+/* ═══ HEALTH INFO BOX ═══ */
+
 .health-info-box {
   display: flex;
   align-items: flex-start;
@@ -387,8 +441,9 @@ select.field-input {
   background: var(--teal-dim);
   border: 1px solid rgba(0, 191, 165, 0.2);
   border-radius: var(--radius-md);
-  padding: 12px 16px;
+  padding: 14px 18px;
   margin-top: 12px;
+  animation: fade-in-up 0.3s ease;
 }
 
 .health-info-box i {
@@ -411,7 +466,7 @@ select.field-input {
 
 .health-info-content ul {
   margin: 0;
-  padding-left: 16px;
+  padding-left: 18px;
   font-size: 12.5px;
   color: var(--text-secondary);
   display: flex;
@@ -424,16 +479,17 @@ select.field-input {
   font-weight: 600;
 }
 
-/* Accordion */
+/* ═══ ACCORDION ═══ */
+
 .accordion-section {
-  padding: 0 22px 20px;
+  padding: 0 24px 22px;
 }
 
 .accordion-content {
   background: var(--bg-elevated);
   border: 1px solid var(--border-mid);
   border-radius: var(--radius-lg);
-  padding: 16px;
+  padding: 18px;
   margin-top: 12px;
   animation: slideDown 0.3s ease-out;
 }
@@ -452,12 +508,12 @@ select.field-input {
 .accordion-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .explain-item {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: flex-start;
 }
 
@@ -470,8 +526,8 @@ select.field-input {
 }
 
 .explain-item p {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
 }

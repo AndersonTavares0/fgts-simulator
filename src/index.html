@@ -1,13 +1,16 @@
 <!doctype html>
-<html lang="pt-br" data-theme="dark">
+<html lang="pt-BR" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FGTS · Simulador de Rescisão</title>
+    <meta name="color-scheme" content="dark light" />
+    <title>FGTS · Simulador de Rescisão Trabalhista</title>
     <meta
       name="description"
-      content="Simulador de FGTS e rescisão trabalhista — Projeto de Extensão UNINTER. Cálculo preciso com base na CLT."
+      content="Simulador gratuito de FGTS e rescisão trabalhista. Calcule saldo, multa rescisória, 13º proporcional e férias com base na CLT. Projeto de Extensão UNINTER."
     />
+    <meta name="theme-color" content="#060b14" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f0f4f8" media="(prefers-color-scheme: light)" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -17,17 +20,19 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <!-- Skip link para navegação por teclado -->
+    <!-- Skip links para navegação por teclado (WCAG 2.4.1) -->
     <a href="#fgtsForm" class="skip-link">Pular para o formulário</a>
+    <a href="#resultsContent" class="skip-link" style="left: 200px">Pular para os resultados</a>
 
-    <!-- Live region para leitores de tela -->
+    <!-- Live regions para leitores de tela (WCAG 4.1.3) -->
     <div id="results-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
     <div id="theme-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    <div id="error-live-region" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
     <div id="theme-fade-overlay" class="theme-fade-overlay" aria-hidden="true"></div>
 
     <div class="app-shell">
       <!-- ═══ SIDEBAR / PAINEL DE ENTRADA ═══ -->
-      <aside class="sidebar" aria-label="Formulário de dados do contrato">
+      <aside class="sidebar" role="complementary" aria-label="Formulário de dados do contrato">
         <!-- Header da sidebar -->
         <div class="sidebar-header">
           <div class="brand">
@@ -83,11 +88,11 @@
               >
             </div>
 
-            <div class="field-row">
+            <fieldset class="field-row" role="group" aria-label="Período do contrato de trabalho">
               <div class="field-group">
                 <label class="field-label" for="inicio">
                   <span class="field-label-text">Início</span>
-                  <span class="required-indicator" aria-required="true">*</span>
+                  <span class="required-indicator" aria-hidden="true">*</span>
                   <i data-lucide="calendar-plus" class="icon-xs" aria-hidden="true"></i>
                 </label>
                 <input
@@ -96,14 +101,15 @@
                   type="date"
                   aria-describedby="inicio-help"
                   aria-required="true"
+                  required
                   class="field-input"
                 />
-                <span id="inicio-help" class="sr-only">Data de início do contrato</span>
+                <span id="inicio-help" class="sr-only">Data de início do contrato de trabalho, no formato dia, mês e ano</span>
               </div>
               <div class="field-group">
                 <label class="field-label" for="termino">
                   <span class="field-label-text">Término</span>
-                  <span class="required-indicator" aria-required="true">*</span>
+                  <span class="required-indicator" aria-hidden="true">*</span>
                   <i data-lucide="calendar-minus" class="icon-xs" aria-hidden="true"></i>
                 </label>
                 <input
@@ -112,11 +118,12 @@
                   type="date"
                   aria-describedby="termino-help"
                   aria-required="true"
+                  required
                   class="field-input"
                 />
-                <span id="termino-help" class="sr-only">Data de término do contrato</span>
+                <span id="termino-help" class="sr-only">Data de término do contrato de trabalho, no formato dia, mês e ano</span>
               </div>
-            </div>
+            </fieldset>
 
             <div class="field-group">
               <label class="field-label" for="motivo">
@@ -146,7 +153,7 @@
               <span id="motivo-help" class="sr-only"
                 >Selecione o motivo do encerramento do contrato</span
               >
-              <div id="multaBadge" class="multa-badge bg-gray-500" aria-live="polite">
+              <div id="multaBadge" class="multa-badge bg-gray-500" role="status" aria-live="polite" aria-label="Percentual da multa rescisória">
                 Multa: 0%
               </div>
               <div
@@ -195,16 +202,16 @@
               </div>
             </div>
 
-            <div class="field-group">
+            <div class="field-group" role="group" aria-label="Tipo de contrato de trabalho">
               <label class="option-toggle">
-                <input id="isAprendiz" type="checkbox" />
+                <input id="isAprendiz" type="checkbox" aria-label="Contrato de Aprendizagem, alíquota FGTS de 2 por cento" />
                 <span class="toggle-track" aria-hidden="true"></span>
                 <span class="toggle-label">Contrato de Aprendizagem (2%)</span>
               </label>
             </div>
             <div class="field-group">
               <label class="option-toggle">
-                <input id="isDomestico" type="checkbox" />
+                <input id="isDomestico" type="checkbox" aria-label="Trabalhador Doméstico, alíquota FGTS de 8 por cento mais 3,2 por cento de reserva indenizatória" />
                 <span class="toggle-track" aria-hidden="true"></span>
                 <span class="toggle-label">Trabalhador Doméstico (8% + 3,2% multa)</span>
               </label>
@@ -340,8 +347,8 @@
       </aside>
 
       <!-- ═══ PAINEL DE RESULTADOS ═══ -->
-      <main class="results-panel" role="main" aria-labelledby="titulo-resultados">
-        <h1 id="titulo-resultados" class="sr-only">Resultados da Simulação FGTS</h1>
+      <main class="results-panel" aria-labelledby="titulo-resultados">
+        <h1 id="titulo-resultados" class="sr-only">Resultados da Simulação de FGTS e Rescisão Trabalhista</h1>
 
         <!-- Estado vazio (antes do cálculo) -->
         <div class="empty-state" id="emptyState" aria-live="polite">
@@ -567,8 +574,7 @@
                 </text>
               </svg>
 
-              <!-- Tooltip do donut -->
-              <div id="donutTooltip" class="donut-tooltip" role="tooltip" aria-hidden="true"></div>
+              <!-- Tooltip do donut movido para fora dos containers glass -->
 
               <!-- Legenda -->
               <div class="donut-legend">
@@ -658,12 +664,15 @@
       </main>
     </div>
 
+    <!-- Tooltip do donut (fora de containers com backdrop-filter para position:fixed funcionar) -->
+    <div id="donutTooltip" class="donut-tooltip" role="tooltip" aria-hidden="true"></div>
+
     <!-- ═══ BARRA DE PRIVACIDADE LGPD ═══ -->
     <div
       id="privacyBanner"
       class="privacy-banner"
-      role="banner"
-      aria-label="Aviso de privacidade LGPD"
+      role="region"
+      aria-label="Aviso de privacidade e proteção de dados conforme LGPD"
     >
       <div class="privacy-banner-content">
         <i data-lucide="shield-check" class="icon-sm" aria-hidden="true"></i>
