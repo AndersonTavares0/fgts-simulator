@@ -27,6 +27,7 @@
 ## Contexto Acadêmico
 
 Este projeto foi desenvolvido como atividade de **Extensão Universitária** para o curso de **Engenharia de Software** do Centro Universitário Internacional **UNINTER**. O objetivo central é utilizar o desenvolvimento de software como instrumento de promoção da justiça social, focando na literacia financeira e na inclusão digital de trabalhadores regidos pela CLT.
+> ⚠️ Este projeto foi desenvolvido como atividade acadêmica de extensão universitária. O uso indevido para submissão acadêmica por terceiros configura plágio e viola princípios de integridade acadêmica.
 
 ## Descrição do Projeto
 
