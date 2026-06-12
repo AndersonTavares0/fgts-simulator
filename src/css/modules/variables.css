@@ -15,14 +15,14 @@
   --bg-input: #080e1c;
 
   /* ═══ Glassmorphism ═══ */
-  --glass-bg: rgba(12, 21, 38, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(12, 21, 38, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.1);
   --glass-blur: 16px;
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 
   /* ═══ Bordas ═══ */
-  --border-subtle: rgba(255, 255, 255, 0.065);
-  --border-mid: rgba(255, 255, 255, 0.12);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-mid: rgba(255, 255, 255, 0.18);
   --border-focus: #22d3a0;
 
   /* ═══ Textos — WCAG AA Compliant ═══ */
@@ -116,9 +116,9 @@
   --bg-hover: #eaeff5;
   --bg-input: #ffffff;
 
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(0, 0, 0, 0.06);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 
   --border-subtle: rgba(0, 0, 0, 0.07);
   --border-mid: rgba(0, 0, 0, 0.12);
