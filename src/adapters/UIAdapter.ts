@@ -536,6 +536,14 @@ export class UIAdapter {
         return;
       }
 
+      // Validate required fields
+      const errors = this.validateRequiredFields();
+      if (errors.length > 0) {
+        // Show first error
+        this.showError(errors[0].message, errors[0].element);
+        return;
+      }
+
       // Parse and validate salary
       const salario = FormatAdapter.parseMonetaryInput(this.salarioEl.value);
       if (!salario) {
@@ -600,6 +608,37 @@ export class UIAdapter {
     } finally {
       this.setLoading(false);
     }
+  }
+
+  /** Validates all required fields and returns array of errors with element references */
+  private validateRequiredFields(): Array<{ message: string; element: HTMLElement }> {
+    const errors: Array<{ message: string; element: HTMLElement }> = [];
+
+    // Salary
+    const salarioValue = this.salarioEl.value.trim();
+    if (!salarioValue) {
+      errors.push({ message: 'Salário bruto é obrigatório.', element: this.salarioEl });
+    }
+
+    // Start date
+    const inicioValue = this.inicioEl.value.trim();
+    if (!inicioValue) {
+      errors.push({ message: 'Data de início é obrigatória.', element: this.inicioEl });
+    }
+
+    // End date
+    const terminoValue = this.terminoEl.value.trim();
+    if (!terminoValue) {
+      errors.push({ message: 'Data de término é obrigatória.', element: this.terminoEl });
+    }
+
+    // Reason (select always has a value, but double-check)
+    const motivoValue = this.motivoEl.value;
+    if (!motivoValue) {
+      errors.push({ message: 'Motivo da saída é obrigatório.', element: this.motivoEl });
+    }
+
+    return errors;
   }
 
   private setLoading(isLoading: boolean): void {
