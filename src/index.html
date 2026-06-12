@@ -104,7 +104,9 @@
                   required
                   class="field-input"
                 />
-                <span id="inicio-help" class="sr-only">Data de início do contrato de trabalho, no formato dia, mês e ano</span>
+                <span id="inicio-help" class="sr-only"
+                  >Data de início do contrato de trabalho, no formato dia, mês e ano</span
+                >
               </div>
               <div class="field-group">
                 <label class="field-label" for="termino">
@@ -121,7 +123,9 @@
                   required
                   class="field-input"
                 />
-                <span id="termino-help" class="sr-only">Data de término do contrato de trabalho, no formato dia, mês e ano</span>
+                <span id="termino-help" class="sr-only"
+                  >Data de término do contrato de trabalho, no formato dia, mês e ano</span
+                >
               </div>
             </fieldset>
 
@@ -153,7 +157,13 @@
               <span id="motivo-help" class="sr-only"
                 >Selecione o motivo do encerramento do contrato</span
               >
-              <div id="multaBadge" class="multa-badge bg-gray-500" role="status" aria-live="polite" aria-label="Percentual da multa rescisória">
+              <div
+                id="multaBadge"
+                class="multa-badge bg-gray-500"
+                role="status"
+                aria-live="polite"
+                aria-label="Percentual da multa rescisória"
+              >
                 Multa: 0%
               </div>
               <div
@@ -204,14 +214,22 @@
 
             <div class="field-group" role="group" aria-label="Tipo de contrato de trabalho">
               <label class="option-toggle">
-                <input id="isAprendiz" type="checkbox" aria-label="Contrato de Aprendizagem, alíquota FGTS de 2 por cento" />
+                <input
+                  id="isAprendiz"
+                  type="checkbox"
+                  aria-label="Contrato de Aprendizagem, alíquota FGTS de 2 por cento"
+                />
                 <span class="toggle-track" aria-hidden="true"></span>
                 <span class="toggle-label">Contrato de Aprendizagem (2%)</span>
               </label>
             </div>
             <div class="field-group">
               <label class="option-toggle">
-                <input id="isDomestico" type="checkbox" aria-label="Trabalhador Doméstico, alíquota FGTS de 8 por cento mais 3,2 por cento de reserva indenizatória" />
+                <input
+                  id="isDomestico"
+                  type="checkbox"
+                  aria-label="Trabalhador Doméstico, alíquota FGTS de 8 por cento mais 3,2 por cento de reserva indenizatória"
+                />
                 <span class="toggle-track" aria-hidden="true"></span>
                 <span class="toggle-label">Trabalhador Doméstico (8% + 3,2% multa)</span>
               </label>
@@ -320,6 +338,24 @@
 
         <!-- Badge do projeto -->
         <div class="sidebar-footer">
+          <div
+            class="institutional-info"
+            role="note"
+            aria-label="Informações institucionais do projeto"
+          >
+            <p class="institutional-text">
+              Este projeto foi desenvolvido como atividade de Extensão Universitária para o curso de
+              Engenharia de Software do Centro Universitário Internacional UNINTER. O objetivo
+              central é utilizar o desenvolvimento de software como instrumento de promoção da
+              justiça social, focando na literacia financeira e na inclusão digital de trabalhadores
+              regidos pela CLT.
+            </p>
+            <p class="institutional-disclaimer">
+              Este projeto foi desenvolvido como atividade acadêmica de extensão universitária. O
+              uso indevido para submissão acadêmica por terceiros configura plágio e viola
+              princípios de integridade acadêmica.
+            </p>
+          </div>
           <span class="badge-project">
             <i data-lucide="graduation-cap" class="icon-xs" aria-hidden="true"></i>
             Extensão Universitária · UNINTER
@@ -348,7 +384,9 @@
 
       <!-- ═══ PAINEL DE RESULTADOS ═══ -->
       <main class="results-panel" aria-labelledby="titulo-resultados">
-        <h1 id="titulo-resultados" class="sr-only">Resultados da Simulação de FGTS e Rescisão Trabalhista</h1>
+        <h1 id="titulo-resultados" class="sr-only">
+          Resultados da Simulação de FGTS e Rescisão Trabalhista
+        </h1>
 
         <!-- Estado vazio (antes do cálculo) -->
         <div class="empty-state" id="emptyState" aria-live="polite">
@@ -795,10 +833,10 @@
 
           <h3>9. Recursos de Terceiros (CDNs)</h3>
           <p>
-            Para garantir a melhor experiência visual e performance, este site carrega fontes (Google
-            Fonts) e ícones (Lucide via Unpkg) de provedores externos. Ao acessar o simulador, seu
-            endereço IP pode ser processado por esses provedores exclusivamente para a entrega técnica
-            desses ativos.
+            Para garantir a melhor experiência visual e performance, este site carrega fontes
+            (Google Fonts) e ícones (Lucide via Unpkg) de provedores externos. Ao acessar o
+            simulador, seu endereço IP pode ser processado por esses provedores exclusivamente para
+            a entrega técnica desses ativos.
           </p>
 
           <h3>10. Contato</h3>
