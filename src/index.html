@@ -30,6 +30,35 @@
     <div id="error-live-region" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
     <div id="theme-fade-overlay" class="theme-fade-overlay" aria-hidden="true"></div>
 
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="navbar" role="navigation" aria-label="Navegação principal">
+      <div class="navbar-content">
+        <div class="navbar-brand">
+          <i data-lucide="landmark" class="icon-sm" aria-hidden="true"></i>
+          <span class="navbar-title">FGTS Simulator</span>
+        </div>
+        <div class="navbar-actions">
+          <a
+            href="https://github.com/AndersonTavares0/Projeto-FGTS"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="navbar-link"
+            aria-label="GitHub"
+          >
+            <i data-lucide="github" class="icon-sm"></i>
+          </a>
+          <button
+            id="navbarThemeToggle"
+            class="navbar-link"
+            type="button"
+            aria-label="Alternar tema"
+          >
+            <i data-lucide="moon" class="icon-sm"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
     <div class="app-shell">
       <!-- ═══ SIDEBAR / PAINEL DE ENTRADA ═══ -->
       <aside class="sidebar" role="complementary" aria-label="Formulário de dados do contrato">
@@ -856,6 +885,19 @@
         </div>
       </div>
     </div>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="app-footer" role="contentinfo">
+      <div class="footer-content">
+        <p class="footer-text">
+          <i data-lucide="graduation-cap" class="icon-xs" aria-hidden="true"></i>
+          Extensão Universitária · UNINTER · Engenharia de Software
+        </p>
+        <p class="footer-disclaimer">
+          Este é um projeto educacional. Não substitui assessoria jurídica profissional.
+        </p>
+      </div>
+    </footer>
 
     <!-- TypeScript Entry Point (Vite compila automaticamente) -->
     <script src="https://unpkg.com/lucide@0.460.0"></script>
