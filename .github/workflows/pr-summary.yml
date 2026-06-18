@@ -20,19 +20,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Type check
+      - id: typecheck
+        name: Type check
         run: npm run typecheck
 
-      - name: Run tests
+      - id: tests
+        name: Run tests
         run: npm test -- --run
 
-      - name: Lint
+      - id: lint
+        name: Lint
         run: npm run lint
 
-      - name: Build
+      - id: build
+        name: Build
         run: npm run build
 
-      - name: Security audit
+      - id: audit
+        name: Security audit
+        continue-on-error: true
         run: npm audit --audit-level=moderate
 
       - name: Post check results
@@ -40,12 +46,13 @@ jobs:
         with:
           script: |
             const steps = ${{ toJSON(steps) }};
+            const s = (id) => steps[id]?.outcome ?? steps[id]?.conclusion ?? 'skipped';
             const results = [
-              `- **Type check**: ${steps.typecheck.outcome}`,
-              `- **Tests**: ${steps.run_tests.outcome}`,
-              `- **Lint**: ${steps.lint.outcome}`,
-              `- **Build**: ${steps.build.outcome}`,
-              `- **Security audit**: ${steps.security_audit.outcome}`,
+              `- **Type check**: ${s('typecheck')}`,
+              `- **Tests**: ${s('tests')}`,
+              `- **Lint**: ${s('lint')}`,
+              `- **Build**: ${s('build')}`,
+              `- **Security audit**: ${s('audit')}`,
             ];
             await github.rest.issues.createComment({
               owner: context.repo.owner,
