@@ -9,8 +9,14 @@
  * Base legal: Lei 13.932/2019
  */
 
-import { Money } from '../types';
+import { Money, TipoRescisao } from '../types';
 import type { ResultadoSaqueAniversario } from '../types';
+
+const HIPOTESES_SAQUE_INTEGRAL = new Set<TipoRescisao>([
+  TipoRescisao.DOENCA_GRAVE,
+  TipoRescisao.APOSENTADORIA,
+  TipoRescisao.FALECIMENTO,
+]);
 
 interface FaixaSaque {
   limiteInferior: number;
@@ -104,9 +110,12 @@ export class SaqueAniversarioService {
   /**
    * Calcula o impacto do Saque-Aniversário na rescisão.
    *
-   * No Saque-Aniversário, o trabalhador:
+   * No Saque-Aniversário, em regra, o trabalhador:
    *  - NÃO saca o saldo principal (fica retido para saques anuais futuros)
    *  - RECEBE a multa rescisória integralmente (40% ou 20%)
+   *
+   * Hipóteses de saque integral (aposentadoria, falecimento e doença grave)
+   * preservam a liberação do saldo mesmo com Saque-Aniversário ativo.
    *
    * @param saldoFGTS Saldo do FGTS
    * @param multaRescisoria Valor da multa rescisória
@@ -114,7 +123,16 @@ export class SaqueAniversarioService {
   static calcularImpactoRescisao(
     saldoFGTS: Money,
     multaRescisoria: Money,
+    tipoRescisao: TipoRescisao,
   ): { saldoFinal: Money; multaFinal: Money; valorSaqueImediato: Money } {
+    if (HIPOTESES_SAQUE_INTEGRAL.has(tipoRescisao)) {
+      return {
+        saldoFinal: saldoFGTS,
+        multaFinal: multaRescisoria,
+        valorSaqueImediato: saldoFGTS.add(multaRescisoria),
+      };
+    }
+
     return {
       saldoFinal: Money.zero(), // Saldo fica retido
       multaFinal: multaRescisoria, // Multa paga integralmente

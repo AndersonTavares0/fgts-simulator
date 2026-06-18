@@ -4,30 +4,36 @@
  * Migrated from the original theme-manager.js to TypeScript.
  */
 
+import { createIcons, icons } from 'lucide';
+
 const THEME_KEY = 'fgts_simulator_theme';
 
 type Theme = 'dark' | 'light';
 
 export class ThemeAdapter {
-  private toggleButton: HTMLElement | null = null;
+  private toggleButtons: HTMLElement[] = [];
 
   /** Initializes the theme manager */
-  init(toggleButton: HTMLElement | null): void {
-    if (!toggleButton) {
-      console.error('ThemeAdapter: toggle button not provided');
+  init(toggleButtons: HTMLElement | Array<HTMLElement | null> | null): void {
+    const buttons = Array.isArray(toggleButtons) ? toggleButtons : [toggleButtons];
+    this.toggleButtons = buttons.filter((button): button is HTMLElement => button !== null);
+
+    if (this.toggleButtons.length === 0) {
+      console.error('ThemeAdapter: toggle buttons not provided');
       return;
     }
-    this.toggleButton = toggleButton;
 
     const savedTheme = this.getSavedTheme();
     this.applyTheme(savedTheme);
 
-    toggleButton.addEventListener('click', () => {
-      const current = this.getCurrentTheme();
-      const newTheme: Theme = current === 'dark' ? 'light' : 'dark';
-      this.applyTheme(newTheme);
-      this.saveTheme(newTheme);
-      this.announceChange(newTheme);
+    this.toggleButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const current = this.getCurrentTheme();
+        const newTheme: Theme = current === 'dark' ? 'light' : 'dark';
+        this.applyTheme(newTheme);
+        this.saveTheme(newTheme);
+        this.announceChange(newTheme);
+      });
     });
 
     if (window.matchMedia) {
@@ -71,19 +77,29 @@ export class ThemeAdapter {
     const overlay = document.getElementById('theme-fade-overlay');
 
     const apply = () => {
-      document.documentElement.setAttribute('data-theme', theme);
+      try {
+        document.documentElement.setAttribute('data-theme', theme);
 
-      if (this.toggleButton) {
         const iconName = theme === 'dark' ? 'sun' : 'moon';
-        this.toggleButton.innerHTML = `<i data-lucide="${iconName}" class="icon-sm"></i>`;
-        this.toggleButton.setAttribute('aria-pressed', String(theme === 'dark'));
-        window.lucide?.createIcons({ nodes: [this.toggleButton] });
-      }
-
-      if (overlay) {
-        requestAnimationFrame(() => {
-          overlay.classList.remove('active');
+        this.toggleButtons.forEach((button) => {
+          button.textContent = '';
+          const icon = document.createElement('i');
+          icon.setAttribute('data-lucide', iconName);
+          icon.className = 'icon-sm';
+          button.appendChild(icon);
+          button.setAttribute('aria-pressed', String(theme === 'dark'));
         });
+        try {
+          createIcons({ icons });
+        } catch {
+          // non-critical — icons may fail but overlay must not stay stuck
+        }
+      } finally {
+        if (overlay) {
+          requestAnimationFrame(() => {
+            overlay.classList.remove('active');
+          });
+        }
       }
     };
 

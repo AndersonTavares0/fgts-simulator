@@ -194,6 +194,7 @@ O trabalhador doméstico possui regras distintas:
 3. **Multa na rescisão**: Calculada sobre o *saldo acumulado da reserva de 3,2%*, não pelo `MultaService`:
    - Dispensa sem justa causa → 100% da reserva acumulada
    - Acordo comum → 50% da reserva acumulada
+   - Culpa recíproca → 50% da reserva acumulada, por interpretação analógica do Art. 484 CLT
    - Demais modalidades → R$ 0,00 (reserva retorna ao empregador, §2º, Art. 22)
 
 ### Juros e Correção Monetária (Art. 13 da Lei 8.036/1990)
@@ -372,7 +373,7 @@ Cada serviço tem responsabilidade única e bem definida, seguindo o princípio 
 
 A arquitetura DDD em camadas permite:
 
-- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (61 testes)
+- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (65 testes)
 - **Reusabilidade**: `Money` é o único Value Object que transita entre todas as camadas
 - **Manutenção Facilitada**: Alterações em uma regra não afetam outras — ex: adicionar novo tipo de rescisão requer apenas atualizar `MultaService`
 - **Type Safety**: TypeScript com `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` previne erros em tempo de compilação
@@ -388,7 +389,7 @@ Este projeto demonstra como requisitos legais complexos podem ser traduzidos em 
 3. **Implementação fiel das regras da CLT** com enum exaustivo de 8 tipos de rescisão
 4. **Compromisso com privacidade** através de processamento client-side
 5. **Acessibilidade inclusiva WCAG 2.1 AA** seguindo padrões internacionais
-6. **TypeScript strict** com cobertura de 80% em 61 testes automatizados
+6. **TypeScript strict** com cobertura de 80% em 65 testes automatizados
 
 Resulta em uma ferramenta educacional robusta que serve tanto como recurso de aprendizado para estudantes quanto como referência de boas práticas de desenvolvimento para projetos de engenharia de software.
 

@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/main.ts",
   "scripts": {
-    "dev": "vite src",
+    "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --outDir dist",
     "test": "vitest run",
@@ -30,7 +30,8 @@
   "author": "AndersonTavares0",
   "license": "MIT",
   "dependencies": {
-    "decimal.js": "^10.4.3"
+    "decimal.js": "^10.4.3",
+    "lucide": "^1.21.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
