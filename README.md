@@ -270,14 +270,16 @@ Este simulador está em conformidade com a **Lei Geral de Proteção de Dados (L
 
 ## Roadmap (Futuras Melhorias)
 
-* [ ] **Integração com API de cotação da TR em tempo real** (BCB/SGS API)
-* [ ] **API de séries históricas do IPCA** (IBGE SIDRA)
-* [ ] **Exportação de Relatórios em PDF** com resumo detalhado
-* [ ] **PWA (Progressive Web App)** — Instalação offline e cache
-* [ ] **Persistência de Histórico** — IndexedDB para simulações anteriores
-* [ ] **Visualização Avançada** — Gráfico de evolução temporal do saldo
-* [ ] **Cálculo de INSS** — Contribuição previdenciária sobre rescisão
-* [ ] **i18n** — Suporte multilíngue para expansão
+*Priorizadas por alinhamento com o propósito educacional e client-side:*
+
+- [ ] **PWA (Progressive Web App)** — Instalação offline e cache para áreas sem internet estável
+- [ ] **Exportação de Relatórios em PDF** — Resumo detalhado para levar a advogados ou sindicatos
+- [ ] **Persistência de Histórico** — IndexedDB para comparar simulações anteriores (armazenamento local, sem backend)
+- [ ] **Visualização Avançada** — Gráfico de evolução temporal do saldo com correção TR+IPCA
+
+### Em Estudo
+
+- **Cálculo de INSS sobre verbas rescisórias** — Aumenta significativamente a complexidade (tabela progressiva, alíquotas por verba, atualização anual) e desvia o foco do FGTS. Pode ser considerado em versão futura como módulo separado.
 
 ---
 
