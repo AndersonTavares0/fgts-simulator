@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/main.ts",
   "scripts": {
-    "dev": "vite src",
+    "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --outDir dist",
     "test": "vitest run",
