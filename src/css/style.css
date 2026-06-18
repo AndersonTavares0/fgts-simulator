@@ -2,6 +2,7 @@
    SIMULADOR FGTS - Ponto de Entrada de Estilos
    ============================================================ */
 
+@import 'modules/fonts.css';
 @import 'modules/variables.css';
 @import 'modules/base.css';
 @import 'modules/layout.css';
