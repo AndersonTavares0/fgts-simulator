@@ -10,7 +10,7 @@
 **Responsável:** Anderson Tavares
 **Projeto:** Simulador de FGTS e Rescisão Trabalhista
 **Contexto:** Projeto de Extensão Universitária — UNINTER (Curso de Engenharia de Software)
-**Contato:** [Repositório GitHub](https://github.com/AndersonTavares0/Projeto-FGTS)
+**Contato:** [Repositório GitHub](https://github.com/AndersonTavares0/fgts-simulator)
 
 ---
 
@@ -155,7 +155,7 @@ Esta política pode ser atualizada para refletir mudanças no projeto ou na legi
 
 Para questões sobre privacidade, tratamento de dados ou exercício de direitos:
 
-- **GitHub:** [AndersonTavares0/Projeto-FGTS](https://github.com/AndersonTavares0/Projeto-FGTS)
+- **GitHub:** [AndersonTavares0/fgts-simulator](https://github.com/AndersonTavares0/fgts-simulator)
 - **Contexto:** Projeto acadêmico de Extensão Universitária — UNINTER
 
 ---

@@ -17,8 +17,8 @@
 
 Este documento descreve a arquitetura técnica e as decisões de implementação do **Simulador de Rescisão e FGTS**, uma ferramenta educacional desenvolvida como parte de um projeto de extensão universitária do curso de **Engenharia de Software da UNINTER**. O sistema tem como objetivo demonstrar a tradução precisa de requisitos legais da Consolidação das Leis do Trabalho (CLT) em código funcional, mantendo rigor técnico e conformidade com boas práticas de desenvolvimento.
 
-**Versão Atual**: 2.0 (TypeScript + DDD)
-**Última Atualização**: 14/05/2026
+**Versão Atual**: 2.1 (TypeScript + DDD)
+**Última Atualização**: 18/06/2026
 **Status**: Produção - Projeto de Extensão Universitária
 
 ---
@@ -83,9 +83,9 @@ src/
 │   └── ThemeAdapter.ts
 ├── main.ts                  # Entry point
 ├── index.html               # Dashboard
+├── public/                  # Assets estáticos
+│   └── fonts/               # Fontes self-hosted (6 woff2)
 ├── css/                     # Estilos (CSS variables + modules)
-└── types/                   # Declarações de tipos
-    └── lucide.d.ts
 ```
 
 ### Camadas e Responsabilidades

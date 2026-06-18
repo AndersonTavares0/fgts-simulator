@@ -2,7 +2,7 @@
 
 [![GitHub AndersonTavares0](https://img.shields.io/badge/GitHub-AndersonTavares0-181717?style=flat-square&logo=github)](https://github.com/AndersonTavares0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Software Version](https://img.shields.io/badge/version-2.0.0-green?style=flat-square)](#)
+[![Software Version](https://img.shields.io/badge/version-2.0.1-green?style=flat-square)](#)
 ![TypeScript](https://img.shields.io/badge/TypeScript-%233178C6.svg?style=flat-square&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-%23646CFF.svg?style=flat-square&logo=vite&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-%236E9F18.svg?style=flat-square&logo=vitest&logoColor=white)
@@ -185,8 +185,8 @@ npm run test:coverage # Relatório de cobertura (threshold 80%)
 ### Setup
 
 ```bash
-git clone https://github.com/AndersonTavares0/PROJETO-FGTS.git
-cd PROJETO-FGTS
+git clone https://github.com/AndersonTavares0/fgts-simulator.git
+cd fgts-simulator
 npm install
 ```
 
@@ -211,7 +211,7 @@ npm run format:check    # Verificação de formatação
 ## Estrutura do Repositório
 
 ```text
-PROJETO-FGTS/
+fgts-simulator/
 ├── .github/workflows/       # CI/CD — GitHub Actions
 ├── src/                     # Código-fonte
 │   ├── index.html           # UI Dashboard
@@ -221,6 +221,8 @@ PROJETO-FGTS/
 │   │   ├── entities/        # Entities
 │   │   └── services/        # Services (cálculos puros)
 │   ├── adapters/            # Adapter Layer (UI/Formato)
+│   ├── public/              # Assets estáticos
+│   │   └── fonts/           # Fontes self-hosted (6 woff2)
 │   ├── css/                 # Estilos (CSS Variables)
 ├── tests/unit/              # Testes automatizados
 │   ├── calculator.test.ts   # Suíte principal (46 testes)
@@ -294,4 +296,4 @@ Para detalhes sobre arquitetura de dados, regras de negócio CLT, segurança, ac
 ---
 
 **Projeto de Extensão Universitária — UNINTER**
-Curso de Engenharia de Software | v2.0.0 (TypeScript + DDD)
+Curso de Engenharia de Software | v2.0.1 (TypeScript + DDD)
