@@ -176,6 +176,22 @@ describe('Legal Boundary Tests - Contract Types', () => {
     expect(deposito.reais).toBe(240);
   });
 
+  it('should apply 50% of domestic indemnity reserve for reciprocal fault', () => {
+    const result = FGTSCalculatorService.calcularRescisao({
+      salarioBruto: Money.fromReais(3000),
+      mesesTrabalhados: 10,
+      tipoRescisao: TipoRescisao.CULPA_RECIPROCA,
+      tipoContrato: TipoContrato.DOMESTICO,
+      incluirDecimoTerceiro: false,
+      incluirFerias: false,
+      saqueAniversario: false,
+    });
+
+    // Reserve = 3,000 * 3.2% * 10 = 960; reciprocal fault pays 50% = 480.
+    expect(result.multa.valorMulta.reais).toBe(480);
+    expect(result.multa.fundamentoLegal).toContain('interpretação analógica');
+  });
+
   it('should include domestic worker contract type in enum', () => {
     const tipos = Object.values(TipoContrato);
     expect(tipos).toContain(TipoContrato.DOMESTICO);

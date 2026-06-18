@@ -128,8 +128,8 @@ export class FGTSCalculatorService {
         .percentage(ALIQUOTA_MULTA_DOMESTICO)
         .multiply(mesesTrabalhados);
 
-      // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal)
-      // §2º: Aposentadoria, Falecimento e Pedido de Demissão → valor retorna ao empregador
+      // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal).
+      // Culpa recíproca usa interpretação analógica do Art. 484 CLT: 50% da indenização.
       let valorMultaDomestico: Money;
       let fundamentoDomestico: string;
 
@@ -139,6 +139,10 @@ export class FGTSCalculatorService {
       } else if (tipoRescisao === TipoRescisao.ACORDO_COMUM) {
         valorMultaDomestico = valorAcumuladoMulta.percentage(50);
         fundamentoDomestico = 'Art. 22 c/c Art. 484-A CLT — 50% da reserva de indenização';
+      } else if (tipoRescisao === TipoRescisao.CULPA_RECIPROCA) {
+        valorMultaDomestico = valorAcumuladoMulta.percentage(50);
+        fundamentoDomestico =
+          'Art. 22, LC 150/2015 c/c Art. 484, CLT — 50% da reserva de indenização (interpretação analógica)';
       } else {
         valorMultaDomestico = Money.zero();
         fundamentoDomestico = 'Art. 22, §2º, LC 150/2015 — Reserva retorna ao empregador';
