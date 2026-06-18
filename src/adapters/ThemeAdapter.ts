@@ -9,25 +9,29 @@ const THEME_KEY = 'fgts_simulator_theme';
 type Theme = 'dark' | 'light';
 
 export class ThemeAdapter {
-  private toggleButton: HTMLElement | null = null;
+  private toggleButtons: HTMLElement[] = [];
 
   /** Initializes the theme manager */
-  init(toggleButton: HTMLElement | null): void {
-    if (!toggleButton) {
-      console.error('ThemeAdapter: toggle button not provided');
+  init(toggleButtons: HTMLElement | Array<HTMLElement | null> | null): void {
+    const buttons = Array.isArray(toggleButtons) ? toggleButtons : [toggleButtons];
+    this.toggleButtons = buttons.filter((button): button is HTMLElement => button !== null);
+
+    if (this.toggleButtons.length === 0) {
+      console.error('ThemeAdapter: toggle buttons not provided');
       return;
     }
-    this.toggleButton = toggleButton;
 
     const savedTheme = this.getSavedTheme();
     this.applyTheme(savedTheme);
 
-    toggleButton.addEventListener('click', () => {
-      const current = this.getCurrentTheme();
-      const newTheme: Theme = current === 'dark' ? 'light' : 'dark';
-      this.applyTheme(newTheme);
-      this.saveTheme(newTheme);
-      this.announceChange(newTheme);
+    this.toggleButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const current = this.getCurrentTheme();
+        const newTheme: Theme = current === 'dark' ? 'light' : 'dark';
+        this.applyTheme(newTheme);
+        this.saveTheme(newTheme);
+        this.announceChange(newTheme);
+      });
     });
 
     if (window.matchMedia) {
@@ -73,12 +77,12 @@ export class ThemeAdapter {
     const apply = () => {
       document.documentElement.setAttribute('data-theme', theme);
 
-      if (this.toggleButton) {
-        const iconName = theme === 'dark' ? 'sun' : 'moon';
-        this.toggleButton.innerHTML = `<i data-lucide="${iconName}" class="icon-sm"></i>`;
-        this.toggleButton.setAttribute('aria-pressed', String(theme === 'dark'));
-        window.lucide?.createIcons({ nodes: [this.toggleButton] });
-      }
+      const iconName = theme === 'dark' ? 'sun' : 'moon';
+      this.toggleButtons.forEach((button) => {
+        button.innerHTML = `<i data-lucide="${iconName}" class="icon-sm"></i>`;
+        button.setAttribute('aria-pressed', String(theme === 'dark'));
+      });
+      window.lucide?.createIcons({ nodes: this.toggleButtons });
 
       if (overlay) {
         requestAnimationFrame(() => {

@@ -9,7 +9,10 @@ import { ThemeAdapter } from './adapters/ThemeAdapter';
 function init(): void {
   // Theme
   const themeAdapter = new ThemeAdapter();
-  themeAdapter.init(document.getElementById('toggleTheme'));
+  themeAdapter.init([
+    document.getElementById('toggleTheme'),
+    document.getElementById('navbarThemeToggle'),
+  ]);
 
   // UI
   const uiAdapter = new UIAdapter();
