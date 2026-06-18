@@ -79,7 +79,11 @@ export class ThemeAdapter {
 
       const iconName = theme === 'dark' ? 'sun' : 'moon';
       this.toggleButtons.forEach((button) => {
-        button.innerHTML = `<i data-lucide="${iconName}" class="icon-sm"></i>`;
+        button.textContent = '';
+        const icon = document.createElement('i');
+        icon.setAttribute('data-lucide', iconName);
+        icon.className = 'icon-sm';
+        button.appendChild(icon);
         button.setAttribute('aria-pressed', String(theme === 'dark'));
       });
       window.lucide?.createIcons({ nodes: this.toggleButtons });
