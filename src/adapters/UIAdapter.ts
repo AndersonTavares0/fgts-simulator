@@ -539,11 +539,7 @@ export class UIAdapter {
       // Validate required fields
       const errors = this.validateRequiredFields();
       if (errors.length > 0) {
-        // Show first error
-        const firstError = errors[0];
-        if (firstError) {
-          this.showError(firstError.message, firstError.element);
-        }
+        this.showErrors(errors);
         return;
       }
 
@@ -853,18 +849,36 @@ export class UIAdapter {
 
   private showError(message: string, element: HTMLElement | null): void {
     this.clearErrors();
+    this.hideResults();
     if (element) {
-      element.setAttribute('aria-invalid', 'true');
-      const err = document.createElement('span');
-      err.className = 'error-message';
-      err.id = element.id + '-error';
-      err.setAttribute('role', 'alert');
-      err.textContent = message;
-      element.parentElement?.insertAdjacentElement('afterend', err);
-      element.setAttribute('aria-describedby', err.id);
+      this.renderFieldError(message, element);
     } else {
       alert(message);
     }
+  }
+
+  private showErrors(errors: Array<{ message: string; element: HTMLElement }>): void {
+    this.clearErrors();
+    this.hideResults();
+    errors.forEach(({ message, element }) => {
+      this.renderFieldError(message, element);
+    });
+  }
+
+  private renderFieldError(message: string, element: HTMLElement): void {
+    element.setAttribute('aria-invalid', 'true');
+    const err = document.createElement('span');
+    err.className = 'error-message';
+    err.id = element.id + '-error';
+    err.setAttribute('role', 'alert');
+    err.textContent = message;
+    element.parentElement?.insertAdjacentElement('afterend', err);
+    element.setAttribute('aria-describedby', err.id);
+  }
+
+  private hideResults(): void {
+    this.resultsContent.style.display = 'none';
+    this.emptyState.style.display = 'flex';
   }
 
   private clearErrors(): void {
