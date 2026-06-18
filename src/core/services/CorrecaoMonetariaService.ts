@@ -1,10 +1,10 @@
 /**
  * Service: CorrecaoMonetariaService
- * Motor de correção monetária com suporte a TR/IPCA e conformidade ADI 5090 (STF)
+ * Motor de correção monetária com suporte a TR/IPCA e estimativa conforme ADI 5090 (STF)
  *
  * Regras:
  *  - Rendimento legal: 3% a.a. + TR (Art. 13 da Lei 8.036/1990)
- *  - Piso ADI 5090: Se (TR + 3% a.a.) < IPCA, aplica-se o IPCA como indexador
+ *  - Piso ADI 5090: Se (TR + 3% a.a.) < IPCA, usa IPCA como piso estimado
  *
  * Base legal: Lei 8.036/1990, Art. 13; ADIs 5090 (STF)
  */
@@ -62,12 +62,13 @@ export class CorrecaoMonetariaService {
     const taxaAnualTR = new Decimal(1).plus(taxaTRMensal).pow(12).minus(1);
     const taxaAnualIPCA = new Decimal(1).plus(ipcaMensal).pow(12).minus(1);
 
-    // ADI 5090: Se rendimento TR+3% < IPCA, aplica IPCA
+    // ADI 5090: Se rendimento TR+3% < IPCA, usa IPCA como piso estimado.
+    // O simulador nao substitui indices oficiais publicados; apenas projeta valores.
     let taxaMensalEfetiva: Decimal;
     let indexadorUtilizado: 'TR' | 'IPCA';
 
     if (taxaAnualTR.lessThan(taxaAnualIPCA)) {
-      // IPCA é maior — aplica IPCA como piso (ADI 5090)
+      // IPCA é maior — usa IPCA como piso estimado (ADI 5090)
       taxaMensalEfetiva = ipcaMensal;
       indexadorUtilizado = 'IPCA';
     } else {

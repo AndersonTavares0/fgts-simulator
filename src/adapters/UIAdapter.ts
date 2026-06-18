@@ -776,6 +776,11 @@ export class UIAdapter {
   }
 
   private updateBreakdown(resultado: ResultadoRescisao): void {
+    const correcaoLabel =
+      resultado.correcao.indexadorUtilizado === 'TR'
+        ? 'Correção estimada (TR + 3% a.a.)'
+        : 'Correção estimada (IPCA como piso ADI 5090)';
+
     const items = [
       { label: 'Saldo FGTS', value: resultado.saldoFinal, color: 'var(--donut-saldo)' },
       {
@@ -791,7 +796,7 @@ export class UIAdapter {
       { label: '13º Proporcional', value: resultado.decimoTerceiro, color: 'var(--donut-prop)' },
       { label: 'Férias Proporcionais + ⅓', value: resultado.ferias, color: 'var(--amber)' },
       {
-        label: `Correção Estimada (${resultado.correcao.indexadorUtilizado}+3%)`,
+        label: correcaoLabel,
         value: resultado.detalhes.correcaoEstimada,
         color: 'var(--teal)',
       },
