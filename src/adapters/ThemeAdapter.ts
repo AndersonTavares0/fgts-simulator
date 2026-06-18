@@ -4,6 +4,8 @@
  * Migrated from the original theme-manager.js to TypeScript.
  */
 
+import { createIcons } from 'lucide';
+
 const THEME_KEY = 'fgts_simulator_theme';
 
 type Theme = 'dark' | 'light';
@@ -86,7 +88,7 @@ export class ThemeAdapter {
         button.appendChild(icon);
         button.setAttribute('aria-pressed', String(theme === 'dark'));
       });
-      window.lucide?.createIcons({ nodes: this.toggleButtons });
+      createIcons();
 
       if (overlay) {
         requestAnimationFrame(() => {

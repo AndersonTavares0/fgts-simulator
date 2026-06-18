@@ -4,6 +4,7 @@
  * Replaces the original script.js with full type safety.
  */
 
+import { createIcons } from 'lucide';
 import { TipoRescisao, TipoContrato } from '../core/types';
 import type { ResultadoRescisao } from '../core/types';
 import { FGTSCalculatorService } from '../core/services/FGTSCalculatorService';
@@ -488,14 +489,7 @@ export class UIAdapter {
     closeBtn?.focus();
 
     // Re-initialize Lucide icons in modal
-    const lucide = window.lucide;
-    if (lucide) {
-      const newIcons = this.privacyModal.querySelectorAll('[data-lucide]:not(.lucide-initialized)');
-      if (newIcons.length > 0) {
-        lucide.createIcons({ nodes: Array.from(newIcons) });
-        newIcons.forEach((el) => el.classList.add('lucide-initialized'));
-      }
-    }
+    createIcons();
   }
 
   private closePrivacyModal(): void {
@@ -661,10 +655,7 @@ export class UIAdapter {
         <i data-lucide="calculator" class="icon-sm" aria-hidden="true"></i>
         <span>Calcular Rescisão</span>
       `;
-      const lucide = window.lucide;
-      if (lucide) {
-        lucide.createIcons({ nodes: [this.calcularBtn] });
-      }
+      createIcons();
     }
   }
 
@@ -724,16 +715,7 @@ export class UIAdapter {
     }, 600);
 
     // Re-instantiate Lucide icons only on new elements
-    const lucide = window.lucide;
-    if (lucide) {
-      const newIcons = this.resultsContent.querySelectorAll(
-        '[data-lucide]:not(.lucide-initialized)',
-      );
-      if (newIcons.length > 0) {
-        lucide.createIcons({ nodes: Array.from(newIcons) });
-        newIcons.forEach((el) => el.classList.add('lucide-initialized'));
-      }
-    }
+    createIcons();
   }
 
   private updateDonut(saldo: number, multa: number, prop: number, total: number): void {
