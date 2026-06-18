@@ -12,7 +12,7 @@ describe('Legal Boundary Tests - Serious Illness (Doença Grave)', () => {
     expect(result.saldoDisponivel.reais).toBe(10000);
     expect(result.percentualLiberado).toBe(100);
     expect(result.tipoDoenca).toBe(TipoDoencaGrave.CANCER);
-    expect(result.fundamentoLegal).toContain('Lei 8.036/90');
+    expect(result.fundamentoLegal).toContain('Art. 20, XI');
   });
 
   it('should allow 100% withdrawal for HIV/AIDS', () => {
@@ -21,7 +21,7 @@ describe('Legal Boundary Tests - Serious Illness (Doença Grave)', () => {
 
     expect(result.saldoDisponivel.reais).toBe(5000);
     expect(result.percentualLiberado).toBe(100);
-    expect(result.fundamentoLegal).toContain('laudo médico pericial');
+    expect(result.fundamentoLegal).toContain('Art. 20, XIII');
   });
 
   it('should allow 100% withdrawal for Terminal Illness', () => {
@@ -30,7 +30,7 @@ describe('Legal Boundary Tests - Serious Illness (Doença Grave)', () => {
 
     expect(result.saldoDisponivel.reais).toBe(15000);
     expect(result.percentualLiberado).toBe(100);
-    expect(result.fundamentoLegal).toContain('junta médica oficial');
+    expect(result.fundamentoLegal).toContain('Art. 20, XIV');
   });
 
   it('should validate eligibility for all serious illness types', () => {

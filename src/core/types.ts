@@ -35,7 +35,7 @@ export enum TipoRescisao {
   JUSTA_CAUSA = 'justa_causa',
   /** Acordo comum — Art. 484-A CLT (Reforma Trabalhista 2017) */
   ACORDO_COMUM = 'acordo_comum',
-  /** Doença grave — Lei 8.036/90, Art. 20, inciso XIII */
+  /** Doença grave — Lei 8.036/90, Art. 20, incisos XI, XIII e XIV */
   DOENCA_GRAVE = 'doenca_grave',
   /** Aposentadoria — Lei 8.036/90, Art. 20, inciso III */
   APOSENTADORIA = 'aposentadoria',
@@ -55,7 +55,7 @@ export enum TipoContrato {
   DOMESTICO = 'domestico',
 }
 
-/** Doenças graves que permitem saque integral (Lei 8.036/90, Art. 20, XIII) */
+/** Doenças graves que permitem saque integral (Lei 8.036/90, Art. 20, XI/XIII/XIV) */
 export enum TipoDoencaGrave {
   CANCER = 'cancer',
   HIV_AIDS = 'hiv_aids',
