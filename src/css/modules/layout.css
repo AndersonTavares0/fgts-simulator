@@ -169,14 +169,14 @@
 .brand-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--accent-dim), rgba(34, 211, 160, 0.18));
-  border: 1px solid rgba(34, 211, 160, 0.25);
+  background: linear-gradient(135deg, var(--accent-dim), rgba(var(--accent-rgb), 0.18));
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
   border-radius: var(--radius-md);
   display: grid;
   place-items: center;
   color: var(--accent);
   transition: all var(--transition);
-  box-shadow: 0 2px 8px rgba(34, 211, 160, 0.1);
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.1);
 }
 
 .brand:hover .brand-icon {

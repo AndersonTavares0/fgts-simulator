@@ -21,13 +21,13 @@
   justify-content: center;
   width: 26px;
   height: 26px;
-  background: linear-gradient(135deg, var(--accent-dim), rgba(34, 211, 160, 0.2));
+  background: linear-gradient(135deg, var(--accent-dim), rgba(var(--accent-rgb), 0.2));
   color: var(--accent);
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
-  border: 1px solid rgba(34, 211, 160, 0.15);
+  border: 1px solid rgba(var(--accent-rgb), 0.15);
 }
 
 .form-section-label {
@@ -106,7 +106,7 @@ fieldset.field-row {
 }
 
 .field-input:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.22);
   background: var(--bg-elevated);
 }
 
@@ -189,15 +189,15 @@ select.field-input {
 }
 
 .multa-badge.bg-green-500 {
-  background: linear-gradient(135deg, var(--accent), rgba(34, 211, 160, 0.85));
+  background: linear-gradient(135deg, var(--accent), rgba(var(--accent-rgb), 0.85));
   color: var(--text-on-accent);
-  box-shadow: 0 2px 12px rgba(34, 211, 160, 0.3);
+  box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.26);
 }
 
 .multa-badge.bg-yellow-500 {
-  background: linear-gradient(135deg, var(--amber), rgba(245, 185, 64, 0.85));
+  background: linear-gradient(135deg, var(--amber), rgba(var(--amber-rgb), 0.85));
   color: #1a0a00;
-  box-shadow: 0 2px 12px rgba(245, 185, 64, 0.2);
+  box-shadow: 0 2px 12px rgba(var(--amber-rgb), 0.2);
 }
 
 .multa-badge.bg-gray-500 {
@@ -270,7 +270,7 @@ select.field-input {
 .option-toggle input:checked + .toggle-track::after {
   background: var(--accent);
   transform: translateX(16px);
-  box-shadow: 0 0 8px rgba(34, 211, 160, 0.4);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.36);
 }
 
 .option-toggle input:focus-visible + .toggle-track {
@@ -322,7 +322,7 @@ select.field-input {
   font-weight: 700;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(34, 211, 160, 0.3);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.28);
   letter-spacing: 0.02em;
 }
 
@@ -347,13 +347,13 @@ select.field-input {
 }
 
 .btn-primary:hover {
-  box-shadow: 0 6px 24px rgba(34, 211, 160, 0.4);
+  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.34);
   transform: translateY(-1px);
 }
 
 .btn-primary:active {
   transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 8px rgba(34, 211, 160, 0.2);
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.2);
 }
 
 .btn-primary:disabled {
@@ -441,7 +441,7 @@ select.field-input {
   align-items: flex-start;
   gap: 12px;
   background: var(--teal-dim);
-  border: 1px solid rgba(0, 191, 165, 0.2);
+  border: 1px solid rgba(var(--teal-rgb), 0.2);
   border-radius: var(--radius-md);
   padding: 14px 18px;
   margin-top: 12px;
