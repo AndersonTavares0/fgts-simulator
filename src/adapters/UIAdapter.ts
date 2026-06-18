@@ -4,7 +4,7 @@
  * Replaces the original script.js with full type safety.
  */
 
-import { createIcons } from 'lucide';
+import { createIcons, icons } from 'lucide';
 import { TipoRescisao, TipoContrato } from '../core/types';
 import type { ResultadoRescisao } from '../core/types';
 import { FGTSCalculatorService } from '../core/services/FGTSCalculatorService';
@@ -489,7 +489,7 @@ export class UIAdapter {
     closeBtn?.focus();
 
     // Re-initialize Lucide icons in modal
-    createIcons();
+    createIcons({ icons });
   }
 
   private closePrivacyModal(): void {
@@ -655,7 +655,7 @@ export class UIAdapter {
         <i data-lucide="calculator" class="icon-sm" aria-hidden="true"></i>
         <span>Calcular Rescisão</span>
       `;
-      createIcons();
+      createIcons({ icons });
     }
   }
 
@@ -715,7 +715,7 @@ export class UIAdapter {
     }, 600);
 
     // Re-instantiate Lucide icons only on new elements
-    createIcons();
+    createIcons({ icons });
   }
 
   private updateDonut(saldo: number, multa: number, prop: number, total: number): void {

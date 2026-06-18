@@ -4,7 +4,7 @@
  * Migrated from the original theme-manager.js to TypeScript.
  */
 
-import { createIcons } from 'lucide';
+import { createIcons, icons } from 'lucide';
 
 const THEME_KEY = 'fgts_simulator_theme';
 
@@ -90,7 +90,7 @@ export class ThemeAdapter {
           button.setAttribute('aria-pressed', String(theme === 'dark'));
         });
         try {
-          createIcons();
+          createIcons({ icons });
         } catch {
           // non-critical — icons may fail but overlay must not stay stuck
         }

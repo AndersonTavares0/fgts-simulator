@@ -3,7 +3,7 @@
  * Inicializa todos os adapters e configura o modal.
  */
 
-import { createIcons } from 'lucide';
+import { createIcons, icons } from 'lucide';
 import { UIAdapter } from './adapters/UIAdapter';
 import { ThemeAdapter } from './adapters/ThemeAdapter';
 
@@ -20,7 +20,7 @@ function init(): void {
   uiAdapter.init();
 
   // Icons
-  createIcons();
+  createIcons({ icons });
 }
 
 if (document.readyState === 'loading') {
