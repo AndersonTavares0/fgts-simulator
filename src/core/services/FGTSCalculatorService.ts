@@ -179,9 +179,13 @@ export class FGTSCalculatorService {
 
     if (saqueAniversario) {
       resultadoSaqueAniversario = SaqueAniversarioService.calcularParcela(saldoBase);
-      const impacto = SaqueAniversarioService.calcularImpactoRescisao(saldoBase, multa.valorMulta);
+      const impacto = SaqueAniversarioService.calcularImpactoRescisao(
+        saldoBase,
+        multa.valorMulta,
+        tipoRescisao,
+      );
       saldoFinal = impacto.saldoFinal;
-      saldoRetido = saldoBase;
+      saldoRetido = saldoBase.subtract(saldoFinal);
       multaFinal = impacto.multaFinal;
     }
 

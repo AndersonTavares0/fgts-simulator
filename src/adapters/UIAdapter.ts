@@ -835,6 +835,12 @@ export class UIAdapter {
     const restrictionBox = document.getElementById('saqueAniversarioRestriction');
     if (restrictionBox) {
       restrictionBox.style.display = resultado.saqueAniversario ? 'flex' : 'none';
+      const restrictionText = restrictionBox.querySelector('p');
+      if (restrictionText && resultado.saqueAniversario) {
+        restrictionText.textContent = resultado.saldoRetido.isZero()
+          ? 'Saque-Aniversário ativo: esta hipótese legal preserva o saque integral do saldo do FGTS.'
+          : 'Atenção: com o Saque-Aniversário ativo, você não pode sacar o saldo integral do FGTS na rescisão. Apenas a multa rescisória (40%/20%) permanece disponível para saque imediato.';
+      }
     }
   }
 

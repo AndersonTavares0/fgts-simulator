@@ -149,6 +149,39 @@ describe('Legal Boundary Tests - Fine Integrity', () => {
   });
 });
 
+describe('Legal Boundary Tests - Saque-Aniversario Exceptions', () => {
+  it('should retain balance on dismissal without cause when birthday withdrawal is active', () => {
+    const result = FGTSCalculatorService.calcularRescisao({
+      salarioBruto: Money.fromReais(3000),
+      mesesTrabalhados: 24,
+      tipoRescisao: TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA,
+      tipoContrato: TipoContrato.CLT_PADRAO,
+      incluirDecimoTerceiro: false,
+      incluirFerias: false,
+      saqueAniversario: true,
+    });
+
+    expect(result.saldoFinal.cents).toBe(0);
+    expect(result.saldoRetido.cents).toBe(result.saldoBase.cents);
+    expect(result.multaFinal.isPositive()).toBe(true);
+  });
+
+  it('should preserve full balance for retirement even with birthday withdrawal active', () => {
+    const result = FGTSCalculatorService.calcularRescisao({
+      salarioBruto: Money.fromReais(3000),
+      mesesTrabalhados: 24,
+      tipoRescisao: TipoRescisao.APOSENTADORIA,
+      tipoContrato: TipoContrato.CLT_PADRAO,
+      incluirDecimoTerceiro: false,
+      incluirFerias: false,
+      saqueAniversario: true,
+    });
+
+    expect(result.saldoFinal.cents).toBe(result.saldoBase.cents);
+    expect(result.saldoRetido.cents).toBe(0);
+  });
+});
+
 describe('Legal Boundary Tests - Contract Types', () => {
   it('should apply 8% deposit for CLT standard contract', () => {
     const salario = Money.fromReais(3000);
