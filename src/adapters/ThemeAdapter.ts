@@ -77,23 +77,29 @@ export class ThemeAdapter {
     const overlay = document.getElementById('theme-fade-overlay');
 
     const apply = () => {
-      document.documentElement.setAttribute('data-theme', theme);
+      try {
+        document.documentElement.setAttribute('data-theme', theme);
 
-      const iconName = theme === 'dark' ? 'sun' : 'moon';
-      this.toggleButtons.forEach((button) => {
-        button.textContent = '';
-        const icon = document.createElement('i');
-        icon.setAttribute('data-lucide', iconName);
-        icon.className = 'icon-sm';
-        button.appendChild(icon);
-        button.setAttribute('aria-pressed', String(theme === 'dark'));
-      });
-      createIcons();
-
-      if (overlay) {
-        requestAnimationFrame(() => {
-          overlay.classList.remove('active');
+        const iconName = theme === 'dark' ? 'sun' : 'moon';
+        this.toggleButtons.forEach((button) => {
+          button.textContent = '';
+          const icon = document.createElement('i');
+          icon.setAttribute('data-lucide', iconName);
+          icon.className = 'icon-sm';
+          button.appendChild(icon);
+          button.setAttribute('aria-pressed', String(theme === 'dark'));
         });
+        try {
+          createIcons();
+        } catch {
+          // non-critical — icons may fail but overlay must not stay stuck
+        }
+      } finally {
+        if (overlay) {
+          requestAnimationFrame(() => {
+            overlay.classList.remove('active');
+          });
+        }
       }
     };
 
