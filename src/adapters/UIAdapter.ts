@@ -540,7 +540,10 @@ export class UIAdapter {
       const errors = this.validateRequiredFields();
       if (errors.length > 0) {
         // Show first error
-        this.showError(errors[0].message, errors[0].element);
+        const firstError = errors[0];
+        if (firstError) {
+          this.showError(firstError.message, firstError.element);
+        }
         return;
       }
 
