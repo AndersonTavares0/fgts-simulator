@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  Money,
-  TipoRescisao,
-  TipoContrato,
-  TipoDoencaGrave,
-} from '../../src/core/types';
+import { Money, TipoRescisao, TipoContrato, TipoDoencaGrave } from '../../src/core/types';
 import { FGTSCalculatorService } from '../../src/core/services/FGTSCalculatorService';
 import { MultaService } from '../../src/core/services/MultaService';
 import { DoencaGraveService } from '../../src/core/services/DoencaGraveService';
@@ -94,8 +89,28 @@ describe('Legal Boundary Tests - Acordo Comum (Art. 484-A CLT)', () => {
 
     // Fine should be 20% (not 40%)
     expect(result.multa.percentualAplicado).toBe(20);
-    // Balance should still be available (80% rule in practice, but fine is separate)
-    expect(result.saldoFinal.isPositive()).toBe(true);
+    // Art. 484-A CLT limits immediate FGTS withdrawal to 80% of the balance.
+    expect(result.saldoFinal.cents).toBe(result.saldoBase.percentage(80).cents);
+    expect(result.saldoRetido.cents).toBe(result.saldoBase.percentage(20).cents);
+  });
+
+  it('should retain balance for voluntary resignation and just cause', () => {
+    const tipos = [TipoRescisao.DEMISSAO_VOLUNTARIA, TipoRescisao.JUSTA_CAUSA];
+
+    tipos.forEach((tipoRescisao) => {
+      const result = FGTSCalculatorService.calcularRescisao({
+        salarioBruto: Money.fromReais(3000),
+        mesesTrabalhados: 24,
+        tipoRescisao,
+        tipoContrato: TipoContrato.CLT_PADRAO,
+        incluirDecimoTerceiro: false,
+        incluirFerias: false,
+        saqueAniversario: false,
+      });
+
+      expect(result.saldoFinal.cents).toBe(0);
+      expect(result.saldoRetido.cents).toBe(result.saldoBase.cents);
+    });
   });
 
   it('should verify 20% fine applies to total historical balance', () => {
@@ -137,10 +152,7 @@ describe('Legal Boundary Tests - Fine Integrity', () => {
 describe('Legal Boundary Tests - Contract Types', () => {
   it('should apply 8% deposit for CLT standard contract', () => {
     const salario = Money.fromReais(3000);
-    const deposito = FGTSCalculatorService.calcularDepositoMensal(
-      salario,
-      TipoContrato.CLT_PADRAO,
-    );
+    const deposito = FGTSCalculatorService.calcularDepositoMensal(salario, TipoContrato.CLT_PADRAO);
 
     // 8% of 3000 = 240
     expect(deposito.reais).toBe(240);
@@ -148,10 +160,7 @@ describe('Legal Boundary Tests - Contract Types', () => {
 
   it('should apply 2% deposit for Aprendiz contract', () => {
     const salario = Money.fromReais(3000);
-    const deposito = FGTSCalculatorService.calcularDepositoMensal(
-      salario,
-      TipoContrato.APRENDIZ,
-    );
+    const deposito = FGTSCalculatorService.calcularDepositoMensal(salario, TipoContrato.APRENDIZ);
 
     // 2% of 3000 = 60
     expect(deposito.reais).toBe(60);

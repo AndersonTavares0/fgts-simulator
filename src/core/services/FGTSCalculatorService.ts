@@ -27,6 +27,17 @@ const ALIQUOTA = {
 
 const ALIQUOTA_MULTA_DOMESTICO = 3.2;
 
+const PERCENTUAL_SALDO_DISPONIVEL = {
+  [TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA]: 100,
+  [TipoRescisao.ACORDO_COMUM]: 80,
+  [TipoRescisao.CULPA_RECIPROCA]: 100,
+  [TipoRescisao.DOENCA_GRAVE]: 100,
+  [TipoRescisao.APOSENTADORIA]: 100,
+  [TipoRescisao.FALECIMENTO]: 100,
+  [TipoRescisao.DEMISSAO_VOLUNTARIA]: 0,
+  [TipoRescisao.JUSTA_CAUSA]: 0,
+} satisfies Record<TipoRescisao, number>;
+
 export class FGTSCalculatorService {
   /**
    * Calcula o depósito mensal do FGTS
@@ -153,30 +164,36 @@ export class FGTSCalculatorService {
       ? this.calcularFeriasProporcionais(salarioBruto, mesesTrabalhados)
       : Money.zero();
 
-    // 5. Saque-Aniversário
+    // 5. Saldo disponível para saque conforme modalidade de rescisão.
+    const percentualSaldoDisponivel = PERCENTUAL_SALDO_DISPONIVEL[tipoRescisao];
+    let saldoFinal = saldoBase.percentage(percentualSaldoDisponivel);
+    let saldoRetido = saldoBase.subtract(saldoFinal);
+
+    // 6. Saque-Aniversário
     let resultadoSaqueAniversario: ResultadoSaqueAniversario | null = null;
-    let saldoFinal = saldoBase;
     let multaFinal = multa.valorMulta;
 
     if (saqueAniversario) {
       resultadoSaqueAniversario = SaqueAniversarioService.calcularParcela(saldoBase);
       const impacto = SaqueAniversarioService.calcularImpactoRescisao(saldoBase, multa.valorMulta);
       saldoFinal = impacto.saldoFinal;
+      saldoRetido = saldoBase;
       multaFinal = impacto.multaFinal;
     }
 
-    // 6. Doença Grave
+    // 7. Doença Grave
     let resultadoDoencaGrave: ResultadoDoencaGrave | null = null;
     if (doencaGrave) {
       resultadoDoencaGrave = DoencaGraveService.calcular(saldoBase, doencaGrave);
       // Doença grave libera 100% do saldo independente de saque-aniversário
       saldoFinal = saldoBase;
+      saldoRetido = Money.zero();
     }
 
-    // 7. Total
+    // 8. Total
     const total = saldoFinal.add(multaFinal).add(decimoTerceiro).add(ferias);
 
-    // 8. Correção estimada (diferença entre saldo corrigido e depósitos brutos)
+    // 9. Correção estimada (diferença entre saldo corrigido e depósitos brutos)
     const depositosBrutos = depositoMensal.multiply(mesesTrabalhados);
     const correcaoEstimada = saldoBase.subtract(depositosBrutos);
 
@@ -188,6 +205,7 @@ export class FGTSCalculatorService {
       ferias,
       saqueAniversario: resultadoSaqueAniversario,
       doencaGrave: resultadoDoencaGrave,
+      saldoRetido,
       saldoFinal,
       multaFinal,
       total,

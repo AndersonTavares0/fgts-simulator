@@ -184,6 +184,7 @@ export interface ResultadoRescisao {
   ferias: Money;
   saqueAniversario: ResultadoSaqueAniversario | null;
   doencaGrave: ResultadoDoencaGrave | null;
+  saldoRetido: Money;
   saldoFinal: Money;
   multaFinal: Money;
   total: Money;

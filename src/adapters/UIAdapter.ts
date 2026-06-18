@@ -779,6 +779,11 @@ export class UIAdapter {
     const items = [
       { label: 'Saldo FGTS', value: resultado.saldoFinal, color: 'var(--donut-saldo)' },
       {
+        label: 'Saldo retido na conta FGTS',
+        value: resultado.saldoRetido,
+        color: 'var(--muted)',
+      },
+      {
         label: `Multa Rescisória (${resultado.multa.percentualAplicado}%)`,
         value: resultado.multaFinal,
         color: 'var(--donut-multa)',
