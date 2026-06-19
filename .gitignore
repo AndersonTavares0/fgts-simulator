@@ -55,7 +55,8 @@ desktop.ini
 .stylelintcache
 .prettiercache
 
-# graphify outputs (knowledge graph)
+# Planning / GSD artifacts (not part of source)
+.planning/
 graphify-out/
 
 # Temporary Files
