@@ -29,7 +29,7 @@
       <div class="navbar-content">
         <div class="navbar-brand">
           <i data-lucide="landmark" class="icon-sm" aria-hidden="true"></i>
-          <span class="navbar-title">FGTS Simulator</span>
+          <span class="navbar-title">FGTS Simulador CLT</span>
         </div>
         <div class="navbar-actions">
           <a
@@ -39,7 +39,7 @@
             class="navbar-link"
             aria-label="GitHub"
           >
-            <i data-lucide="Link" class="icon-sm"></i>
+            <i data-lucide="code-xml" class="icon-sm"></i>
           </a>
           <button
             id="navbarThemeToggle"
@@ -78,14 +78,7 @@
         </div>
 
         <!-- Formulário -->
-        <form
-          id="fgtsForm"
-          autocomplete="off"
-          action="#"
-          method="post"
-          onsubmit="return false;"
-          novalidate
-        >
+        <form id="fgtsForm" autocomplete="off" onsubmit="return false;" novalidate>
           <!-- Passo 1: Dados essenciais -->
           <div class="form-section">
             <div class="form-section-header">
@@ -368,28 +361,33 @@
 
         <!-- Badge do projeto -->
         <div class="sidebar-footer">
+          <button
+            id="sobreProjetoBtn"
+            class="footer-accordion-btn"
+            type="button"
+            aria-expanded="false"
+            aria-controls="sobreProjetoContent"
+          >
+            <i data-lucide="graduation-cap" class="icon-xs" aria-hidden="true"></i>
+            <span>Sobre o projeto</span>
+            <i data-lucide="chevron-down" class="icon-xs accordion-arrow" aria-hidden="true"></i>
+          </button>
           <div
-            class="institutional-info"
-            role="note"
-            aria-label="Informações institucionais do projeto"
+            id="sobreProjetoContent"
+            class="footer-accordion-content"
+            role="region"
+            aria-labelledby="sobreProjetoBtn"
+            style="display: none"
           >
             <p class="institutional-text">
-              Este projeto foi desenvolvido como atividade de Extensão Universitária para o curso de
-              Engenharia de Software do Centro Universitário Internacional UNINTER. O objetivo
-              central é utilizar o desenvolvimento de software como instrumento de promoção da
-              justiça social, focando na literacia financeira e na inclusão digital de trabalhadores
-              regidos pela CLT.
+              Projeto de Extensão Universitária — Engenharia de Software, UNINTER.<br />
+              Simulador educacional de FGTS e rescisão trabalhista para promoção da literacia
+              financeira e inclusão digital de trabalhadores CLT.
             </p>
             <p class="institutional-disclaimer">
-              Este projeto foi desenvolvido como atividade acadêmica de extensão universitária. O
-              uso indevido para submissão acadêmica por terceiros configura plágio e viola
-              princípios de integridade acadêmica.
+              Projeto acadêmico. Não substitui assessoria jurídica profissional.
             </p>
           </div>
-          <span class="badge-project">
-            <i data-lucide="graduation-cap" class="icon-xs" aria-hidden="true"></i>
-            Extensão Universitária · UNINTER
-          </span>
           <a
             href="https://github.com/AndersonTavares0/fgts-simulator"
             target="_blank"
@@ -397,7 +395,7 @@
             class="github-link"
             aria-label="Repositório do projeto no GitHub"
           >
-            <i data-lucide="Link" class="icon-sm"></i>
+            <i data-lucide="code-xml" class="icon-sm"></i>
             <span>Código-fonte</span>
           </a>
           <button
@@ -421,7 +419,7 @@
         <!-- Estado vazio (antes do cálculo) -->
         <div class="empty-state" id="emptyState" aria-live="polite">
           <div class="empty-icon" aria-hidden="true">
-            <i data-lucide="bar-chart-3" aria-hidden="true"></i>
+            <i data-lucide="chart-bar" aria-hidden="true"></i>
           </div>
           <p class="empty-title">Pronto para simular</p>
           <p class="empty-desc">
@@ -457,7 +455,7 @@
 
           <!-- Cards de métricas principais -->
           <div class="metrics-grid">
-            <div class="metric-card accent featured" role="status" aria-label="Total a receber">
+            <div class="metric-card accent featured" aria-label="Total a receber">
               <div class="metric-icon bg-accent" aria-hidden="true">
                 <i data-lucide="wallet" class="icon-sm"></i>
               </div>
@@ -466,7 +464,7 @@
                   <span class="metric-label">Total a Receber</span>
                   <span class="warning-tooltip-wrapper">
                     <i
-                      data-lucide="alert-triangle"
+                      data-lucide="triangle-alert"
                       class="icon-xs warning-icon"
                       aria-hidden="true"
                       title="Valor estimado — consulte um advogado trabalhista"
@@ -478,8 +476,8 @@
               </div>
             </div>
 
-            <div class="metric-card" role="status" aria-label="Saldo FGTS acumulado">
-              <div class="metric-icon bg-teal" aria-hidden="true">
+            <div class="metric-card" aria-label="Saldo FGTS acumulado">
+              <div class="metric-icon bg-accent" aria-hidden="true">
                 <i data-lucide="piggy-bank" class="icon-sm"></i>
               </div>
               <div class="metric-body">
@@ -488,7 +486,7 @@
               </div>
             </div>
 
-            <div class="metric-card" role="status" aria-label="Multa e verbas extras">
+            <div class="metric-card" aria-label="Multa e verbas extras">
               <div class="metric-icon bg-blue" aria-hidden="true">
                 <i data-lucide="shield-check" class="icon-sm"></i>
               </div>
@@ -699,7 +697,7 @@
                 class="info-box restriction-warning"
                 style="display: none"
               >
-                <i data-lucide="alert-triangle" class="icon-xs"></i>
+                <i data-lucide="triangle-alert" class="icon-xs"></i>
                 <p>
                   <strong>Atenção:</strong> Com o Saque-Aniversário ativo, você
                   <strong>não pode sacar o saldo integral do FGTS</strong> na rescisão. Apenas a
@@ -719,9 +717,29 @@
             </div>
           </div>
 
+          <!-- Parâmetros do cálculo -->
+          <div class="calc-summary">
+            <div class="calc-summary-item">
+              <span class="cs-label">Base</span>
+              <span class="cs-value" id="cs-base">—</span>
+            </div>
+            <div class="calc-summary-item">
+              <span class="cs-label">Multa</span>
+              <span class="cs-value" id="cs-multa">—</span>
+            </div>
+            <div class="calc-summary-item">
+              <span class="cs-label">Período</span>
+              <span class="cs-value" id="cs-periodo">—</span>
+            </div>
+            <div class="calc-summary-item">
+              <span class="cs-label">FGTS</span>
+              <span class="cs-value" id="cs-fgts">—</span>
+            </div>
+          </div>
+
           <!-- Aviso legal -->
           <div class="legal-notice">
-            <i data-lucide="alert-triangle" class="icon-xs" aria-hidden="true"></i>
+            <i data-lucide="triangle-alert" class="icon-xs" aria-hidden="true"></i>
             <p>
               Este cálculo é uma <strong>estimativa educativa</strong> e não substitui assessoria
               jurídica trabalhista. Valores podem variar conforme convenção sindical, horas extras e

@@ -13,7 +13,7 @@
 .navbar-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 20px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -27,7 +27,7 @@
 }
 
 .navbar-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   letter-spacing: 0.02em;
@@ -43,15 +43,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   text-decoration: none;
-  transition: all var(--transition);
+  transition:
+    border-color var(--transition),
+    color var(--transition),
+    background var(--transition);
 }
 
 .navbar-link:hover {
@@ -99,10 +102,14 @@
   max-width: 100%;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .navbar,
   .app-footer {
     display: block;
+  }
+
+  .sidebar-header {
+    display: none;
   }
 
   .app-shell {
@@ -114,10 +121,8 @@
 
 /* ═══ Sidebar Container ═══ */
 .sidebar {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border-right: 1px solid var(--glass-border);
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border-mid);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -125,9 +130,6 @@
   height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    var(--glass-shadow);
   transition:
     background var(--transition-slow),
     border-color var(--transition-slow);
@@ -142,7 +144,7 @@
   border-radius: 4px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .sidebar {
     position: static;
     height: auto;
@@ -156,47 +158,30 @@
 
 /* ═══ Header da Sidebar ═══ */
 .sidebar-header {
+  background: var(--bg-elevated);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 24px;
-  border-bottom: 1px solid var(--border-subtle);
-  position: relative;
-}
-
-.sidebar-header::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 24px;
-  right: 24px;
-  height: 1px;
-  background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 80%);
-  opacity: 0.6;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-mid);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .brand-icon {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--accent-dim), rgba(var(--accent-rgb), 0.18));
-  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  width: 32px;
+  height: 32px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(var(--accent-rgb), 0.15);
   border-radius: var(--radius-md);
   display: grid;
   place-items: center;
   color: var(--accent);
   transition: all var(--transition);
-  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.1);
-}
-
-.brand:hover .brand-icon {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-glow);
 }
 
 .brand-text {
@@ -206,29 +191,18 @@
 }
 
 .brand-name {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  background: linear-gradient(135deg, var(--text-primary), var(--accent));
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Desabilita gradiente no alto contraste para legibilidade */
-@media (prefers-contrast: more) {
-  .brand-name {
-    background: none;
-    -webkit-text-fill-color: var(--text-primary);
-    color: var(--text-primary);
-  }
+  color: var(--text-primary);
 }
 
 .brand-sub {
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-on-accent);
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  opacity: 0.7;
 }
 
 /* ═══ Theme Toggle Button ═══ */
@@ -236,59 +210,49 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-mid);
   border-radius: var(--radius-full);
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   cursor: pointer;
-  color: var(--text-secondary);
-  transition: all var(--transition);
-  font-size: 1.2rem;
-  line-height: 1;
-  position: relative;
-}
-
-.theme-toggle::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
+  color: var(--icon-primary);
+  transition:
+    border-color var(--transition),
+    color var(--transition),
+    background var(--transition);
 }
 
 .theme-toggle:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--icon-accent);
   background: var(--accent-dim);
-  transform: rotate(15deg);
-}
-
-.theme-toggle:active {
-  transform: rotate(15deg) scale(0.92);
 }
 
 /* ═══ Rodapé da Sidebar ═══ */
 .sidebar-footer {
   margin-top: auto;
-  padding: 14px 24px 16px;
-  border-top: 1px solid var(--border-subtle);
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--border-mid);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  background: var(--bg-surface);
 }
 
 .institutional-info {
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .institutional-text {
-  font-size: var(--fs-caption);
+  font-size: 11px;
   color: var(--text-secondary);
   line-height: 1.6;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .institutional-disclaimer {
-  font-size: var(--fs-caption);
+  font-size: 10px;
   color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
@@ -298,34 +262,74 @@
 .badge-project {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
+  gap: 6px;
+  font-size: 10px;
+  color: var(--icon-secondary);
 }
 
 .github-link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-muted);
+  gap: 6px;
+  font-size: 11px;
+  color: var(--icon-secondary);
   text-decoration: none;
-  opacity: 0.7;
-  transition:
-    opacity 0.2s,
-    color 0.2s,
-    transform 0.2s;
-  padding: 6px 0;
+  transition: color 0.2s;
+  padding: 4px 0;
 }
 
 .github-link:hover,
 .github-link:focus-visible {
-  opacity: 1;
   color: var(--text-primary);
-  transform: translateX(2px);
 }
 
 .github-link svg {
   width: 16px;
   height: 16px;
+}
+
+/* ═══ "Sobre o projeto" Footer Accordion ═══ */
+.footer-accordion-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all var(--transition);
+  width: 100%;
+  justify-content: center;
+  min-height: 30px;
+}
+
+.footer-accordion-btn:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.footer-accordion-btn .accordion-arrow {
+  transition: transform var(--transition);
+}
+
+.footer-accordion-btn[aria-expanded='true'] .accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.footer-accordion-content {
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 4px;
+  animation: fade-in-up 0.2s ease;
+}
+
+@media (max-width: 767px) {
+  .footer-accordion-content {
+    padding: 4px 0;
+  }
 }
