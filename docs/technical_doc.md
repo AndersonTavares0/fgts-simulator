@@ -17,8 +17,8 @@
 
 Este documento descreve a arquitetura técnica e as decisões de implementação do **Simulador de Rescisão e FGTS**, uma ferramenta educacional desenvolvida como parte de um projeto de extensão universitária do curso de **Engenharia de Software da UNINTER**. O sistema tem como objetivo demonstrar a tradução precisa de requisitos legais da Consolidação das Leis do Trabalho (CLT) em código funcional, mantendo rigor técnico e conformidade com boas práticas de desenvolvimento.
 
-**Versão Atual**: 2.1 (TypeScript + DDD)
-**Última Atualização**: 18/06/2026
+**Versão Atual**: 2.0.3 (TypeScript + DDD)
+**Última Atualização**: 19/06/2026
 **Status**: Produção - Projeto de Extensão Universitária
 
 ---
@@ -373,7 +373,7 @@ Cada serviço tem responsabilidade única e bem definida, seguindo o princípio 
 
 A arquitetura DDD em camadas permite:
 
-- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (65 testes)
+- **Testabilidade Individual**: Cada serviço pode ser testado isoladamente (77 testes)
 - **Reusabilidade**: `Money` é o único Value Object que transita entre todas as camadas
 - **Manutenção Facilitada**: Alterações em uma regra não afetam outras — ex: adicionar novo tipo de rescisão requer apenas atualizar `MultaService`
 - **Type Safety**: TypeScript com `strict` + `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` previne erros em tempo de compilação
@@ -389,7 +389,7 @@ Este projeto demonstra como requisitos legais complexos podem ser traduzidos em 
 3. **Implementação fiel das regras da CLT** com enum exaustivo de 8 tipos de rescisão
 4. **Compromisso com privacidade** através de processamento client-side
 5. **Acessibilidade inclusiva WCAG 2.1 AA** seguindo padrões internacionais
-6. **TypeScript strict** com cobertura de 80% em 65 testes automatizados
+6. **TypeScript strict** com cobertura de 80% em 77 testes automatizados
 
 Resulta em uma ferramenta educacional robusta que serve tanto como recurso de aprendizado para estudantes quanto como referência de boas práticas de desenvolvimento para projetos de engenharia de software.
 
