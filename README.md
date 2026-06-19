@@ -2,7 +2,7 @@
 
 [![GitHub AndersonTavares0](https://img.shields.io/badge/GitHub-AndersonTavares0-181717?style=flat-square&logo=github)](https://github.com/AndersonTavares0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Software Version](https://img.shields.io/badge/version-2.0.1-green?style=flat-square)](#)
+[![Software Version](https://img.shields.io/badge/version-2.0.3-green?style=flat-square)](#)
 ![TypeScript](https://img.shields.io/badge/TypeScript-%233178C6.svg?style=flat-square&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-%23646CFF.svg?style=flat-square&logo=vite&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-%236E9F18.svg?style=flat-square&logo=vitest&logoColor=white)
@@ -33,15 +33,16 @@ Este projeto foi desenvolvido como atividade de **Extensão Universitária** par
 
 O sistema consiste em uma ferramenta de simulação trabalhista que permite ao usuário calcular estimativas de verbas rescisórias e saldo de FGTS de forma autônoma e ágil. A v2.0 implementa:
 
-### Funcionalidades (v2.0)
+### Funcionalidades (v2.1)
 
 * **TypeScript com Domain-Driven Design** — Arquitetura de camadas com Entities, Services e Adapters
 * **Precisão financeira com Decimal.js** — Eliminação completa de erros IEEE 754 via Value Object `Money`
 * **Correção Monetária TR/IPCA** — Motor de indexação com conformidade ADI 5090 (STF)
+* **Cálculo de INSS** — Tabela progressiva 2026 com 4 faixas e teto
 * **8 Modalidades de Rescisão** — Enum exaustivo com multas diferenciadas (40%, 20%, 0%)
 * **Saque por Doença Grave** — Liberação integral de 100% do saldo (Lei 8.036/90)
 * **Saque-Aniversário** — Tabela oficial de 7 faixas com parcela fixa
-* **65 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
+* **77 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros, INSS e validações legais
 * **Acessibilidade WCAG 2.1 AA** — ARIA labels, live regions, navegação por teclado
 * **Conformidade LGPD** — Política de privacidade, consentimento para dados sensíveis, banner de transparência
 
@@ -158,7 +159,7 @@ Na rescisão, o optante normalmente **não saca o saldo** (fica retido), mas **r
 
 ## Testes Automatizados
 
-O projeto inclui **65 testes automatizados** executados com **Vitest**:
+O projeto inclui **77 testes automatizados** executados com **Vitest**:
 
 ```bash
 npm test              # Executa todos os testes
@@ -170,7 +171,7 @@ npm run test:coverage # Relatório de cobertura (threshold 80%)
 
 | Arquivo | Testes | Escopo |
 |---------|--------|--------|
-| `calculator.test.ts` | 46 | Money VO, depósito, juros, multas (7 tipos), doença grave, ADI 5090, saque-aniversário, integração completa, validação, verbas proporcionais |
+| `calculator.test.ts` | 58 | Money VO, depósito, juros, multas (7 tipos), doença grave, ADI 5090, saque-aniversário, integração completa, validação, verbas proporcionais, INSS tabela progressiva 2026, FormatAdapter |
 | `legal-boundary.test.ts` | 19 | Doença grave (5), Acordo 484-A e saldo retido (4), integridade de multas (3), saque-aniversário (2), tipos de contrato e doméstico (5) |
 
 ---
@@ -225,7 +226,7 @@ fgts-simulator/
 │   │   └── fonts/           # Fontes self-hosted (6 woff2)
 │   ├── css/                 # Estilos (CSS Variables)
 ├── tests/unit/              # Testes automatizados
-│   ├── calculator.test.ts   # Suíte principal (46 testes)
+│   ├── calculator.test.ts   # Suíte principal (58 testes)
 │   └── legal-boundary.test.ts # Limites legais (19 testes)
 ├── docs/                    # Documentação técnica
 ├── tsconfig.json            # Configuração TypeScript (strict)
@@ -298,4 +299,4 @@ Para detalhes sobre arquitetura de dados, regras de negócio CLT, segurança, ac
 ---
 
 **Projeto de Extensão Universitária — UNINTER**
-Curso de Engenharia de Software | v2.0.1 (TypeScript + DDD)
+Curso de Engenharia de Software | v2.0.3 (TypeScript + DDD)
