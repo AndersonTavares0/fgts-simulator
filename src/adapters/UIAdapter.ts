@@ -295,14 +295,14 @@ export class UIAdapter {
     };
 
     const percent = multaPercentages[this.motivoEl.value] ?? 0;
-    let colorClass = 'bg-gray-500';
+    let colorClass = 'multa-zero';
     let text = 'Multa: 0%';
 
     if (percent === 40) {
-      colorClass = 'bg-green-500';
+      colorClass = 'multa-alta';
       text = 'Multa: 40% do FGTS';
     } else if (percent === 20) {
-      colorClass = 'bg-yellow-500';
+      colorClass = 'multa-media';
       text = 'Multa: 20% do FGTS';
     }
 
