@@ -8,6 +8,12 @@
   padding-bottom: 0;
 }
 
+.form-section + .form-section {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
 .form-section-header {
   display: flex;
   align-items: center;
@@ -41,7 +47,7 @@
 /* ═══ FIELD GROUPS ═══ */
 
 .field-group {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 fieldset.field-row {
@@ -55,7 +61,7 @@ fieldset.field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 @media (max-width: 560px) {
@@ -108,12 +114,12 @@ fieldset.field-row {
 }
 
 .field-input:hover {
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: var(--border-focus);
   background: var(--bg-hover);
 }
 
 [data-theme='light'] .field-input:hover {
-  border-color: rgba(0, 0, 0, 0.14);
+  border-color: var(--border-focus);
   background: var(--bg-hover);
 }
 
@@ -210,17 +216,17 @@ select.field-input {
     border-color var(--transition-spring);
 }
 
-.multa-badge.bg-green-500 {
+.multa-badge.multa-alta {
   background: var(--accent);
   color: var(--text-on-accent);
 }
 
-.multa-badge.bg-yellow-500 {
+.multa-badge.multa-media {
   background: var(--amber);
   color: #1a0a00;
 }
 
-.multa-badge.bg-gray-500 {
+.multa-badge.multa-zero {
   background: var(--bg-elevated);
   color: var(--text-secondary);
   border: 1px solid var(--border-mid);
@@ -231,7 +237,7 @@ select.field-input {
 .options-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .option-toggle {
@@ -239,8 +245,8 @@ select.field-input {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  padding: 10px 12px;
-  min-height: 40px;
+  padding: 8px 12px;
+  min-height: 38px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border-subtle);
   transition:
@@ -283,7 +289,9 @@ select.field-input {
   border-radius: 50%;
   top: 2px;
   left: 2px;
-  transition: all var(--transition-spring);
+  transition:
+    transform var(--transition-spring),
+    background var(--transition-spring);
 }
 
 .option-toggle input:checked + .toggle-track {
@@ -315,10 +323,10 @@ select.field-input {
 /* ═══ BUTTONS ═══ */
 
 .form-actions {
-  padding: 10px 16px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .btn-primary,
@@ -336,9 +344,7 @@ select.field-input {
     border-color var(--transition),
     background var(--transition),
     color var(--transition),
-    transform var(--transition),
-    opacity var(--transition),
-    box-shadow var(--transition);
+    opacity var(--transition);
 }
 
 .btn-primary {
@@ -353,12 +359,11 @@ select.field-input {
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
+  background: var(--accent-hover);
 }
 
 .btn-primary:active {
-  transform: none;
-  opacity: 0.95;
+  opacity: 0.9;
 }
 
 .btn-primary:disabled {
@@ -397,8 +402,6 @@ select.field-input {
 .btn-secondary:hover {
   border-color: var(--accent);
   background: var(--accent-dim);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
 }
 
 .btn-secondary:active {
@@ -407,11 +410,11 @@ select.field-input {
 
 .btn-ghost {
   padding: 10px 18px;
-  min-height: 36px;
+  min-height: 38px;
   background: transparent;
   color: var(--text-secondary);
   border: 1.5px solid var(--border-subtle);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -473,7 +476,7 @@ select.field-input {
 .health-info-content ul {
   margin: 0;
   padding-left: 18px;
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
@@ -514,17 +517,6 @@ select.field-input {
   opacity: 1;
   padding: 14px;
   border-color: var(--border-mid);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .accordion-body {
@@ -589,15 +581,4 @@ select.field-input {
 .select-wrapper select[aria-invalid='true']:focus {
   border-color: var(--danger) !important;
   box-shadow: 0 0 0 3px var(--danger-dim);
-}
-
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
