@@ -28,6 +28,17 @@ const ALIQUOTA = {
 
 const ALIQUOTA_MULTA_DOMESTICO = 3.2;
 
+const PERCENTUAL_SALDO_DISPONIVEL = {
+  [TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA]: 100,
+  [TipoRescisao.ACORDO_COMUM]: 80,
+  [TipoRescisao.CULPA_RECIPROCA]: 100,
+  [TipoRescisao.DOENCA_GRAVE]: 100,
+  [TipoRescisao.APOSENTADORIA]: 100,
+  [TipoRescisao.FALECIMENTO]: 100,
+  [TipoRescisao.DEMISSAO_VOLUNTARIA]: 0,
+  [TipoRescisao.JUSTA_CAUSA]: 0,
+} satisfies Record<TipoRescisao, number>;
+
 export class FGTSCalculatorService {
   /**
    * Calcula o depósito mensal do FGTS
@@ -119,8 +130,8 @@ export class FGTSCalculatorService {
         .percentage(ALIQUOTA_MULTA_DOMESTICO)
         .multiply(mesesTrabalhados);
 
-      // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal)
-      // §2º: Aposentadoria, Falecimento e Pedido de Demissão → valor retorna ao empregador
+      // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal).
+      // Culpa recíproca usa interpretação analógica do Art. 484 CLT: 50% da indenização.
       let valorMultaDomestico: Money;
       let fundamentoDomestico: string;
 
@@ -130,6 +141,10 @@ export class FGTSCalculatorService {
       } else if (tipoRescisao === TipoRescisao.ACORDO_COMUM) {
         valorMultaDomestico = valorAcumuladoMulta.percentage(50);
         fundamentoDomestico = 'Art. 22 c/c Art. 484-A CLT — 50% da reserva de indenização';
+      } else if (tipoRescisao === TipoRescisao.CULPA_RECIPROCA) {
+        valorMultaDomestico = valorAcumuladoMulta.percentage(50);
+        fundamentoDomestico =
+          'Art. 22, LC 150/2015 c/c Art. 484, CLT — 50% da reserva de indenização (interpretação analógica)';
       } else {
         valorMultaDomestico = Money.zero();
         fundamentoDomestico = 'Art. 22, §2º, LC 150/2015 — Reserva retorna ao empregador';
@@ -155,18 +170,25 @@ export class FGTSCalculatorService {
       ? this.calcularFeriasProporcionais(salarioBruto, mesesTrabalhados)
       : Money.zero();
 
-    // 5. INSS
+    // 5. INSS + saldo disponível para saque conforme modalidade de rescisão.
     const resultadoINSS = calcularINSS ? INSSService.calcular(salarioBruto) : null;
+    const percentualSaldoDisponivel = PERCENTUAL_SALDO_DISPONIVEL[tipoRescisao];
+    let saldoFinal = saldoBase.percentage(percentualSaldoDisponivel);
+    let saldoRetido = saldoBase.subtract(saldoFinal);
 
     // 6. Saque-Aniversário
     let resultadoSaqueAniversario: ResultadoSaqueAniversario | null = null;
-    let saldoFinal = saldoBase;
     let multaFinal = multa.valorMulta;
 
     if (saqueAniversario) {
       resultadoSaqueAniversario = SaqueAniversarioService.calcularParcela(saldoBase);
-      const impacto = SaqueAniversarioService.calcularImpactoRescisao(saldoBase, multa.valorMulta);
+      const impacto = SaqueAniversarioService.calcularImpactoRescisao(
+        saldoBase,
+        multa.valorMulta,
+        tipoRescisao,
+      );
       saldoFinal = impacto.saldoFinal;
+      saldoRetido = saldoBase.subtract(saldoFinal);
       multaFinal = impacto.multaFinal;
     }
 
@@ -176,6 +198,7 @@ export class FGTSCalculatorService {
       resultadoDoencaGrave = DoencaGraveService.calcular(saldoBase, doencaGrave);
       // Doença grave libera 100% do saldo independente de saque-aniversário
       saldoFinal = saldoBase;
+      saldoRetido = Money.zero();
     }
 
     // 8. Total
@@ -196,6 +219,7 @@ export class FGTSCalculatorService {
       saqueAniversario: resultadoSaqueAniversario,
       doencaGrave: resultadoDoencaGrave,
       inss: resultadoINSS,
+      saldoRetido,
       saldoFinal,
       multaFinal,
       total,

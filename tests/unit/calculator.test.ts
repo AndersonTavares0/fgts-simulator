@@ -14,12 +14,7 @@
 import { describe, it, expect } from 'vitest';
 import Decimal from 'decimal.js';
 
-import {
-  Money,
-  TipoRescisao,
-  TipoContrato,
-  TipoDoencaGrave,
-} from '../../src/core/types';
+import { Money, TipoRescisao, TipoContrato, TipoDoencaGrave } from '../../src/core/types';
 import { FGTSCalculatorService } from '../../src/core/services/FGTSCalculatorService';
 import { INSSService } from '../../src/core/services/INSSService';
 import { CorrecaoMonetariaService } from '../../src/core/services/CorrecaoMonetariaService';
@@ -31,7 +26,6 @@ import { ContratoTrabalho } from '../../src/core/entities/ContratoTrabalho';
 
 // ─── Constantes de teste ────────────────────────────────────────────────────
 const SALARIO_3000 = Money.fromReais(3000); // R$ 3.000,00
-const SALARIO_1500 = Money.fromReais(1500); // R$ 1.500,00
 
 // ─── 1. Money Value Object ──────────────────────────────────────────────────
 describe('Money Value Object', () => {
@@ -229,7 +223,7 @@ describe('CorrecaoMonetariaService — ADI 5090 (TR zero → IPCA)', () => {
     // IPCA = 0.005/mês → ~6.17% a.a.
     // Como 3% < 6.17%, deve aplicar IPCA
     const resultado = CorrecaoMonetariaService.calcularSaldoComCorrecao(deposito, 12, {
-      trMensal: new Decimal(0),     // TR zerada
+      trMensal: new Decimal(0), // TR zerada
       ipcaMensal: new Decimal('0.005'), // IPCA ~6% a.a.
     });
 
@@ -243,8 +237,8 @@ describe('CorrecaoMonetariaService — ADI 5090 (TR zero → IPCA)', () => {
 
     // TR alta → TR+3% > IPCA
     const resultado = CorrecaoMonetariaService.calcularSaldoComCorrecao(deposito, 12, {
-      trMensal: new Decimal('0.005'),    // TR alta (0.5%/mês)
-      ipcaMensal: new Decimal('0.003'),  // IPCA baixo
+      trMensal: new Decimal('0.005'), // TR alta (0.5%/mês)
+      ipcaMensal: new Decimal('0.003'), // IPCA baixo
     });
 
     expect(resultado.indexadorUtilizado).toBe('TR');
@@ -279,7 +273,11 @@ describe('SaqueAniversarioService — Tabela Oficial Caixa', () => {
   it('deve reter saldo na rescisão mas pagar multa integral', () => {
     const saldo = Money.fromCents(100000);
     const multa = Money.fromCents(40000);
-    const impacto = SaqueAniversarioService.calcularImpactoRescisao(saldo, multa);
+    const impacto = SaqueAniversarioService.calcularImpactoRescisao(
+      saldo,
+      multa,
+      TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA,
+    );
 
     expect(impacto.saldoFinal.cents).toBe(0);
     expect(impacto.multaFinal.cents).toBe(40000);
@@ -514,7 +512,7 @@ describe('INSSService — Tabela Progressiva 2026', () => {
 
   it('deve calcular salário líquido corretamente', () => {
     const result = INSSService.calcular(Money.fromReais(3000));
-    expect(result.salarioLiquido.reais).toBeCloseTo(3000 - 248.60, 1);
+    expect(result.salarioLiquido.reais).toBeCloseTo(3000 - 248.6, 1);
   });
 });
 

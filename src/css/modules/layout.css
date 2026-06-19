@@ -1,15 +1,114 @@
+/* ═══ Navbar ═══ */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+  display: none;
+}
+
+.navbar-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+}
+
+.navbar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+
+.navbar-link:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ═══ Footer ═══ */
+.app-footer {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  padding: 20px;
+  display: none;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  margin: 0 0 6px 0;
+}
+
+.footer-disclaimer {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+  opacity: 0.7;
+}
+
 /* ═══ Shell da Aplicação ═══ */
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-w-min) 1fr;
-  min-height: 100dvh;
+  min-height: calc(100dvh - 52px);
   max-width: 100%;
 }
 
 @media (max-width: 900px) {
+  .navbar,
+  .app-footer {
+    display: block;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
+    min-height: calc(100dvh - 104px);
   }
 }
 
@@ -26,6 +125,9 @@
   height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    var(--glass-shadow);
   transition:
     background var(--transition-slow),
     border-color var(--transition-slow);
@@ -59,6 +161,18 @@
   justify-content: space-between;
   padding: 22px 24px;
   border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.sidebar-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 24px;
+  right: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 80%);
+  opacity: 0.6;
 }
 
 .brand {
@@ -70,14 +184,14 @@
 .brand-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--accent-dim), rgba(34, 211, 160, 0.18));
-  border: 1px solid rgba(34, 211, 160, 0.25);
+  background: linear-gradient(135deg, var(--accent-dim), rgba(var(--accent-rgb), 0.18));
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
   border-radius: var(--radius-md);
   display: grid;
   place-items: center;
   color: var(--accent);
   transition: all var(--transition);
-  box-shadow: 0 2px 8px rgba(34, 211, 160, 0.1);
+  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.1);
 }
 
 .brand:hover .brand-icon {
@@ -154,11 +268,31 @@
 /* ═══ Rodapé da Sidebar ═══ */
 .sidebar-footer {
   margin-top: auto;
-  padding: 18px 24px;
+  padding: 14px 24px 16px;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+.institutional-info {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.institutional-text {
+  font-size: var(--fs-caption);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 8px 0;
+}
+
+.institutional-disclaimer {
+  font-size: var(--fs-caption);
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
 }
 
 .badge-project {

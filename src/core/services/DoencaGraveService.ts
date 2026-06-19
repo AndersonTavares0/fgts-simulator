@@ -7,7 +7,7 @@
  *  - Condições qualificadoras: câncer, HIV/AIDS, doença terminal
  *  - Extensível a doenças graves conforme portaria ministerial
  *
- * Base legal: Lei 8.036/1990, Art. 20, inciso XIII
+ * Base legal: Lei 8.036/1990, Art. 20, incisos XI, XIII e XIV
  */
 
 import { Money, TipoDoencaGrave } from '../types';
@@ -17,7 +17,7 @@ import type { ResultadoDoencaGrave } from '../types';
 const DOENCAS_QUALIFICADAS: Record<TipoDoencaGrave, { descricao: string; fundamento: string }> = {
   [TipoDoencaGrave.CANCER]: {
     descricao: 'Neoplasia maligna (Câncer)',
-    fundamento: 'Lei 8.036/90, Art. 20, XIII — Portaria Interministerial MPAS/MS nº 2.998/2001',
+    fundamento: 'Lei 8.036/90, Art. 20, XI — Neoplasia maligna',
   },
   [TipoDoencaGrave.HIV_AIDS]: {
     descricao: 'HIV/AIDS (Portador do vírus)',
@@ -25,11 +25,11 @@ const DOENCAS_QUALIFICADAS: Record<TipoDoencaGrave, { descricao: string; fundame
   },
   [TipoDoencaGrave.DOENCA_TERMINAL]: {
     descricao: 'Doença em estágio terminal',
-    fundamento: 'Lei 8.036/90, Art. 20, XIII — laudo de junta médica oficial',
+    fundamento: 'Lei 8.036/90, Art. 20, XIV — doença em estágio terminal',
   },
   [TipoDoencaGrave.OUTRA_GRAVE]: {
     descricao: 'Outra doença grave conforme rol ministerial',
-    fundamento: 'Lei 8.036/90, Art. 20, XIII — conforme portaria vigente',
+    fundamento: 'Lei 8.036/90, Art. 20 — conforme hipótese legal ou portaria vigente',
   },
 };
 

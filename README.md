@@ -2,7 +2,7 @@
 
 [![GitHub AndersonTavares0](https://img.shields.io/badge/GitHub-AndersonTavares0-181717?style=flat-square&logo=github)](https://github.com/AndersonTavares0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Software Version](https://img.shields.io/badge/version-2.0.0-green?style=flat-square)](#)
+[![Software Version](https://img.shields.io/badge/version-2.0.1-green?style=flat-square)](#)
 ![TypeScript](https://img.shields.io/badge/TypeScript-%233178C6.svg?style=flat-square&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-%23646CFF.svg?style=flat-square&logo=vite&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-%236E9F18.svg?style=flat-square&logo=vitest&logoColor=white)
@@ -27,6 +27,7 @@
 ## Contexto Acadêmico
 
 Este projeto foi desenvolvido como atividade de **Extensão Universitária** para o curso de **Engenharia de Software** do Centro Universitário Internacional **UNINTER**. O objetivo central é utilizar o desenvolvimento de software como instrumento de promoção da justiça social, focando na literacia financeira e na inclusão digital de trabalhadores regidos pela CLT.
+> ⚠️ Este projeto foi desenvolvido como atividade acadêmica de extensão universitária. O uso indevido para submissão acadêmica por terceiros configura plágio e viola princípios de integridade acadêmica.
 
 ## Descrição do Projeto
 
@@ -40,7 +41,7 @@ O sistema consiste em uma ferramenta de simulação trabalhista que permite ao u
 * **8 Modalidades de Rescisão** — Enum exaustivo com multas diferenciadas (40%, 20%, 0%)
 * **Saque por Doença Grave** — Liberação integral de 100% do saldo (Lei 8.036/90)
 * **Saque-Aniversário** — Tabela oficial de 7 faixas com parcela fixa
-* **61 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
+* **65 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros e validações
 * **Acessibilidade WCAG 2.1 AA** — ARIA labels, live regions, navegação por teclado
 * **Conformidade LGPD** — Política de privacidade, consentimento para dados sensíveis, banner de transparência
 
@@ -94,7 +95,7 @@ enum TipoRescisao {
   DEMISSAO_VOLUNTARIA       // Pedido do empregado → Multa 0%
   JUSTA_CAUSA               // Art. 482 CLT → Multa 0%
   ACORDO_COMUM              // Art. 484-A CLT (Reforma 2017) → Multa 20%
-  DOENCA_GRAVE              // Lei 8.036/90, Art. 20 XIII → Multa 0% (saque integral)
+  DOENCA_GRAVE              // Lei 8.036/90, Art. 20 XI/XIII/XIV → Multa 0% (saque integral)
   APOSENTADORIA             // Lei 8.036/90, Art. 20 III → Multa 0% (saque integral)
   FALECIMENTO               // Lei 8.036/90, Art. 20 IV → Multa 0% (saque por dependentes)
   CULPA_RECIPROCA           // Art. 484 CLT → Multa 20%
@@ -111,15 +112,15 @@ O saldo do FGTS é corrigido mensalmente pelo motor `CorrecaoMonetariaService`:
 
 1. **Taxa legal**: Juros de 3% ao ano (Art. 13, Lei 8.036/1990) + TR mensal
 2. **Conversão mensal**: `taxaMensal = (1 + 0.03)^(1/12) - 1 + TR`
-3. **Piso ADI 5090**: Se `(TR + 3%) anual < IPCA anual`, aplica-se o IPCA como indexador substituto
+3. **Piso estimado ADI 5090**: Se `(TR + 3%) anual < IPCA anual`, usa-se IPCA como piso de estimativa
 4. **Série de pagamentos**: `FV = Depósito × [((1 + i)^n - 1) / i]`
 
 ### Saque por Doença Grave
 
-Conforme Lei 8.036/90, Art. 20, inciso XIII — liberação de **100% do saldo** para:
-- Neoplasia maligna (Câncer)
-- HIV/AIDS
-- Doença em estágio terminal
+Conforme Lei 8.036/90, Art. 20 — liberação de **100% do saldo** para:
+- Neoplasia maligna (Câncer) — inciso XI
+- HIV/AIDS — inciso XIII
+- Doença em estágio terminal — inciso XIV
 - Doenças graves conforme portaria ministerial vigente
 
 ### Saque-Aniversário (Tabela Oficial Caixa)
@@ -134,7 +135,7 @@ Conforme Lei 8.036/90, Art. 20, inciso XIII — liberação de **100% do saldo**
 | R$ 15.000,01 – R$ 20.000,00 | 10% | R$ 1.900,00 |
 | Acima de R$ 20.000,00 | 5% | R$ 2.900,00 |
 
-Na rescisão, o optante **não saca o saldo** (fica retido), mas **recebe a multa rescisória integralmente**.
+Na rescisão, o optante normalmente **não saca o saldo** (fica retido), mas **recebe a multa rescisória integralmente**. Hipóteses de saque integral, como aposentadoria, falecimento e doença grave, preservam a liberação do saldo.
 
 ---
 
@@ -151,13 +152,13 @@ Na rescisão, o optante **não saca o saldo** (fica retido), mas **recebe a mult
 | **13º Proporcional** | `Salário × (meses / 12)` — máx. 12 avos | Art. 1º, Lei 4.090/1962 |
 | **Férias + 1/3** | `Salário × (meses / 12) × (4/3)` | Art. 7º, XVII, CF/88 |
 | **Saque-Aniversário** | `Saldo × alíquota + parcela fixa` | Lei 13.932/2019 |
-| **Doença Grave** | `100% do saldo` | Art. 20, XIII, Lei 8.036/90 |
+| **Doença Grave** | `100% do saldo` | Art. 20, XI/XIII/XIV, Lei 8.036/90 |
 
 ---
 
 ## Testes Automatizados
 
-O projeto inclui **61 testes automatizados** executados com **Vitest**:
+O projeto inclui **65 testes automatizados** executados com **Vitest**:
 
 ```bash
 npm test              # Executa todos os testes
@@ -170,7 +171,7 @@ npm run test:coverage # Relatório de cobertura (threshold 80%)
 | Arquivo | Testes | Escopo |
 |---------|--------|--------|
 | `calculator.test.ts` | 46 | Money VO, depósito, juros, multas (7 tipos), doença grave, ADI 5090, saque-aniversário, integração completa, validação, verbas proporcionais |
-| `legal-boundary.test.ts` | 15 | Doença grave (5), Acordo 484-A (3), Integridade de multas (3), Tipos de contrato (4: CLT 8%, Aprendiz 2%, Doméstico FGTS 8% + reserva 3.2%) |
+| `legal-boundary.test.ts` | 19 | Doença grave (5), Acordo 484-A e saldo retido (4), integridade de multas (3), saque-aniversário (2), tipos de contrato e doméstico (5) |
 
 ---
 
@@ -184,8 +185,8 @@ npm run test:coverage # Relatório de cobertura (threshold 80%)
 ### Setup
 
 ```bash
-git clone https://github.com/AndersonTavares0/PROJETO-FGTS.git
-cd PROJETO-FGTS
+git clone https://github.com/AndersonTavares0/fgts-simulator.git
+cd fgts-simulator
 npm install
 ```
 
@@ -210,7 +211,7 @@ npm run format:check    # Verificação de formatação
 ## Estrutura do Repositório
 
 ```text
-PROJETO-FGTS/
+fgts-simulator/
 ├── .github/workflows/       # CI/CD — GitHub Actions
 ├── src/                     # Código-fonte
 │   ├── index.html           # UI Dashboard
@@ -220,10 +221,12 @@ PROJETO-FGTS/
 │   │   ├── entities/        # Entities
 │   │   └── services/        # Services (cálculos puros)
 │   ├── adapters/            # Adapter Layer (UI/Formato)
+│   ├── public/              # Assets estáticos
+│   │   └── fonts/           # Fontes self-hosted (6 woff2)
 │   ├── css/                 # Estilos (CSS Variables)
 ├── tests/unit/              # Testes automatizados
 │   ├── calculator.test.ts   # Suíte principal (46 testes)
-│   └── legal-boundary.test.ts # Limites legais (15 testes)
+│   └── legal-boundary.test.ts # Limites legais (19 testes)
 ├── docs/                    # Documentação técnica
 ├── tsconfig.json            # Configuração TypeScript (strict)
 ├── vite.config.ts           # Configuração Vite + Vitest
@@ -267,14 +270,16 @@ Este simulador está em conformidade com a **Lei Geral de Proteção de Dados (L
 
 ## Roadmap (Futuras Melhorias)
 
-* [ ] **Integração com API de cotação da TR em tempo real** (BCB/SGS API)
-* [ ] **API de séries históricas do IPCA** (IBGE SIDRA)
-* [ ] **Exportação de Relatórios em PDF** com resumo detalhado
-* [ ] **PWA (Progressive Web App)** — Instalação offline e cache
-* [ ] **Persistência de Histórico** — IndexedDB para simulações anteriores
-* [ ] **Visualização Avançada** — Gráfico de evolução temporal do saldo
-* [ ] **Cálculo de INSS** — Contribuição previdenciária sobre rescisão
-* [ ] **i18n** — Suporte multilíngue para expansão
+*Priorizadas por alinhamento com o propósito educacional e client-side:*
+
+- [ ] **PWA (Progressive Web App)** — Instalação offline e cache para áreas sem internet estável
+- [ ] **Exportação de Relatórios em PDF** — Resumo detalhado para levar a advogados ou sindicatos
+- [ ] **Persistência de Histórico** — IndexedDB para comparar simulações anteriores (armazenamento local, sem backend)
+- [ ] **Visualização Avançada** — Gráfico de evolução temporal do saldo com correção TR+IPCA
+
+### Em Estudo
+
+- **Cálculo de INSS sobre verbas rescisórias** — Aumenta significativamente a complexidade (tabela progressiva, alíquotas por verba, atualização anual) e desvia o foco do FGTS. Pode ser considerado em versão futura como módulo separado.
 
 ---
 
@@ -293,4 +298,4 @@ Para detalhes sobre arquitetura de dados, regras de negócio CLT, segurança, ac
 ---
 
 **Projeto de Extensão Universitária — UNINTER**
-Curso de Engenharia de Software | v2.0.0 (TypeScript + DDD)
+Curso de Engenharia de Software | v2.0.1 (TypeScript + DDD)

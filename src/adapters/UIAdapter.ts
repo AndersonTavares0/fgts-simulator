@@ -4,6 +4,7 @@
  * Replaces the original script.js with full type safety.
  */
 
+import { createIcons, icons } from 'lucide';
 import { TipoRescisao, TipoContrato } from '../core/types';
 import type { ResultadoRescisao } from '../core/types';
 import { FGTSCalculatorService } from '../core/services/FGTSCalculatorService';
@@ -488,14 +489,7 @@ export class UIAdapter {
     closeBtn?.focus();
 
     // Re-initialize Lucide icons in modal
-    const lucide = window.lucide;
-    if (lucide) {
-      const newIcons = this.privacyModal.querySelectorAll('[data-lucide]:not(.lucide-initialized)');
-      if (newIcons.length > 0) {
-        lucide.createIcons({ nodes: Array.from(newIcons) });
-        newIcons.forEach((el) => el.classList.add('lucide-initialized'));
-      }
-    }
+    createIcons({ icons });
   }
 
   private closePrivacyModal(): void {
@@ -533,6 +527,13 @@ export class UIAdapter {
           'Para simular saque por doença grave, é necessário consentir com o tratamento dos seus dados de saúde (LGPD Art. 11).',
           this.doencaGraveConsent,
         );
+        return;
+      }
+
+      // Validate required fields
+      const errors = this.validateRequiredFields();
+      if (errors.length > 0) {
+        this.showErrors(errors);
         return;
       }
 
@@ -603,6 +604,37 @@ export class UIAdapter {
     }
   }
 
+  /** Validates all required fields and returns array of errors with element references */
+  private validateRequiredFields(): Array<{ message: string; element: HTMLElement }> {
+    const errors: Array<{ message: string; element: HTMLElement }> = [];
+
+    // Salary
+    const salarioValue = this.salarioEl.value.trim();
+    if (!salarioValue) {
+      errors.push({ message: 'Salário bruto é obrigatório.', element: this.salarioEl });
+    }
+
+    // Start date
+    const inicioValue = this.inicioEl.value.trim();
+    if (!inicioValue) {
+      errors.push({ message: 'Data de início é obrigatória.', element: this.inicioEl });
+    }
+
+    // End date
+    const terminoValue = this.terminoEl.value.trim();
+    if (!terminoValue) {
+      errors.push({ message: 'Data de término é obrigatória.', element: this.terminoEl });
+    }
+
+    // Reason (select always has a value, but double-check)
+    const motivoValue = this.motivoEl.value;
+    if (!motivoValue) {
+      errors.push({ message: 'Motivo da saída é obrigatório.', element: this.motivoEl });
+    }
+
+    return errors;
+  }
+
   private setLoading(isLoading: boolean): void {
     this.isCalculating = isLoading;
     this.calcularBtn.disabled = isLoading;
@@ -624,10 +656,7 @@ export class UIAdapter {
         <i data-lucide="calculator" class="icon-sm" aria-hidden="true"></i>
         <span>Calcular Rescisão</span>
       `;
-      const lucide = window.lucide;
-      if (lucide) {
-        lucide.createIcons({ nodes: [this.calcularBtn] });
-      }
+      createIcons({ icons });
     }
   }
 
@@ -687,16 +716,7 @@ export class UIAdapter {
     }, 600);
 
     // Re-instantiate Lucide icons only on new elements
-    const lucide = window.lucide;
-    if (lucide) {
-      const newIcons = this.resultsContent.querySelectorAll(
-        '[data-lucide]:not(.lucide-initialized)',
-      );
-      if (newIcons.length > 0) {
-        lucide.createIcons({ nodes: Array.from(newIcons) });
-        newIcons.forEach((el) => el.classList.add('lucide-initialized'));
-      }
-    }
+    createIcons({ icons });
   }
 
   private updateDonut(saldo: number, multa: number, prop: number, total: number): void {
@@ -735,8 +755,18 @@ export class UIAdapter {
   }
 
   private updateBreakdown(resultado: ResultadoRescisao): void {
+    const correcaoLabel =
+      resultado.correcao.indexadorUtilizado === 'TR'
+        ? 'Correção estimada (TR + 3% a.a.)'
+        : 'Correção estimada (IPCA como piso ADI 5090)';
+
     const items = [
       { label: 'Saldo FGTS', value: resultado.saldoFinal, color: 'var(--donut-saldo)' },
+      {
+        label: 'Saldo retido na conta FGTS',
+        value: resultado.saldoRetido,
+        color: 'var(--muted)',
+      },
       {
         label: `Multa Rescisória (${resultado.multa.percentualAplicado}%)`,
         value: resultado.multaFinal,
@@ -754,7 +784,7 @@ export class UIAdapter {
           ]
         : []),
       {
-        label: `Correção Estimada (${resultado.correcao.indexadorUtilizado}+3%)`,
+        label: correcaoLabel,
         value: resultado.detalhes.correcaoEstimada,
         color: 'var(--teal)',
       },
@@ -798,6 +828,12 @@ export class UIAdapter {
     const restrictionBox = document.getElementById('saqueAniversarioRestriction');
     if (restrictionBox) {
       restrictionBox.style.display = resultado.saqueAniversario ? 'flex' : 'none';
+      const restrictionText = restrictionBox.querySelector('p');
+      if (restrictionText && resultado.saqueAniversario) {
+        restrictionText.textContent = resultado.saldoRetido.isZero()
+          ? 'Saque-Aniversário ativo: esta hipótese legal preserva o saque integral do saldo do FGTS.'
+          : 'Atenção: com o Saque-Aniversário ativo, você não pode sacar o saldo integral do FGTS na rescisão. Apenas a multa rescisória (40%/20%) permanece disponível para saque imediato.';
+      }
     }
   }
 
@@ -805,18 +841,36 @@ export class UIAdapter {
 
   private showError(message: string, element: HTMLElement | null): void {
     this.clearErrors();
+    this.hideResults();
     if (element) {
-      element.setAttribute('aria-invalid', 'true');
-      const err = document.createElement('span');
-      err.className = 'error-message';
-      err.id = element.id + '-error';
-      err.setAttribute('role', 'alert');
-      err.textContent = message;
-      element.parentElement?.insertAdjacentElement('afterend', err);
-      element.setAttribute('aria-describedby', err.id);
+      this.renderFieldError(message, element);
     } else {
       alert(message);
     }
+  }
+
+  private showErrors(errors: Array<{ message: string; element: HTMLElement }>): void {
+    this.clearErrors();
+    this.hideResults();
+    errors.forEach(({ message, element }) => {
+      this.renderFieldError(message, element);
+    });
+  }
+
+  private renderFieldError(message: string, element: HTMLElement): void {
+    element.setAttribute('aria-invalid', 'true');
+    const err = document.createElement('span');
+    err.className = 'error-message';
+    err.id = element.id + '-error';
+    err.setAttribute('role', 'alert');
+    err.textContent = message;
+    element.parentElement?.insertAdjacentElement('afterend', err);
+    element.setAttribute('aria-describedby', err.id);
+  }
+
+  private hideResults(): void {
+    this.resultsContent.style.display = 'none';
+    this.emptyState.style.display = 'flex';
   }
 
   private clearErrors(): void {

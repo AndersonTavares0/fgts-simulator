@@ -28,7 +28,7 @@ const REGRAS_MULTA = {
   },
   [TipoRescisao.DOENCA_GRAVE]: {
     percentual: 0,
-    fundamento: 'Art. 20, XIII, Lei 8.036/90 — Saque integral (isento de multa patronal)',
+    fundamento: 'Art. 20, XI/XIII/XIV, Lei 8.036/90 — Saque integral (isento de multa patronal)',
   },
   [TipoRescisao.APOSENTADORIA]: {
     percentual: 0,
