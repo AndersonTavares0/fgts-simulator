@@ -14,6 +14,7 @@ import type {
   ResultadoDoencaGrave,
 } from '../types';
 import { CorrecaoMonetariaService } from './CorrecaoMonetariaService';
+import { INSSService } from './INSSService';
 import { MultaService } from './MultaService';
 import { SaqueAniversarioService } from './SaqueAniversarioService';
 import { DoencaGraveService } from './DoencaGraveService';
@@ -107,6 +108,7 @@ export class FGTSCalculatorService {
       saqueAniversario,
       doencaGrave,
       indicesCorrecao,
+      calcularINSS,
     } = params;
 
     // 1. Depósito mensal
@@ -168,7 +170,8 @@ export class FGTSCalculatorService {
       ? this.calcularFeriasProporcionais(salarioBruto, mesesTrabalhados)
       : Money.zero();
 
-    // 5. Saldo disponível para saque conforme modalidade de rescisão.
+    // 5. INSS + saldo disponível para saque conforme modalidade de rescisão.
+    const resultadoINSS = calcularINSS ? INSSService.calcular(salarioBruto) : null;
     const percentualSaldoDisponivel = PERCENTUAL_SALDO_DISPONIVEL[tipoRescisao];
     let saldoFinal = saldoBase.percentage(percentualSaldoDisponivel);
     let saldoRetido = saldoBase.subtract(saldoFinal);
@@ -205,6 +208,8 @@ export class FGTSCalculatorService {
     const depositosBrutos = depositoMensal.multiply(mesesTrabalhados);
     const correcaoEstimada = saldoBase.subtract(depositosBrutos);
 
+    const salarioLiquido = resultadoINSS?.salarioLiquido ?? salarioBruto;
+
     return {
       saldoBase,
       correcao,
@@ -213,6 +218,7 @@ export class FGTSCalculatorService {
       ferias,
       saqueAniversario: resultadoSaqueAniversario,
       doencaGrave: resultadoDoencaGrave,
+      inss: resultadoINSS,
       saldoRetido,
       saldoFinal,
       multaFinal,
@@ -224,6 +230,7 @@ export class FGTSCalculatorService {
         tipoContrato,
         saqueAniversarioAtivo: saqueAniversario,
         correcaoEstimada,
+        salarioLiquido,
       },
     };
   }

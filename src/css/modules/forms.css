@@ -1,7 +1,7 @@
 /* ═══ FORM SECTIONS ═══ */
 
 .form-section {
-  padding: 22px 24px 0;
+  padding: 10px 16px 0;
 }
 
 .form-section:last-of-type {
@@ -12,26 +12,25 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .form-section-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  background: linear-gradient(135deg, var(--accent-dim), rgba(var(--accent-rgb), 0.2));
+  width: 22px;
+  height: 22px;
+  background: var(--accent-dim);
   color: var(--accent);
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
-  border: 1px solid rgba(var(--accent-rgb), 0.15);
 }
 
 .form-section-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -42,7 +41,7 @@
 /* ═══ FIELD GROUPS ═══ */
 
 .field-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 fieldset.field-row {
@@ -55,25 +54,25 @@ fieldset.field-row {
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .field-row {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 10px;
   }
 }
 
 .field-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
 }
 
 .field-label-text {
@@ -95,24 +94,27 @@ fieldset.field-row {
   color: var(--text-primary);
   border: 1.5px solid var(--border-mid);
   border-radius: var(--radius-md);
-  padding: 14px 16px;
+  padding: 10px 12px;
   font-size: var(--fs-body);
   font-family: var(--font-ui);
-  transition: all var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition),
+    background var(--transition);
   appearance: none;
   -webkit-appearance: none;
-  min-height: 48px;
+  min-height: 40px;
   box-sizing: border-box;
 }
 
 .field-input:hover {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: var(--bg-elevated);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--bg-hover);
 }
 
 [data-theme='light'] .field-input:hover {
-  border-color: rgba(0, 0, 0, 0.18);
-  background: var(--bg-elevated);
+  border-color: rgba(0, 0, 0, 0.14);
+  background: var(--bg-hover);
 }
 
 .field-input:focus {
@@ -131,8 +133,25 @@ input[type='date'].field-input {
   color-scheme: dark;
 }
 
+[data-theme='light'] input[type='date'].field-input::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+input[type='date'].field-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.85) hue-rotate(180deg);
+  cursor: pointer;
+}
+
+input[type='date'].field-input::-webkit-datetime-edit {
+  color: var(--text-primary);
+}
+
 [data-theme='light'] input[type='date'].field-input {
   color-scheme: light;
+}
+
+[data-theme='light'] input[type='date'].field-input::-webkit-calendar-picker-indicator {
+  filter: invert(0);
 }
 
 .input-wrapper {
@@ -147,7 +166,7 @@ input[type='date'].field-input {
 }
 
 .input-prefix {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
   pointer-events: none;
@@ -165,7 +184,7 @@ input[type='date'].field-input {
   right: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted);
+  color: var(--icon-secondary);
   pointer-events: none;
   transition: transform var(--transition);
 }
@@ -180,24 +199,25 @@ select.field-input {
 .multa-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: var(--radius-full);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  margin-top: 10px;
-  transition: all var(--transition-spring);
+  margin-top: 8px;
+  transition:
+    background var(--transition-spring),
+    color var(--transition-spring),
+    border-color var(--transition-spring);
 }
 
 .multa-badge.bg-green-500 {
-  background: linear-gradient(135deg, var(--accent), rgba(var(--accent-rgb), 0.85));
+  background: var(--accent);
   color: var(--text-on-accent);
-  box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.26);
 }
 
 .multa-badge.bg-yellow-500 {
-  background: linear-gradient(135deg, var(--amber), rgba(var(--amber-rgb), 0.85));
+  background: var(--amber);
   color: #1a0a00;
-  box-shadow: 0 2px 12px rgba(var(--amber-rgb), 0.2);
 }
 
 .multa-badge.bg-gray-500 {
@@ -217,13 +237,15 @@ select.field-input {
 .option-toggle {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
-  padding: 12px 14px;
-  min-height: 48px;
+  padding: 10px 12px;
+  min-height: 40px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border-subtle);
-  transition: all var(--transition);
+  transition:
+    border-color var(--transition),
+    background var(--transition);
   box-sizing: border-box;
 }
 
@@ -241,20 +263,22 @@ select.field-input {
 
 .toggle-track {
   flex-shrink: 0;
-  width: 36px;
-  height: 20px;
+  width: 32px;
+  height: 18px;
   background: var(--bg-elevated);
   border: 1.5px solid var(--border-mid);
   border-radius: var(--radius-full);
   position: relative;
-  transition: all var(--transition);
+  transition:
+    background var(--transition),
+    border-color var(--transition);
 }
 
 .toggle-track::after {
   content: '';
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: var(--text-muted);
   border-radius: 50%;
   top: 2px;
@@ -263,14 +287,13 @@ select.field-input {
 }
 
 .option-toggle input:checked + .toggle-track {
-  background: var(--accent-dim);
+  background: var(--accent);
   border-color: var(--accent);
 }
 
 .option-toggle input:checked + .toggle-track::after {
-  background: var(--accent);
-  transform: translateX(16px);
-  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.36);
+  background: var(--bg-surface);
+  transform: translateX(14px);
 }
 
 .option-toggle input:focus-visible + .toggle-track {
@@ -279,7 +302,7 @@ select.field-input {
 }
 
 .toggle-label {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   font-weight: 500;
   transition: color var(--transition);
@@ -292,10 +315,10 @@ select.field-input {
 /* ═══ BUTTONS ═══ */
 
 .form-actions {
-  padding: 22px 24px;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .btn-primary,
@@ -309,58 +332,39 @@ select.field-input {
   border-radius: var(--radius-lg);
   font-family: var(--font-ui);
   cursor: pointer;
-  transition: all var(--transition);
+  transition:
+    border-color var(--transition),
+    background var(--transition),
+    color var(--transition),
+    transform var(--transition),
+    opacity var(--transition),
+    box-shadow var(--transition);
 }
 
 .btn-primary {
-  padding: 16px 22px;
-  min-height: 48px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  padding: 10px 16px;
+  min-height: 40px;
+  background: var(--accent);
   color: var(--text-on-accent);
   border: none;
   font-size: var(--fs-button);
   font-weight: 700;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.28);
   letter-spacing: 0.02em;
 }
 
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  opacity: 0;
-  transition: opacity var(--transition);
-}
-
-.btn-primary:hover::before {
-  opacity: 1;
-  animation: shimmer 1.5s ease infinite;
-}
-
 .btn-primary:hover {
-  box-shadow: 0 6px 24px rgba(var(--accent-rgb), 0.34);
   transform: translateY(-1px);
 }
 
 .btn-primary:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.2);
+  transform: none;
+  opacity: 0.95;
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
 }
 
 .loading-spinner {
@@ -377,12 +381,12 @@ select.field-input {
 }
 
 [data-theme='dark'] .btn-primary {
-  color: #030e09;
+  color: #042a1a;
 }
 
 .btn-secondary {
-  padding: 14px 22px;
-  min-height: 48px;
+  padding: 12px 16px;
+  min-height: 42px;
   background: var(--bg-elevated);
   color: var(--text-primary);
   border: 1.5px solid var(--border-mid);
@@ -402,12 +406,12 @@ select.field-input {
 }
 
 .btn-ghost {
-  padding: 14px 22px;
-  min-height: 48px;
+  padding: 10px 18px;
+  min-height: 36px;
   background: transparent;
   color: var(--text-secondary);
   border: 1.5px solid var(--border-subtle);
-  font-size: var(--fs-body);
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -439,12 +443,12 @@ select.field-input {
 .health-info-box {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   background: var(--teal-dim);
   border: 1px solid rgba(var(--teal-rgb), 0.2);
   border-radius: var(--radius-md);
-  padding: 14px 18px;
-  margin-top: 12px;
+  padding: 12px 14px;
+  margin-top: 10px;
   animation: fade-in-up 0.3s ease;
 }
 
@@ -484,16 +488,32 @@ select.field-input {
 /* ═══ ACCORDION ═══ */
 
 .accordion-section {
-  padding: 0 24px 22px;
+  padding: 0 16px 8px;
 }
 
 .accordion-content {
   background: var(--bg-elevated);
   border: 1px solid var(--border-mid);
   border-radius: var(--radius-lg);
-  padding: 18px;
-  margin-top: 12px;
-  animation: slideDown 0.3s ease-out;
+  padding: 14px;
+  margin-top: 10px;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.25s ease,
+    padding 0.25s ease;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-color: transparent;
+}
+
+.accordion-content.open {
+  max-height: 800px;
+  opacity: 1;
+  padding: 14px;
+  border-color: var(--border-mid);
 }
 
 @keyframes slideDown {
@@ -510,25 +530,25 @@ select.field-input {
 .accordion-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .explain-item {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
 }
 
 .explain-item strong {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-primary);
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   display: block;
 }
 
 .explain-item p {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-secondary);
   margin: 0;
   line-height: 1.55;

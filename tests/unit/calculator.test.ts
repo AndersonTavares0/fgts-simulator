@@ -16,8 +16,10 @@ import Decimal from 'decimal.js';
 
 import { Money, TipoRescisao, TipoContrato, TipoDoencaGrave } from '../../src/core/types';
 import { FGTSCalculatorService } from '../../src/core/services/FGTSCalculatorService';
+import { INSSService } from '../../src/core/services/INSSService';
 import { CorrecaoMonetariaService } from '../../src/core/services/CorrecaoMonetariaService';
 import { MultaService } from '../../src/core/services/MultaService';
+import { FormatAdapter } from '../../src/adapters/FormatAdapter';
 import { SaqueAniversarioService } from '../../src/core/services/SaqueAniversarioService';
 import { DoencaGraveService } from '../../src/core/services/DoencaGraveService';
 import { ContratoTrabalho } from '../../src/core/entities/ContratoTrabalho';
@@ -466,5 +468,97 @@ describe('FGTSCalculatorService — Verbas Proporcionais', () => {
   it('deve retornar zero para meses negativos', () => {
     expect(FGTSCalculatorService.calcularDecimoTerceiro(SALARIO_3000, -1).cents).toBe(0);
     expect(FGTSCalculatorService.calcularFeriasProporcionais(SALARIO_3000, 0).cents).toBe(0);
+  });
+});
+
+// ─── INSS Service ──────────────────────────────────────────────────────────
+describe('INSSService — Tabela Progressiva 2026', () => {
+  it('deve calcular INSS na 1ª faixa (salário mínimo R$ 1.621 → R$ 121,58)', () => {
+    const result = INSSService.calcular(Money.fromReais(1621));
+    expect(result.valorINSS.cents).toBe(12158);
+    expect(result.aliquotaEfetiva).toBeCloseTo(0.075, 3);
+    expect(result.faixaDescricao).toContain('1ª faixa');
+  });
+
+  it('deve calcular INSS na 2ª faixa (R$ 2.000 → R$ 155,68)', () => {
+    const result = INSSService.calcular(Money.fromReais(2000));
+    expect(result.valorINSS.cents).toBe(15568);
+    expect(result.faixaDescricao).toContain('2ª faixa');
+  });
+
+  it('deve calcular INSS na 3ª faixa (R$ 3.500 → R$ 308,60)', () => {
+    const result = INSSService.calcular(Money.fromReais(3500));
+    expect(result.valorINSS.cents).toBe(30860);
+    expect(result.faixaDescricao).toContain('3ª faixa');
+  });
+
+  it('deve calcular INSS na 4ª faixa (R$ 5.000 → R$ 501,51)', () => {
+    const result = INSSService.calcular(Money.fromReais(5000));
+    expect(result.valorINSS.cents).toBe(50151);
+    expect(result.faixaDescricao).toContain('4ª faixa');
+  });
+
+  it('deve respeitar o teto do INSS (R$ 8.475,55 → R$ 988,09)', () => {
+    const result = INSSService.calcular(Money.fromReais(10000));
+    expect(result.valorINSS.cents).toBe(98809);
+    expect(result.baseCalculo.reais).toBe(8475.55);
+  });
+
+  it('deve retornar zero para salário inválido', () => {
+    const result = INSSService.calcular(Money.fromReais(0));
+    expect(result.valorINSS.cents).toBe(0);
+    expect(result.salarioLiquido.cents).toBe(0);
+  });
+
+  it('deve calcular salário líquido corretamente', () => {
+    const result = INSSService.calcular(Money.fromReais(3000));
+    expect(result.salarioLiquido.reais).toBeCloseTo(3000 - 248.6, 1);
+  });
+});
+
+// ─── FormatAdapter (jsdom) ──────────────────────────────────────────────────
+describe('FormatAdapter — Parsing e Formatação', () => {
+  it('deve fazer parse de entrada monetária válida', () => {
+    const money = FormatAdapter.parseMonetaryInput('1.500,50');
+    expect(money).not.toBeNull();
+    expect(money!.cents).toBe(150050);
+  });
+
+  it('deve rejeitar entrada monetária inválida', () => {
+    expect(FormatAdapter.parseMonetaryInput('abc')).toBeNull();
+    expect(FormatAdapter.parseMonetaryInput('')).toBeNull();
+    expect(FormatAdapter.parseMonetaryInput('-100')).toBeNull();
+  });
+
+  it('deve fazer parse de data válida YYYY-MM-DD', () => {
+    const date = FormatAdapter.parseDate('2026-01-15');
+    expect(date).not.toBeNull();
+    expect(date!.getFullYear()).toBe(2026);
+    expect(date!.getMonth()).toBe(0); // January
+    expect(date!.getDate()).toBe(15);
+  });
+
+  it('deve rejeitar datas inválidas', () => {
+    expect(FormatAdapter.parseDate('abc')).toBeNull();
+    expect(FormatAdapter.parseDate('2026-13-01')).toBeNull();
+    expect(FormatAdapter.parseDate('')).toBeNull();
+  });
+
+  it('deve retornar label de rescisão para todos os tipos', () => {
+    const tipos = [
+      TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA,
+      TipoRescisao.DEMISSAO_VOLUNTARIA,
+      TipoRescisao.JUSTA_CAUSA,
+      TipoRescisao.ACORDO_COMUM,
+      TipoRescisao.DOENCA_GRAVE,
+      TipoRescisao.APOSENTADORIA,
+      TipoRescisao.FALECIMENTO,
+      TipoRescisao.CULPA_RECIPROCA,
+    ];
+    tipos.forEach((t) => {
+      const label = FormatAdapter.getRescisaoLabel(t);
+      expect(label.label).toBeTruthy();
+      expect(label.cssClass).toBeTruthy();
+    });
   });
 });

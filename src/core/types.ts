@@ -176,6 +176,16 @@ export interface ResultadoDoencaGrave {
   fundamentoLegal: string;
 }
 
+export interface ResultadoINSS {
+  salarioBruto: Money;
+  aliquotaEfetiva: number;
+  valorINSS: Money;
+  baseCalculo: Money;
+  salarioLiquido: Money;
+  faixaDescricao: string;
+  fundamentoLegal: string;
+}
+
 export interface ResultadoRescisao {
   saldoBase: Money;
   correcao: ResultadoCorrecao;
@@ -184,6 +194,7 @@ export interface ResultadoRescisao {
   ferias: Money;
   saqueAniversario: ResultadoSaqueAniversario | null;
   doencaGrave: ResultadoDoencaGrave | null;
+  inss: ResultadoINSS | null;
   saldoRetido: Money;
   saldoFinal: Money;
   multaFinal: Money;
@@ -195,6 +206,7 @@ export interface ResultadoRescisao {
     tipoContrato: TipoContrato;
     saqueAniversarioAtivo: boolean;
     correcaoEstimada: Money;
+    salarioLiquido: Money;
   };
 }
 
@@ -210,6 +222,8 @@ export interface ParametrosCalculo {
   depositoHistoricoTotal?: Money;
   doencaGrave?: TipoDoencaGrave;
   indicesCorrecao?: IndicesCorrecao;
+  /** Whether to calculate INSS contribution (tabela progressiva 2026) */
+  calcularINSS?: boolean;
 }
 
 export interface ValidationResult {

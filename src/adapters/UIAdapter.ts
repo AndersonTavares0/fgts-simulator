@@ -48,6 +48,8 @@ export class UIAdapter {
   private donutTooltip!: HTMLElement | null;
   private accordionBtn!: HTMLButtonElement | null;
   private accordionContent!: HTMLElement | null;
+  private sobreProjetoBtn!: HTMLButtonElement | null;
+  private sobreProjetoContent!: HTMLElement | null;
 
   private saldoEl!: HTMLElement;
   private multaEl!: HTMLElement;
@@ -74,6 +76,11 @@ export class UIAdapter {
   private barSaldo!: HTMLElement;
   private barMulta!: HTMLElement;
   private barProp!: HTMLElement;
+
+  private csBase!: HTMLElement;
+  private csMulta!: HTMLElement;
+  private csPeriodo!: HTMLElement;
+  private csFgts!: HTMLElement;
 
   private resultsLiveRegion: HTMLElement | null = null;
   private isCalculating = false;
@@ -112,6 +119,8 @@ export class UIAdapter {
     this.donutTooltip = document.getElementById('donutTooltip') as HTMLElement | null;
     this.accordionBtn = document.getElementById('accordionBtn') as HTMLButtonElement | null;
     this.accordionContent = document.getElementById('accordionContent') as HTMLElement | null;
+    this.sobreProjetoBtn = document.getElementById('sobreProjetoBtn') as HTMLButtonElement | null;
+    this.sobreProjetoContent = document.getElementById('sobreProjetoContent') as HTMLElement | null;
 
     this.saldoEl = document.getElementById('saldo')!;
     this.multaEl = document.getElementById('multa')!;
@@ -139,6 +148,11 @@ export class UIAdapter {
     this.barSaldo = document.getElementById('bar-saldo')!;
     this.barMulta = document.getElementById('bar-multa')!;
     this.barProp = document.getElementById('bar-prop')!;
+
+    this.csBase = document.getElementById('cs-base')!;
+    this.csMulta = document.getElementById('cs-multa')!;
+    this.csPeriodo = document.getElementById('cs-periodo')!;
+    this.csFgts = document.getElementById('cs-fgts')!;
 
     // LGPD components
     this.privacyBanner = document.getElementById('privacyBanner');
@@ -216,6 +230,9 @@ export class UIAdapter {
 
     // Accordion
     this.accordionBtn?.addEventListener('click', () => this.toggleAccordion());
+
+    // Sobre o projeto
+    this.sobreProjetoBtn?.addEventListener('click', () => this.toggleSobreProjeto());
 
     // Donut chart interactions
     this.bindDonutInteractions();
@@ -324,7 +341,19 @@ export class UIAdapter {
 
     const isExpanded = this.accordionBtn.getAttribute('aria-expanded') === 'true';
     this.accordionBtn.setAttribute('aria-expanded', String(!isExpanded));
-    this.accordionContent.style.display = isExpanded ? 'none' : 'block';
+    this.accordionContent.classList.toggle('open', !isExpanded);
+  }
+
+  private toggleSobreProjeto(): void {
+    if (!this.sobreProjetoBtn || !this.sobreProjetoContent) return;
+
+    const isExpanded = this.sobreProjetoBtn.getAttribute('aria-expanded') === 'true';
+    this.sobreProjetoBtn.setAttribute('aria-expanded', String(!isExpanded));
+    if (isExpanded) {
+      this.sobreProjetoContent.style.display = 'none';
+    } else {
+      this.sobreProjetoContent.style.display = 'block';
+    }
   }
 
   private bindDonutInteractions(): void {
@@ -592,6 +621,7 @@ export class UIAdapter {
         incluirFerias: this.incluirFeriasEl.checked,
         saqueAniversario: this.saqueAniversarioEl.checked,
         depositoHistoricoTotal,
+        calcularINSS: true,
       });
 
       this.updateUI(resultado);
@@ -701,6 +731,9 @@ export class UIAdapter {
     // Breakdown
     this.updateBreakdown(resultado);
 
+    // Calc summary
+    this.updateCalcSummary(resultado);
+
     // Show results
     this.emptyState.style.display = 'none';
     this.resultsContent.style.display = 'flex';
@@ -773,6 +806,15 @@ export class UIAdapter {
       },
       { label: '13º Proporcional', value: resultado.decimoTerceiro, color: 'var(--donut-prop)' },
       { label: 'Férias Proporcionais + ⅓', value: resultado.ferias, color: 'var(--amber)' },
+      ...(resultado.inss
+        ? [
+            {
+              label: `INSS (${resultado.inss.faixaDescricao})`,
+              value: resultado.inss.valorINSS,
+              color: 'var(--danger)',
+            },
+          ]
+        : []),
       {
         label: correcaoLabel,
         value: resultado.detalhes.correcaoEstimada,
@@ -825,6 +867,40 @@ export class UIAdapter {
           : 'Atenção: com o Saque-Aniversário ativo, você não pode sacar o saldo integral do FGTS na rescisão. Apenas a multa rescisória (40%/20%) permanece disponível para saque imediato.';
       }
     }
+  }
+
+  private updateCalcSummary(_resultado: ResultadoRescisao): void {
+    const salario = FormatAdapter.parseMonetaryInput(this.salarioEl.value);
+    const baseValue = salario
+      ? (salario.cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      : '—';
+
+    const multaPercentages: Record<string, number> = {
+      dispensa_sem_causa: 40,
+      acordo_comum: 20,
+      culpa_reciproca: 20,
+      demissao_voluntaria: 0,
+      justa_causa: 0,
+      doenca_grave: 0,
+      aposentadoria: 0,
+      falecimento: 0,
+      outra_saida: 0,
+    };
+    const multaPct = multaPercentages[this.motivoEl.value] ?? 0;
+
+    const inicio = FormatAdapter.parseDate(this.inicioEl.value);
+    const termino = FormatAdapter.parseDate(this.terminoEl.value);
+    const meses =
+      inicio && termino ? ContratoTrabalho.calcularMesesTrabalhados(inicio, termino) : 0;
+
+    let fgtsPct = '8%';
+    if (this.isAprendizEl.checked) fgtsPct = '2%';
+    else if (this.isDomesticoEl.checked) fgtsPct = '8% + 3,2%';
+
+    this.csBase.textContent = baseValue;
+    this.csMulta.textContent = `${multaPct}%`;
+    this.csPeriodo.textContent = `${meses} ${meses === 1 ? 'mês' : 'meses'}`;
+    this.csFgts.textContent = fgtsPct;
   }
 
   // ── Errors & Accessibility ───────────────────────────────────
