@@ -75,6 +75,7 @@ src/
 │       ├── FGTSCalculatorService.ts
 │       ├── CorrecaoMonetariaService.ts
 │       ├── MultaService.ts
+│       ├── INSSService.ts
 │       ├── SaqueAniversarioService.ts
 │       └── DoencaGraveService.ts
 ├── adapters/                # ADAPTER LAYER — UI, formatação, tema
@@ -97,6 +98,7 @@ src/
 | **Service** | `FGTSCalculatorService` | Orquestrador central |
 | **Service** | `CorrecaoMonetariaService` | Juros TR/IPCA + ADI 5090 |
 | **Service** | `MultaService` | Multas por tipo de rescisão |
+| **Service** | `INSSService` | INSS 2026 (tabela progressiva 4 faixas) |
 | **Service** | `SaqueAniversarioService` | 7 faixas oficiais |
 | **Service** | `DoencaGraveService` | Saque integral 100% |
 | **Adapter** | `UIAdapter` | Binding DOM + eventos |
@@ -359,15 +361,16 @@ Cada serviço tem responsabilidade única e bem definida, seguindo o princípio 
 
 | Serviço | Método Principal | Responsabilidade | Entrada | Saída |
 |---------|-----------------|------------------|---------|-------|
-| `FGTSCalculatorService` | `calcular()` | Orquestração completa | `ContratoTrabalho`, opções | `ResultadoRescisao` |
-| `CorrecaoMonetariaService` | `calcularSaldoComCorrecao()` | Juros TR+3% com piso IPCA | `Money`, meses, taxas | `Money` (saldo corrigido) |
-| `MultaService` | `calcular()` | Multa por tipo de rescisão | `Money` (saldo), `TipoRescisao`, `Money` (total depósitos) | `ResultadoMulta` |
+| `FGTSCalculatorService` | `calcularRescisao()` | Orquestração completa | `ParametrosCalculo` | `ResultadoRescisao` |
+| `CorrecaoMonetariaService` | `calcularSaldoComCorrecao()` | Juros TR+3% com piso IPCA | `Money`, meses, `IndicesCorrecao?` | `ResultadoCorrecao` |
+| `MultaService` | `calcular()` | Multa por tipo de rescisão | `Money` (saldo), `TipoRescisao` | `ResultadoMulta` |
+| `INSSService` | `calcular()` | INSS 2026 (tabela progressiva) | `Money` (salário) | `ResultadoINSS` |
 | `SaqueAniversarioService` | `calcularParcela()` | Parcela por faixa oficial | `Money` (saldo) | `ResultadoSaqueAniversario` |
-| `DoencaGraveService` | `avaliar()` | Elegibilidade + saque integral | `Money` (saldo), doença | `Money`, elegibilidade |
+| `DoencaGraveService` | `calcular()` | Elegibilidade + saque integral | `Money` (saldo), `TipoDoencaGrave` | `ResultadoDoencaGrave` |
 | `ContratoTrabalho` | `validar()` | Validação de contrato | Dados do formulário | Erros ou contrato válido |
 | `FormatAdapter` | `parseMonetaryInput()` | Sanitização e parsing BRL | String do input | `Money` |
 | `FormatAdapter` | `parseDate()` | Validação de data | String YYYY-MM-DD | `Date` |
-| `ThemeAdapter` | `aplicarTema()` | Tema claro/escuro persistente | String | - |
+| `ThemeAdapter` | `init()` | Tema claro/escuro persistente | `HTMLElement[]` | - |
 
 #### Separação de Responsabilidades
 

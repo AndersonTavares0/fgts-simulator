@@ -1,22 +1,26 @@
 # Plano Unificado de Correcoes Legais e Infraestrutura
 
+> **Documento histórico** — as correções abaixo já foram implementadas no código.
+> Mantido para auditoria, rastreabilidade e referência legal.
+> Para o estado atual, consultar o código-fonte e `docs/technical_doc.md`.
+
 Este documento consolida a auditoria feita sobre o simulador FGTS, o plano de aplicacao por etapas, a estrategia de branches/commits e o template de Pull Request.
 
 ## Diagnostico Validado
 
-| Item | Status | Evidencia no codigo | Decisao |
-| --- | --- | --- | --- |
-| Acordo comum libera 100% do saldo | Bug confirmado | `FGTSCalculatorService.calcularRescisao` mantem `saldoFinal = saldoBase` | Liberar 80% e reter 20% |
-| Demissao voluntaria/justa causa liberam saldo | Bug confirmado | `saldoFinal` nao e zerado para essas modalidades | Saldo sacavel = 0%; saldo fica retido |
-| Domestico culpa reciproca zera reserva | Bug confirmado | Branch domestico cai no `else` que zera reserva | Aplicar 50% por analogia ao Art. 484 CLT |
-| Doenca grave usa inciso unico | Bug confirmado | `DoencaGraveService` usa Art. 20, XIII para todos os tipos | Cancer XI, HIV XIII, terminal XIV |
-| Saque-aniversario bloqueia hipoteses de saque integral | Bug confirmado | `calcularImpactoRescisao` sempre zera saldo | Aposentadoria, falecimento e doenca grave liberam saldo |
-| ADI 5090 sugere IPCA automatico | Melhoria confirmada | Comentarios/UI indicam substituicao direta | Tratar como estimativa/piso |
-| `UIAdapter.ts:543` falha typecheck | Bug confirmado | `errors[0]` pode ser `undefined` com `noUncheckedIndexedAccess` | Acesso seguro ao primeiro erro |
-| `navbarThemeToggle` nao funciona | Bug confirmado | `main.ts` conecta apenas `toggleTheme` | Conectar ambos os botoes |
-| Form pode submeter por GET sem JS | Risco confirmado | `<form>` sem `method/action` explicitos | Adicionar fallback anti-GET |
-| Google Fonts duplicado | Nao confirmado | Existe apenas uma tag de fonts | Removido do plano |
-| Prazo art. 15 dia 7/vigesimo dia | Nao confirmado | Nao ha texto no codigo | Removido do plano |
+| Item | Status Original | Situacao Atual | Evidencia no codigo | Fundamento Legal |
+| --- | --- | --- | --- | --- |
+| Acordo comum libera 100% do saldo | Bug confirmado | ✅ Corrigido | `PERCENTUAL_SALDO_DISPONIVEL.ACORDO_COMUM = 80` | Art. 484-A, §1º CLT |
+| Demissao voluntaria/justa causa liberam saldo | Bug confirmado | ✅ Corrigido | `DEMISSAO_VOLUNTARIA = 0`, `JUSTA_CAUSA = 0` | Art. 20 Lei 8.036/90 |
+| Domestico culpa reciproca zera reserva | Bug confirmado | ✅ Corrigido | `CULPA_RECIPROCA → 50% da reserva 3,2%` | Art. 22 LC 150/2015 c/c Art. 484 CLT |
+| Doenca grave usa inciso unico | Bug confirmado | ✅ Corrigido | `DOENCAS_QUALIFICADAS` com XI/XIII/XIV por tipo | Lei 8.036/90, Art. 20, XI/XIII/XIV |
+| Saque-aniversario bloqueia hipoteses de saque integral | Bug confirmado | ✅ Corrigido | `HIPOTESES_SAQUE_INTEGRAL` inclui DOENCA_GRAVE, APOSENTADORIA, FALECIMENTO | Lei 8.036/90 art. 20-A/20-D |
+| ADI 5090 sugere IPCA automatico | Melhoria confirmada | ✅ Implementado | `CorrecaoMonetariaService` compara TR vs IPCA, usa IPCA como piso | ADI 5090 STF |
+| `UIAdapter.ts` acesso a erros | Bug confirmado | ✅ Corrigido | Refatorado para `validateContractConstraints()` + `showErrors(errors[])` com `length > 0` | Type safety |
+| `navbarThemeToggle` nao funciona | Bug confirmado | ✅ Corrigido | `main.ts` passa ambos os botoes ao `ThemeAdapter.init()` | UX |
+| Form pode submeter por GET sem JS | Risco confirmado | ⚠️ Mitigado | `onsubmit="return false;"` presente; edge case aceito para app client-side | Seguranca |
+| Google Fonts duplicado | Nao confirmado | ✅ Resolvido | Fontes self-hosted em `src/public/fonts/` | Performance |
+| Prazo art. 15 dia 7/vigesimo dia | Nao confirmado | — | Removido do plano | — |
 
 ## Branches e Commits Planejados
 

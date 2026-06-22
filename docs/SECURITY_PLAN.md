@@ -1,32 +1,30 @@
 # Plano de Seguranca e Privacidade
 
+> **Documento histórico** — atualizado com o status das correções implementadas.
+> Mantido para auditoria e rastreabilidade.
+
 Auditoria e correcoes de seguranca para o FGTS Simulator, divididas em dois niveis de prioridade.
 
-## Diagnostico
+## Diagnostico — Situacao Atual
 
-| # | Achado | Risco | Impacto |
-|---|--------|-------|---------|
-| 1 | 5 vulnerabilidades em devDependencies (npm audit) | Baixo | Apenas ferramentas de build/test/lint |
-| 2 | Google Fonts duplicado (HTML + CSS @import) | Baixo | Performance, requisicao redundante |
-| 3 | innerHTML com template string no ThemeAdapter | Muito baixo | Nao ha input de usuario, mas e boa pratica evitar |
-| 4 | CDNs externas expoem IP do visitante | Medio | Google Fonts + Unpkg (Lucide) |
-| 5 | Sem CSP ou headers de seguranca | Baixo | App e client-side puro, sem backend |
+| # | Achado | Risco Original | Situacao Atual |
+|---|--------|----------------|----------------|
+| 1 | 5 vulnerabilidades em devDependencies (npm audit) | Baixo | ✅ Resolvido — `npm audit` (jun/2026): **0 vulnerabilidades moderadas ou altas** |
+| 2 | Google Fonts duplicado (HTML + CSS @import) | Baixo | ✅ Resolvido — fontes self-hosted em `src/public/fonts/`, sem CDN |
+| 3 | innerHTML no ThemeAdapter | Muito baixo | ✅ Resolvido no ThemeAdapter. ⚠️ Ainda ha 3 ocorrencias em `UIAdapter.ts` (linhas 673, 684, 825), todas com controle de input — risco aceito |
+| 4 | CDNs externas expoem IP do visitante | Medio | ✅ Resolvido — Google Fonts self-hosted; Lucide migrado para pacote npm |
+| 5 | Sem CSP ou headers de seguranca | Baixo | ❌ Nao implementado — app e client-side puro sem backend, risco aceito |
 
-## Nivel 1 — Baixo Impacto
+## Acoes Implementadas
 
-| Acao | Arquivos |
-|------|----------|
-| npm audit fix | package-lock.json |
-| Remover @import duplicado de Google Fonts | src/css/style.css |
-| Trocar innerHTML por createElement no ThemeAdapter | src/adapters/ThemeAdapter.ts |
-
-## Nivel 2 — Privacidade (Self-Host)
-
-| Acao | Arquivos |
-|------|----------|
-| Baixar fontes woff2 e criar @font-face local | src/css/fonts.css, src/css/fonts/ |
-| Remover link CDN Google Fonts do HTML | src/index.html |
-| Migrar Lucide de CDN para pacote npm | package.json, src/main.ts, src/adapters/*.ts, src/index.html |
+| # | Acao | Status | Arquivos |
+|---|------|--------|----------|
+| 1 | npm audit fix | ✅ | package-lock.json |
+| 2 | Remover @import duplicado de Google Fonts | ✅ | src/css/style.css |
+| 3 | Trocar innerHTML por createElement no ThemeAdapter | ✅ | src/adapters/ThemeAdapter.ts |
+| 4 | Baixar fontes woff2 e criar @font-face local | ✅ | src/css/fonts.css, src/public/fonts/ |
+| 5 | Remover link CDN Google Fonts do HTML | ✅ | src/index.html |
+| 6 | Migrar Lucide de CDN para pacote npm | ✅ | package.json, src/main.ts, src/adapters/ |
 
 ## Verificacao
 
@@ -35,6 +33,8 @@ npm run typecheck && npm test -- --run && npm run lint && npm run build
 grep -c 'fonts.googleapis.com\|unpkg.com' dist/index.html  # Esperado: 0
 npm audit --audit-level=moderate  # Esperado: 0 vulnerabilidades
 ```
+
+Resultado (jun/2026): 0 referencias CDN, 0 vulnerabilidades moderadas/altas. ✅
 
 ## Commits
 
