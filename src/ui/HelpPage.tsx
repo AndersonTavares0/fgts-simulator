@@ -21,20 +21,44 @@ export function HelpPage() {
               anteriores, variações salariais, juros de atraso ou o extrato individual da CAIXA.
             </p>
             <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              13º e férias usam os avos ainda devidos que você informar. O total não apura
-              integralmente tributos, descontos, aviso-prévio e todas as verbas de uma rescisão.
+              Para o FGTS sobre o 13º, estimamos pelo salário fixo: meses com ao menos 15 dias
+              contam como avo. Quando novembro e dezembro estão no período, dividimos o valor entre
+              esses meses. Em rescisões cabíveis, estimamos o proporcional no término; doença grave
+              e aposentadoria não presumem término no ano incompleto. O adiantamento pode não
+              aparecer em períodos encerrados antes de dezembro; atrasos e lucros não são modelados.
+              Como opção avançada, informe a remuneração bruta de 13º paga por competência. Ela não
+              prova depósitos, não reproduz índices históricos e não reconstitui extrato.
+            </p>
+            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
+              13º e férias usam os avos ainda devidos que você informar: mês com 15 dias ou mais
+              conta como avo inteiro. Na justa causa e no saque por doença grave, essas verbas não
+              entram: a primeira não as gera e a segunda é hipótese de saque, não de rescisão. O
+              total não apura integralmente tributos, descontos, aviso-prévio, rescisão indireta,
+              força maior, contrato a termo e todas as verbas de uma rescisão. O salário deve
+              respeitar o piso legal; o app não valida esse limite.
             </p>
           </div>
           <div>
             <h3 className="text-[14px] font-medium">Taxas transparentes</h3>
             <p className="text-muted-foreground mt-2 text-[14px] leading-relaxed">
-              O cenário padrão aplica TR mensal estimada e juros de 3% ao ano. O IPCA é referência
-              econômica alternativa, não crédito judicial ou garantia de remuneração.
+              O cenário padrão soma à TR mensal estimada a taxa mensal equivalente a 3% efetivos ao
+              ano; essa soma simplificada não reproduz necessariamente a combinação histórica
+              oficial. O IPCA é referência econômica alternativa, não crédito judicial ou garantia.
             </p>
             <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
               A ADI 5090 não é troca automática pela maior taxa mensal: envolve remuneração anual,
               distribuição de resultados e eventual compensação. Esta projeção não reproduz esse
-              mecanismo nem recomposição retroativa.
+              mecanismo nem recomposição retroativa. As taxas do formulário são exemplos: confira a
+              TR e o IPCA do mês.
+            </p>
+            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
+              Trabalho doméstico: a reserva de 3,2% é corrigida como o FGTS. No acordo comum, metade
+              da reserva é destinada ao trabalhador, conforme orientação do eSocial. A mesma reserva
+              incide sobre o 13º estimado ou informado.
+            </p>
+            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
+              Valores são brutos. Não descontamos IRRF nem INSS: o 13º é tributável, as férias
+              rescisórias com 1/3 são isentas e a multa não sofre retenção.
             </p>
             <a
               className="text-foreground mt-3 inline-block text-[13.5px] underline underline-offset-2"

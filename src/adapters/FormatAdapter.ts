@@ -12,9 +12,9 @@ const LABELS_RESCISAO: Record<TipoRescisao, string> = {
   [TipoRescisao.DEMISSAO_VOLUNTARIA]: 'Demissão voluntária',
   [TipoRescisao.JUSTA_CAUSA]: 'Justa causa',
   [TipoRescisao.ACORDO_COMUM]: 'Acordo comum',
-  [TipoRescisao.DOENCA_GRAVE]: 'Doença grave',
-  [TipoRescisao.APOSENTADORIA]: 'Aposentadoria',
-  [TipoRescisao.FALECIMENTO]: 'Falecimento',
+  [TipoRescisao.DOENCA_GRAVE]: 'Saque por doença grave',
+  [TipoRescisao.APOSENTADORIA]: 'Saque por aposentadoria',
+  [TipoRescisao.FALECIMENTO]: 'Saque por falecimento',
   [TipoRescisao.CULPA_RECIPROCA]: 'Culpa recíproca',
 };
 

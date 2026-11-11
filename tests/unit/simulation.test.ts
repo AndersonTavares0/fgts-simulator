@@ -17,6 +17,8 @@ const INPUT: SimulationInput = {
   trMonthly: '0',
   ipcaMonthly: '0',
   scenario: 'TR',
+  thirteenthMode: 'actual',
+  thirteenthEntries: [],
 };
 
 describe('simulate — documento financeiro único', () => {
@@ -54,6 +56,26 @@ describe('simulate — documento financeiro único', () => {
       expect(snapshot.input.salaryCents).toBe('300000');
       expect(isSimulationSnapshot(snapshot)).toBe(true);
       expect(isSimulationSnapshot(JSON.parse(JSON.stringify(snapshot)))).toBe(true);
+    }
+  });
+
+  it('normaliza justa causa e doença grave sem verbas proporcionais', () => {
+    for (const terminationType of [TipoRescisao.JUSTA_CAUSA, TipoRescisao.DOENCA_GRAVE]) {
+      const snapshot = simulate({
+        ...INPUT,
+        terminationType,
+        include13: true,
+        includeVacation: true,
+        thirteenthMonths: 12,
+        vacationMonths: 12,
+      });
+      expect(snapshot.input.include13).toBe(false);
+      expect(snapshot.input.includeVacation).toBe(false);
+      expect(snapshot.result.decimoTerceiroCents).toBe('0');
+      expect(snapshot.result.feriasCents).toBe('0');
+      expect(snapshot.warnings.join(' ')).toMatch(
+        terminationType === TipoRescisao.JUSTA_CAUSA ? /Justa causa/ : /hipótese legal/,
+      );
     }
   });
 
@@ -160,6 +182,213 @@ describe('simulate — documento financeiro único', () => {
 });
 
 describe('isSimulationSnapshot — fronteira de persistência sem recálculo', () => {
+  it('estima 13º em novembro, dezembro e na rescisão por meses com pelo menos 15 dias', () => {
+    const base = {
+      ...INPUT,
+      startDate: '2024-01-17',
+      endDate: '2025-02-14',
+      scenario: 'IPCA' as const,
+    };
+    const actual = simulate(base);
+    const estimate = simulate({ ...base, thirteenthMode: 'estimate' });
+    // 2024: 12 avos; 2025: um avo (fevereiro incompleto).
+    expect(
+      BigInt(estimate.timeline[10]!.depositosCents) - BigInt(actual.timeline[10]!.depositosCents),
+    ).toBe(12000n);
+    expect(
+      BigInt(estimate.timeline[11]!.depositosCents) - BigInt(actual.timeline[11]!.depositosCents),
+    ).toBe(24000n);
+    expect(BigInt(estimate.result.depositosCents) - BigInt(actual.result.depositosCents)).toBe(
+      26000n,
+    );
+    expect(estimate.result.rendimentoCents).toBe('0');
+  });
+
+  it.each([TipoRescisao.DOENCA_GRAVE, TipoRescisao.APOSENTADORIA])(
+    'estima possível adiantamento quando o vínculo continua e a projeção termina em novembro: %s',
+    (terminationType) => {
+      const base = { ...INPUT, endDate: '2024-11-30', terminationType };
+      const actual = simulate(base);
+      const estimate = simulate({ ...base, thirteenthMode: 'estimate' });
+      expect(BigInt(estimate.result.depositosCents) - BigInt(actual.result.depositosCents)).toBe(
+        11000n,
+      );
+    },
+  );
+
+  it('lança proporcional integral na rescisão em novembro, sem somar adiantamento', () => {
+    const base = { ...INPUT, endDate: '2024-11-30' };
+    const actual = simulate(base);
+    const estimate = simulate({ ...base, thirteenthMode: 'estimate' });
+    expect(BigInt(estimate.result.depositosCents) - BigInt(actual.result.depositosCents)).toBe(
+      22000n,
+    );
+  });
+
+  it('lança dezembro sem novembro e não duplica no janeiro seguinte', () => {
+    const base = { ...INPUT, startDate: '2024-12-01', endDate: '2025-01-31' };
+    const actual = simulate(base);
+    const estimate = simulate({ ...base, thirteenthMode: 'estimate' });
+    expect(
+      BigInt(estimate.timeline[0]!.depositosCents) - BigInt(actual.timeline[0]!.depositosCents),
+    ).toBe(2000n);
+    expect(BigInt(estimate.result.depositosCents) - BigInt(actual.result.depositosCents)).toBe(
+      4000n,
+    );
+  });
+
+  it('não credita saldo proporcional em dezembro da justa causa, mas preserva anos anteriores e adiantamento', () => {
+    const base = {
+      ...INPUT,
+      startDate: '2023-01-01',
+      endDate: '2024-12-31',
+      terminationType: TipoRescisao.JUSTA_CAUSA,
+    };
+    const actual = simulate(base);
+    const estimate = simulate({ ...base, thirteenthMode: 'estimate' });
+    expect(
+      BigInt(estimate.timeline[22]!.depositosCents) - BigInt(actual.timeline[22]!.depositosCents),
+    ).toBe(35000n);
+    expect(BigInt(estimate.result.depositosCents) - BigInt(actual.result.depositosCents)).toBe(
+      35000n,
+    );
+    const decemberOnly = { ...base, startDate: '2024-12-01' };
+    expect(simulate({ ...decemberOnly, thirteenthMode: 'estimate' }).result.depositosCents).toBe(
+      simulate(decemberOnly).result.depositosCents,
+    );
+  });
+
+  it.each([TipoRescisao.JUSTA_CAUSA, TipoRescisao.DOENCA_GRAVE, TipoRescisao.APOSENTADORIA])(
+    'não presume pagamento proporcional no término incompleto por %s',
+    (terminationType) => {
+      const base = { ...INPUT, endDate: '2024-06-30', terminationType };
+      expect(simulate({ ...base, thirteenthMode: 'estimate' }).result.depositosCents).toBe(
+        simulate(base).result.depositosCents,
+      );
+    },
+  );
+
+  it.each([
+    [TipoContrato.CLT_PADRAO, '24000'],
+    [TipoContrato.APRENDIZ, '6000'],
+    [TipoContrato.DOMESTICO, '24000'],
+  ] as const)(
+    'lança remuneração real com alíquota de %s e corrige a partir do mês seguinte',
+    (contractType, extra) => {
+      const base = {
+        ...INPUT,
+        contractType,
+        endDate: '2024-03-31',
+        scenario: 'IPCA' as const,
+        ipcaMonthly: '0.01',
+      };
+      const without = simulate(base);
+      const withExtra = simulate({
+        ...base,
+        thirteenthEntries: [{ competencia: '2024-02', remuneracaoCents: '300000' }],
+      });
+      expect(
+        BigInt(withExtra.timeline[1]!.depositosCents) - BigInt(without.timeline[1]!.depositosCents),
+      ).toBe(BigInt(extra));
+      expect(BigInt(withExtra.result.saldoBaseCents) - BigInt(without.result.saldoBaseCents)).toBe(
+        (BigInt(extra) * 101n) / 100n,
+      );
+      expect(isSimulationSnapshot(withExtra)).toBe(true);
+    },
+  );
+
+  it('usa estimativa por padrão e persiste os dois campos nos novos cálculos', () => {
+    const legacy = { ...INPUT };
+    delete legacy.thirteenthMode;
+    delete legacy.thirteenthEntries;
+    const snapshot = simulate(legacy);
+    expect(snapshot.input.thirteenthMode).toBe('estimate');
+    expect(snapshot.input.thirteenthEntries).toEqual([]);
+    expect(snapshot.result.depositosCents).toBe('312000');
+  });
+
+  it('inclui 13º na reserva doméstica e preserva metade no acordo', () => {
+    const base = {
+      ...INPUT,
+      endDate: '2024-02-29',
+      contractType: TipoContrato.DOMESTICO,
+      scenario: 'IPCA' as const,
+      thirteenthEntries: [{ competencia: '2024-01', remuneracaoCents: '300000' }],
+    };
+    const dismissal = simulate(base);
+    const agreement = simulate({ ...base, terminationType: TipoRescisao.ACORDO_COMUM });
+    expect(dismissal.result.depositosCents).toBe('72000');
+    expect(dismissal.result.multaCents).toBe('28800');
+    expect(agreement.result.multaCents).toBe('14400');
+  });
+
+  it('corrige a reserva doméstica extra somente nos meses seguintes', () => {
+    const base = {
+      ...INPUT,
+      endDate: '2024-02-29',
+      contractType: TipoContrato.DOMESTICO,
+      scenario: 'IPCA' as const,
+      ipcaMonthly: '0.01',
+    };
+    const without = simulate(base);
+    const withExtra = simulate({
+      ...base,
+      thirteenthEntries: [{ competencia: '2024-01', remuneracaoCents: '300000' }],
+    });
+    expect(BigInt(withExtra.result.multaCents) - BigInt(without.result.multaCents)).toBe(9696n);
+  });
+
+  it('preserva entradas reais em justa causa e não depende de verbas proporcionais', () => {
+    const snapshot = simulate({
+      ...INPUT,
+      endDate: '2024-06-30',
+      terminationType: TipoRescisao.JUSTA_CAUSA,
+      thirteenthEntries: [{ competencia: '2024-03', remuneracaoCents: '300000' }],
+    });
+    expect(snapshot.result.depositosCents).toBe('168000');
+    expect(snapshot.input.include13).toBe(false);
+  });
+
+  it('rejeita campos incompletos, valores inválidos e competências não ordenadas ou fora do período', () => {
+    for (const invalid of [
+      { thirteenthMode: undefined },
+      { thirteenthEntries: undefined },
+      {
+        thirteenthMode: 'estimate',
+        thirteenthEntries: [{ competencia: '2024-01', remuneracaoCents: '1' }],
+      },
+      { thirteenthEntries: [{ competencia: '2023-12', remuneracaoCents: '1' }] },
+      { thirteenthEntries: [{ competencia: '2025-01', remuneracaoCents: '1' }] },
+      { thirteenthEntries: [{ competencia: '2024-13', remuneracaoCents: '1' }] },
+      { thirteenthEntries: [{ competencia: '2024-01', remuneracaoCents: '9007199254740992' }] },
+      { thirteenthEntries: [{ competencia: '2024-01', remuneracaoCents: '-1' }] },
+      { thirteenthEntries: [{ competencia: '2024-01', remuneracaoCents: '1.5' }] },
+      {
+        thirteenthEntries: [
+          { competencia: '2024-01', remuneracaoCents: '1' },
+          { competencia: '2024-01', remuneracaoCents: '2' },
+        ],
+      },
+      {
+        thirteenthEntries: [
+          { competencia: '2024-02', remuneracaoCents: '1' },
+          { competencia: '2024-01', remuneracaoCents: '2' },
+        ],
+      },
+    ]) {
+      expect(() => simulate({ ...INPUT, ...invalid } as SimulationInput)).toThrow();
+    }
+  });
+
+  it('avisa sobre extrapolação da reserva doméstica antes de outubro de 2015', () => {
+    const snapshot = simulate({
+      ...INPUT,
+      contractType: TipoContrato.DOMESTICO,
+      startDate: '2015-09-01',
+    });
+    expect(snapshot.warnings.join(' ')).toContain('Antes de outubro de 2015');
+  });
+
   it('aceita um documento histórico internamente consistente sem trocar seus números pelo motor atual', () => {
     const historical: SimulationSnapshot = {
       formatVersion: 1,
@@ -185,6 +414,8 @@ describe('isSimulationSnapshot — fronteira de persistência sem recálculo', (
       assumptions: ['Hipóteses preservadas da versão histórica.'],
       warnings: ['Estimativa histórica.'],
     };
+    delete historical.input.thirteenthMode;
+    delete historical.input.thirteenthEntries;
     const original = JSON.stringify(historical);
     expect(isSimulationSnapshot(historical)).toBe(true);
     expect(JSON.stringify(historical)).toBe(original);

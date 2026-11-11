@@ -181,9 +181,7 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
   doc.setFontSize(8.6);
   doc.setTextColor(INK);
   doc.text(
-    hasTotal
-      ? totalCaption(snapshot.result.saldoRetidoCents)
-      : 'Nenhuma parcela a receber neste cenário.',
+    hasTotal ? totalCaption(snapshot.result) : 'Nenhuma parcela a receber neste cenário.',
     LEFT,
     y,
   );
@@ -251,6 +249,14 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
     ['Cenário', input.scenario === 'TR' ? 'TR + 3% ao ano' : 'IPCA comparativo'],
     ['TR mensal', `${FormatAdapter.rateToPercent(input.trMonthly)}% a.m.`],
     ['IPCA mensal', `${FormatAdapter.rateToPercent(input.ipcaMonthly)}% a.m.`],
+    [
+      'FGTS do 13º',
+      input.thirteenthMode === 'actual'
+        ? 'Bases informadas'
+        : input.thirteenthMode === 'estimate'
+          ? 'Estimativa'
+          : 'Não incluído',
+    ],
   ];
   const factColumn = WIDTH / 4;
   for (let index = 0; index < facts.length; index += 4) {
@@ -267,6 +273,16 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
       doc.text(doc.splitTextToSize(value, factColumn - 4)[0] ?? value, x, y + 4);
     });
     y += 7.6;
+  }
+  if (input.thirteenthMode === 'actual' && input.thirteenthEntries?.length) {
+    section('Remunerações do 13º informadas', 12);
+    paragraph('Valores brutos informados por competência; não comprovam recolhimento.');
+    rows(
+      input.thirteenthEntries.map((entry) => [
+        FormatAdapter.civilDate(entry.competencia),
+        entry.remuneracaoCents,
+      ]),
+    );
   }
 
   // Memória de cálculo

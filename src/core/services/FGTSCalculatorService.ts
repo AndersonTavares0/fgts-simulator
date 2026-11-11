@@ -6,7 +6,6 @@
  * Este é o ponto de entrada principal para todo cálculo financeiro.
  */
 
-import Decimal from 'decimal.js';
 import { Money, TipoContrato, TipoRescisao } from '../types';
 import type {
   ParametrosCalculo,
@@ -15,7 +14,6 @@ import type {
   ResultadoDoencaGrave,
 } from '../types';
 import { CorrecaoMonetariaService } from './CorrecaoMonetariaService';
-import { INSSService } from './INSSService';
 import { MultaService } from './MultaService';
 import { SaqueAniversarioService } from './SaqueAniversarioService';
 import { DoencaGraveService } from './DoencaGraveService';
@@ -96,10 +94,10 @@ export class FGTSCalculatorService {
       avosFerias,
       cenarioCorrecao,
       periodosDeposito,
+      remuneracoesDecimoTerceiro,
       saqueAniversario,
       doencaGrave,
       indicesCorrecao,
-      calcularINSS,
     } = params;
 
     this.validarAvos(avosDecimoTerceiro);
@@ -114,6 +112,9 @@ export class FGTSCalculatorService {
       indicesCorrecao,
       cenarioCorrecao,
       periodosDeposito,
+      remuneracoesDecimoTerceiro?.map((remuneracao) =>
+        this.calcularDepositoMensal(remuneracao, tipoContrato),
+      ),
     );
 
     const saldoBase = correcao.saldoCorrigido;
@@ -121,31 +122,37 @@ export class FGTSCalculatorService {
     // 3. Multa rescisória
     let multa: import('../types').ResultadoMulta;
     if (tipoContrato === TipoContrato.DOMESTICO) {
-      const valorAcumuladoMulta = salarioBruto
-        .percentage(ALIQUOTA_MULTA_DOMESTICO)
-        .multiply(
-          periodosDeposito?.reduce((sum, fraction) => sum.plus(fraction), new Decimal(0)) ??
-            mesesTrabalhados,
-        );
+      // Art. 22, §4º, LC 150/2015: a reserva segue a Lei 8.036/90, inclusive a
+      // correção monetária e os juros do art. 13. Por isso não é soma nominal.
+      const correcaoReserva = CorrecaoMonetariaService.calcularSaldoComCorrecao(
+        salarioBruto.percentage(ALIQUOTA_MULTA_DOMESTICO),
+        mesesTrabalhados,
+        indicesCorrecao,
+        cenarioCorrecao,
+        periodosDeposito,
+        remuneracoesDecimoTerceiro?.map((remuneracao) =>
+          remuneracao.percentage(ALIQUOTA_MULTA_DOMESTICO),
+        ),
+      );
+      const valorAcumuladoMulta = correcaoReserva.saldoCorrigido;
 
-      // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal).
-      // Culpa recíproca usa interpretação analógica do Art. 484 CLT: 50% da indenização.
+      // O eSocial orienta liberar metade da reserva no acordo e na culpa recíproca.
       let valorMultaDomestico: Money;
       let fundamentoDomestico: string;
 
       if (tipoRescisao === TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA) {
         valorMultaDomestico = valorAcumuladoMulta;
         fundamentoDomestico = 'Art. 22, LC 150/2015 — 100% da reserva de indenização';
-      } else if (tipoRescisao === TipoRescisao.ACORDO_COMUM) {
-        valorMultaDomestico = valorAcumuladoMulta.percentage(50);
-        fundamentoDomestico = 'Art. 22 c/c Art. 484-A CLT — 50% da reserva de indenização';
       } else if (tipoRescisao === TipoRescisao.CULPA_RECIPROCA) {
         valorMultaDomestico = valorAcumuladoMulta.percentage(50);
-        fundamentoDomestico =
-          'Art. 22, LC 150/2015 c/c Art. 484, CLT — 50% da reserva de indenização (interpretação analógica)';
+        fundamentoDomestico = 'Art. 22, §2º, LC 150/2015 — metade da reserva';
+      } else if (tipoRescisao === TipoRescisao.ACORDO_COMUM) {
+        valorMultaDomestico = valorAcumuladoMulta.percentage(50);
+        fundamentoDomestico = 'Art. 484-A, CLT — acordo doméstico; metade da reserva';
       } else {
         valorMultaDomestico = Money.zero();
-        fundamentoDomestico = 'Art. 22, §2º, LC 150/2015 — Reserva retorna ao empregador';
+        fundamentoDomestico =
+          'Art. 22, LC 150/2015 — hipótese não prevista; reserva não liberada ao empregado';
       }
 
       multa = {
@@ -159,17 +166,22 @@ export class FGTSCalculatorService {
       multa = MultaService.calcular(baseCalculoMulta, tipoRescisao);
     }
 
-    // 4. Verbas proporcionais
-    const decimoTerceiro = incluirDecimoTerceiro
-      ? this.calcularDecimoTerceiro(salarioBruto, avosDecimoTerceiro)
-      : Money.zero();
+    // 4. Verbas proporcionais. Justa causa não gera 13º nem férias proporcionais
+    // (Súmula 171/TST; CLT 146, parágrafo único). Doença grave é hipótese de saque,
+    // não de rescisão: as verbas só entram se o vínculo realmente terminou.
+    const verbasRescisorias =
+      tipoRescisao !== TipoRescisao.JUSTA_CAUSA && tipoRescisao !== TipoRescisao.DOENCA_GRAVE;
+    const decimoTerceiro =
+      verbasRescisorias && incluirDecimoTerceiro
+        ? this.calcularDecimoTerceiro(salarioBruto, avosDecimoTerceiro)
+        : Money.zero();
 
-    const ferias = incluirFerias
-      ? this.calcularFeriasProporcionais(salarioBruto, avosFerias)
-      : Money.zero();
+    const ferias =
+      verbasRescisorias && incluirFerias
+        ? this.calcularFeriasProporcionais(salarioBruto, avosFerias)
+        : Money.zero();
 
-    // 5. INSS + saldo disponível para saque conforme modalidade de rescisão.
-    const resultadoINSS = calcularINSS ? INSSService.calcular(salarioBruto) : null;
+    // 5. Saldo disponível conforme modalidade de rescisão.
     const percentualSaldoDisponivel = PERCENTUAL_SALDO_DISPONIVEL[tipoRescisao];
     let saldoFinal = saldoBase.percentage(percentualSaldoDisponivel);
     let saldoRetido = saldoBase.subtract(saldoFinal);
@@ -204,8 +216,6 @@ export class FGTSCalculatorService {
 
     const correcaoEstimada = correcao.rendimentoTotal;
 
-    const salarioLiquido = resultadoINSS?.salarioLiquido ?? salarioBruto;
-
     return {
       saldoBase,
       correcao,
@@ -214,7 +224,6 @@ export class FGTSCalculatorService {
       ferias,
       saqueAniversario: resultadoSaqueAniversario,
       doencaGrave: resultadoDoencaGrave,
-      inss: resultadoINSS,
       saldoRetido,
       saldoFinal,
       multaFinal,
@@ -226,7 +235,6 @@ export class FGTSCalculatorService {
         tipoContrato,
         saqueAniversarioAtivo: saqueAniversario,
         correcaoEstimada,
-        salarioLiquido,
       },
     };
   }

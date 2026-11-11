@@ -18,6 +18,8 @@ export type SimulationInput = {
   trMonthly: string;
   ipcaMonthly: string;
   scenario: 'TR' | 'IPCA';
+  thirteenthMode?: 'estimate' | 'actual';
+  thirteenthEntries?: Array<{ competencia: string; remuneracaoCents: string }>;
 };
 
 export interface SimulationSnapshot {
@@ -78,7 +80,7 @@ const RESULT_KEYS = [
 const MAX_CENTS = BigInt(Number.MAX_SAFE_INTEGER);
 const MAX_POINTS = 602;
 const DAY_MS = 86_400_000;
-const CALCULATION_VERSION = '2.1.0';
+const CALCULATION_VERSION = '2.3.0';
 
 function hasKeys(value: object, keys: readonly string[]): boolean {
   return (
@@ -101,7 +103,10 @@ function validateInput(candidate: unknown): asserts candidate is SimulationInput
     typeof candidate !== 'object' ||
     candidate === null ||
     Array.isArray(candidate) ||
-    !hasKeys(candidate, INPUT_KEYS)
+    !(
+      hasKeys(candidate, INPUT_KEYS) ||
+      hasKeys(candidate, [...INPUT_KEYS, 'thirteenthMode', 'thirteenthEntries'])
+    )
   )
     throw new Error('Entradas da simulação inválidas.');
   const value = candidate as Partial<SimulationInput>;
@@ -120,6 +125,32 @@ function validateInput(candidate: unknown): asserts candidate is SimulationInput
   limit.setUTCFullYear(start.getUTCFullYear() + 50);
   if (limit.getUTCMonth() !== start.getUTCMonth()) limit.setUTCDate(0);
   if (end > limit) throw new Error('Período máximo permitido: 50 anos.');
+  if (Object.hasOwn(value, 'thirteenthMode')) {
+    if (
+      (value.thirteenthMode !== 'estimate' && value.thirteenthMode !== 'actual') ||
+      !Array.isArray(value.thirteenthEntries) ||
+      value.thirteenthEntries.length > MAX_POINTS ||
+      (value.thirteenthMode === 'estimate' && value.thirteenthEntries.length !== 0)
+    )
+      throw new Error('Dados do 13º inválidos.');
+    let previous = '';
+    for (const entry of value.thirteenthEntries) {
+      if (
+        typeof entry !== 'object' ||
+        entry === null ||
+        Array.isArray(entry) ||
+        !hasKeys(entry, ['competencia', 'remuneracaoCents']) ||
+        typeof entry.competencia !== 'string' ||
+        !/^\d{4}-(?:0[1-9]|1[0-2])$/.test(entry.competencia) ||
+        entry.competencia < value.startDate!.slice(0, 7) ||
+        entry.competencia > value.endDate!.slice(0, 7) ||
+        entry.competencia <= previous ||
+        !isCents(entry.remuneracaoCents)
+      )
+        throw new Error('Competência ou remuneração de 13º inválida.');
+      previous = entry.competencia;
+    }
+  }
   if (
     !Object.values(TipoRescisao).some((tipo) => tipo === value.terminationType) ||
     !Object.values(TipoContrato).some((tipo) => tipo === value.contractType)
@@ -162,12 +193,12 @@ function validateInput(candidate: unknown): asserts candidate is SimulationInput
 function calendarPeriods(
   startText: string,
   endText: string,
-): Array<{ competencia: string; fraction: Decimal }> {
+): Array<{ competencia: string; fraction: Decimal; days: number }> {
   const start = parseCivilDate(startText)!;
   const end = parseCivilDate(endText)!;
   const month = new Date(start);
   month.setUTCDate(1);
-  const periods: Array<{ competencia: string; fraction: Decimal }> = [];
+  const periods: Array<{ competencia: string; fraction: Decimal; days: number }> = [];
   while (month <= end) {
     const next = new Date(month);
     next.setUTCMonth(next.getUTCMonth() + 1);
@@ -178,6 +209,7 @@ function calendarPeriods(
     periods.push({
       competencia: month.toISOString().slice(0, 7),
       fraction: new Decimal(days).dividedBy(daysInMonth),
+      days,
     });
     month.setTime(next.getTime());
   }
@@ -212,47 +244,130 @@ function simulationId(): string {
 
 export function simulate(input: SimulationInput): SimulationSnapshot {
   validateInput(input);
-  const periods = calendarPeriods(input.startDate, input.endDate);
+  const semVerbasProporcionais =
+    input.terminationType === TipoRescisao.JUSTA_CAUSA ||
+    input.terminationType === TipoRescisao.DOENCA_GRAVE;
+  const withMode: SimulationInput = {
+    ...input,
+    thirteenthMode: input.thirteenthMode ?? 'estimate',
+    thirteenthEntries: input.thirteenthEntries?.map((entry) => ({ ...entry })) ?? [],
+  };
+  const normalized: SimulationInput = semVerbasProporcionais
+    ? {
+        ...withMode,
+        include13: false,
+        includeVacation: false,
+        thirteenthMonths: 0,
+        vacationMonths: 0,
+      }
+    : withMode;
+  const periods = calendarPeriods(normalized.startDate, normalized.endDate);
   const fractions = periods.map((period) => period.fraction);
   const months = fractions.reduce((sum, fraction) => sum.plus(fraction), new Decimal(0));
+  const entries = new Map(
+    normalized.thirteenthEntries!.map((entry) => [entry.competencia, entry.remuneracaoCents]),
+  );
+  let avos = 0;
+  let adiantamento = Money.zero();
+  const remuneracoes = periods.map((period, index) => {
+    if (normalized.thirteenthMode === 'actual') {
+      return Money.fromCents(entries.get(period.competencia) ?? '0');
+    }
+    if (period.days >= 15) avos++;
+    const december = period.competencia.endsWith('-12');
+    const last = index === periods.length - 1;
+    const termination =
+      normalized.terminationType !== TipoRescisao.JUSTA_CAUSA &&
+      normalized.terminationType !== TipoRescisao.DOENCA_GRAVE &&
+      normalized.terminationType !== TipoRescisao.APOSENTADORIA;
+    const continued =
+      normalized.terminationType === TipoRescisao.DOENCA_GRAVE ||
+      normalized.terminationType === TipoRescisao.APOSENTADORIA;
+    if (
+      period.competencia.endsWith('-11') &&
+      (periods[index + 1]?.competencia.endsWith('-12') || (last && continued))
+    ) {
+      const next = periods[index + 1];
+      const justaCausaEmDezembro =
+        index + 1 === periods.length - 1 && normalized.terminationType === TipoRescisao.JUSTA_CAUSA;
+      const avosAnuais =
+        avos +
+        (next?.competencia.endsWith('-12') && next.days >= 15 && !justaCausaEmDezembro ? 1 : 0);
+      adiantamento = FGTSCalculatorService.calcularDecimoTerceiro(
+        Money.fromCents(normalized.salaryCents),
+        avosAnuais,
+      ).divide(2);
+      return adiantamento;
+    }
+    if (
+      (december && !(last && normalized.terminationType === TipoRescisao.JUSTA_CAUSA)) ||
+      (last && termination)
+    ) {
+      const remuneration = FGTSCalculatorService.calcularDecimoTerceiro(
+        Money.fromCents(normalized.salaryCents),
+        avos,
+      ).subtract(adiantamento);
+      avos = 0;
+      adiantamento = Money.zero();
+      return remuneration;
+    }
+    return Money.zero();
+  });
   const result = FGTSCalculatorService.calcularRescisao({
-    salarioBruto: Money.fromCents(input.salaryCents),
+    salarioBruto: Money.fromCents(normalized.salaryCents),
     mesesTrabalhados: months.toNumber(),
-    tipoRescisao: input.terminationType,
-    tipoContrato: input.contractType,
-    incluirDecimoTerceiro: input.include13,
-    incluirFerias: input.includeVacation,
-    avosDecimoTerceiro: input.thirteenthMonths,
-    avosFerias: input.vacationMonths,
-    saqueAniversario: input.birthdayWithdrawal,
-    cenarioCorrecao: input.scenario,
+    tipoRescisao: normalized.terminationType,
+    tipoContrato: normalized.contractType,
+    incluirDecimoTerceiro: normalized.include13,
+    incluirFerias: normalized.includeVacation,
+    avosDecimoTerceiro: normalized.thirteenthMonths,
+    avosFerias: normalized.vacationMonths,
+    saqueAniversario: normalized.birthdayWithdrawal,
+    cenarioCorrecao: normalized.scenario,
     periodosDeposito: fractions,
+    remuneracoesDecimoTerceiro: remuneracoes,
     indicesCorrecao: {
-      trMensal: new Decimal(input.trMonthly),
-      ipcaMensal: new Decimal(input.ipcaMonthly),
+      trMensal: new Decimal(normalized.trMonthly),
+      ipcaMensal: new Decimal(normalized.ipcaMonthly),
     },
   });
   const warnings = [
     'Estimativa educativa: não substitui o extrato da CAIXA nem orientação profissional.',
-    'Não inclui FGTS do 13º, lucros, aumentos, saques anteriores ou antecipações.',
+    'Não inclui lucros, aumentos, saques anteriores ou antecipações.',
     '13º e férias são valores brutos; o total não é rescisão completa nem valor líquido.',
     'IPCA é só comparação econômica, não piso automático da ADI 5090.',
   ];
-  if (input.birthdayWithdrawal)
+  if (normalized.birthdayWithdrawal)
     warnings.push(
-      'Saque-aniversário: parte do saldo fica retida; antecipações não são calculadas.',
+      'Saque-aniversário: parte do saldo pode ficar retida; antecipações não são calculadas. Outras hipóteses, como idade a partir de 70 anos e desastre natural, não são simuladas e têm condições próprias.',
     );
-  if (input.terminationType === TipoRescisao.DOENCA_GRAVE)
-    warnings.push('Doença grave exige documentos e análise da CAIXA; não é autorização.');
-  if (input.contractType === TipoContrato.DOMESTICO)
-    warnings.push('Trabalho doméstico: reserva de 3,2% ao mês, sem correção.');
+  if (normalized.terminationType === TipoRescisao.DOENCA_GRAVE)
+    warnings.push(
+      'O saque por doença exige hipótese legal, documentos e análise da Caixa; nem toda doença grave dá direito. Este cenário não calcula verbas rescisórias.',
+    );
+  if (normalized.terminationType === TipoRescisao.JUSTA_CAUSA)
+    warnings.push(
+      'Justa causa: 13º e férias proporcionais não são devidos; o saldo permanece no FGTS.',
+    );
+  if (normalized.terminationType === TipoRescisao.APOSENTADORIA)
+    warnings.push(
+      'Aposentadoria não encerra o contrato automaticamente; 13º e férias só se houver rescisão.',
+    );
+  if (normalized.contractType === TipoContrato.DOMESTICO)
+    warnings.push(
+      'Trabalho doméstico: reserva de 3,2% estimada e corrigida pela mesma taxa do saldo.',
+    );
+  if (normalized.contractType === TipoContrato.DOMESTICO && normalized.startDate < '2015-10-01')
+    warnings.push(
+      'Antes de outubro de 2015, o FGTS doméstico era facultativo; esta projeção aplica 8% e reserva de 3,2% a todo o período, inclusive antes da obrigatoriedade, e pode superestimar o saldo e a reserva.',
+    );
   const snapshot: SimulationSnapshot = {
     formatVersion: 1,
     calculationVersion: CALCULATION_VERSION,
     appVersion: packageInfo.version,
     id: simulationId(),
     createdAt: new Date().toISOString(),
-    input: { ...input },
+    input: { ...normalized },
     result: {
       saldoBaseCents: cents(result.saldoBase),
       depositosCents: cents(result.correcao.serie.at(-1)?.depositos ?? Money.zero()),
@@ -273,9 +388,21 @@ export function simulate(input: SimulationInput): SimulationSnapshot {
     assumptions: [
       'Salário fixo no período; depósito de 8% ao mês (2% para aprendiz).',
       'Meses incompletos contam pelos dias trabalhados; sem rendimento no mês do depósito.',
-      'TR + 3% ao ano ou IPCA, com índices mensais fixos que você informou.',
+      'TR + 3% ao ano efetivo ou IPCA, com índices mensais fixos que você informou.',
       '13º e férias contados pelos meses que faltam receber, informados por você.',
+      normalized.thirteenthMode === 'actual'
+        ? 'FGTS sobre remunerações brutas de 13º informadas por competência; crédito estimado no fim do mês.'
+        : 'FGTS do 13º estimado com salário fixo e avos por mês com ao menos 15 dias: metade em novembro e restante em dezembro, ou proporcional na rescisão anterior; crédito estimado no fim da competência.',
+      ...(normalized.thirteenthMode === 'estimate'
+        ? [
+            'Se a projeção termina em novembro sem rescisão, estima-se adiantamento de metade do 13º acumulado; pagamentos em outras datas e atrasos não são previstos.',
+            'Na justa causa em dezembro, não se presume pagamento do saldo proporcional; a parcela estimada de novembro é mantida.',
+          ]
+        : []),
+      'A projeção é aproximada e não representa correção legal exata.',
       'Multa sobre o saldo corrigido, sem saques anteriores; centavos arredondados.',
+      'Reserva doméstica corrigida pela mesma taxa do cenário selecionado.',
+      'Total bruto: não desconta IRRF/INSS; 13º e férias têm tratamentos fiscais distintos.',
     ],
     warnings,
   };

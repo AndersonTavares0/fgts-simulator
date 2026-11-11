@@ -18,15 +18,17 @@ const BASE: ParametrosCalculo = {
 };
 
 describe('Hipótese de saque por doença grave', () => {
-  it.each([TipoDoencaGrave.CANCER, TipoDoencaGrave.HIV_AIDS, TipoDoencaGrave.DOENCA_TERMINAL])(
-    'preserva o saldo integral para %s na hipótese informada',
-    (tipo) => {
-      const result = DoencaGraveService.calcular(Money.fromReais(10000), tipo);
-      expect(result.saldoDisponivel.cents).toBe(1000000);
-      expect(result.percentualLiberado).toBe(100);
-      expect(result.tipoDoenca).toBe(tipo);
-    },
-  );
+  it.each([
+    TipoDoencaGrave.CANCER,
+    TipoDoencaGrave.HIV_AIDS,
+    TipoDoencaGrave.DOENCA_TERMINAL,
+    TipoDoencaGrave.DOENCA_RARA,
+  ])('preserva o saldo integral para %s na hipótese informada', (tipo) => {
+    const result = DoencaGraveService.calcular(Money.fromReais(10000), tipo);
+    expect(result.saldoDisponivel.cents).toBe(1000000);
+    expect(result.percentualLiberado).toBe(100);
+    expect(result.tipoDoenca).toBe(tipo);
+  });
 
   it('libera saldo sem criar multa mesmo com saque-aniversário', () => {
     const result = FGTSCalculatorService.calcularRescisao({
@@ -107,14 +109,63 @@ describe('Tipos de contrato e avos pendentes', () => {
     ).toBe(esperado);
   });
 
-  it('aplica metade da reserva doméstica em culpa recíproca', () => {
+  it('aplica metade da reserva doméstica corrigida em culpa recíproca', () => {
     const result = FGTSCalculatorService.calcularRescisao({
       ...BASE,
       mesesTrabalhados: 10,
       tipoRescisao: TipoRescisao.CULPA_RECIPROCA,
       tipoContrato: TipoContrato.DOMESTICO,
     });
-    expect(result.multa.valorMulta.cents).toBe(48000);
+    expect(result.multa.valorMulta.cents).toBe(48712);
+  });
+
+  it('corrige a reserva doméstica como saldo FGTS', () => {
+    const result = FGTSCalculatorService.calcularRescisao({
+      ...BASE,
+      mesesTrabalhados: 24,
+      tipoRescisao: TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA,
+      tipoContrato: TipoContrato.DOMESTICO,
+    });
+    // 24 × R$ 96,00 = R$ 2.304,00 nominal; corrigido pela TR + 3% a.a.
+    expect(result.multa.valorMulta.cents).toBe(239265);
+  });
+
+  it('libera metade da reserva doméstica corrigida no acordo comum', () => {
+    const result = FGTSCalculatorService.calcularRescisao({
+      ...BASE,
+      tipoRescisao: TipoRescisao.ACORDO_COMUM,
+      tipoContrato: TipoContrato.DOMESTICO,
+    });
+    expect(result.multa.valorMulta.cents).toBe(119632);
+  });
+
+  it('zera 13º e férias na justa causa mesmo se informados', () => {
+    const result = FGTSCalculatorService.calcularRescisao({
+      ...BASE,
+      tipoRescisao: TipoRescisao.JUSTA_CAUSA,
+      incluirDecimoTerceiro: true,
+      incluirFerias: true,
+      avosDecimoTerceiro: 12,
+      avosFerias: 12,
+    });
+    expect(result.decimoTerceiro.cents).toBe(0);
+    expect(result.ferias.cents).toBe(0);
+    expect(result.total.cents).toBe(0);
+  });
+
+  it('não trata doença grave como rescisão para 13º e férias', () => {
+    const result = FGTSCalculatorService.calcularRescisao({
+      ...BASE,
+      tipoRescisao: TipoRescisao.DOENCA_GRAVE,
+      doencaGrave: TipoDoencaGrave.CANCER,
+      incluirDecimoTerceiro: true,
+      incluirFerias: true,
+      avosDecimoTerceiro: 12,
+      avosFerias: 12,
+    });
+    expect(result.decimoTerceiro.cents).toBe(0);
+    expect(result.ferias.cents).toBe(0);
+    expect(result.saldoFinal.cents).toBe(result.saldoBase.cents);
   });
 
   it('não transforma duração longa em 12 avos pendentes', () => {

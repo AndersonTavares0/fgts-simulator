@@ -14,6 +14,7 @@ export class CorrecaoMonetariaService {
     indices?: IndicesCorrecao,
     cenario: 'TR' | 'IPCA' = 'TR',
     periodos?: readonly Decimal[],
+    depositosExtras?: readonly Money[],
   ): ResultadoCorrecao {
     if (!Number.isFinite(meses) || meses < 0 || meses > 602) {
       throw new Error('Período de correção inválido.');
@@ -47,13 +48,20 @@ export class CorrecaoMonetariaService {
     ) {
       throw new Error('Frações de competência inválidas.');
     }
+    if (
+      depositosExtras &&
+      (depositosExtras.length !== fracoes.length ||
+        depositosExtras.some((deposito) => deposito.decimal.lessThan(0)))
+    ) {
+      throw new Error('Depósitos extras inválidos.');
+    }
     let saldoTR = new Decimal(0);
     let saldoIPCA = new Decimal(0);
     let depositos = new Decimal(0);
     const serie: PontoCorrecao[] = [];
     const depositoBase = depositoMensal.isPositive() ? depositoMensal.decimal : new Decimal(0);
-    for (const fracao of fracoes) {
-      const deposito = depositoBase.times(fracao);
+    for (const [index, fracao] of fracoes.entries()) {
+      const deposito = depositoBase.times(fracao).plus(depositosExtras?.[index]?.decimal ?? 0);
       saldoTR = saldoTR.times(new Decimal(1).plus(taxaTR).pow(fracao)).plus(deposito);
       saldoIPCA = saldoIPCA.times(new Decimal(1).plus(ipca).pow(fracao)).plus(deposito);
       depositos = depositos.plus(deposito);

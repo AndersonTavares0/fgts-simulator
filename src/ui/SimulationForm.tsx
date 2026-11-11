@@ -28,9 +28,9 @@ const REASONS: Record<TipoRescisao, string> = {
   [TipoRescisao.DEMISSAO_VOLUNTARIA]: 'Eu pedi demissão',
   [TipoRescisao.JUSTA_CAUSA]: 'Fui demitido por justa causa',
   [TipoRescisao.ACORDO_COMUM]: 'Fiz acordo com a empresa',
-  [TipoRescisao.DOENCA_GRAVE]: 'Estou com doença grave',
-  [TipoRescisao.APOSENTADORIA]: 'Vou me aposentar',
-  [TipoRescisao.FALECIMENTO]: 'Falecimento do trabalhador',
+  [TipoRescisao.DOENCA_GRAVE]: 'Saque por doença grave',
+  [TipoRescisao.APOSENTADORIA]: 'Saque por aposentadoria',
+  [TipoRescisao.FALECIMENTO]: 'Saque por falecimento',
   [TipoRescisao.CULPA_RECIPROCA]: 'A culpa foi das duas partes',
 };
 
@@ -87,7 +87,11 @@ export function SimulationForm({
     ([key]) => key !== 'consentProcessing' && key !== 'form',
   );
   const advancedError = Boolean(
-    errors.thirteenthMonths || errors.vacationMonths || errors.trMonthly || errors.ipcaMonthly,
+    errors.thirteenthMonths ||
+    errors.thirteenthEntries ||
+    errors.vacationMonths ||
+    errors.trMonthly ||
+    errors.ipcaMonthly,
   );
 
   useEffect(() => {
@@ -192,14 +196,30 @@ export function SimulationForm({
         </div>
 
         <p className="text-muted-foreground mt-7 mb-3 text-[11px] font-medium tracking-[0.08em] uppercase">
-          Saída
+          Saída ou saque
         </p>
 
-        <Field name="terminationType" label="Por que você saiu?">
+        <Field name="terminationType" label="Qual é a situação?">
           <Select
             id="field-terminationType"
             value={draft.terminationType}
-            onChange={(event) => onDraft({ terminationType: event.target.value as TipoRescisao })}
+            onChange={(event) => {
+              const terminationType = event.target.value as TipoRescisao;
+              const semVerbas =
+                terminationType === TipoRescisao.JUSTA_CAUSA ||
+                terminationType === TipoRescisao.DOENCA_GRAVE;
+              onDraft({
+                terminationType,
+                ...(semVerbas
+                  ? {
+                      include13: false,
+                      includeVacation: false,
+                      thirteenthMonths: '0',
+                      vacationMonths: '0',
+                    }
+                  : {}),
+              });
+            }}
           >
             {Object.values(TipoRescisao).map((value) => (
               <option key={value} value={value}>
@@ -301,46 +321,195 @@ export function SimulationForm({
                   </div>
                 </div>
 
+                <div className="mt-4">
+                  <Field name="thirteenthMode" label="FGTS sobre o 13º">
+                    <Select
+                      id="field-thirteenthMode"
+                      value={draft.thirteenthMode}
+                      onChange={(event) =>
+                        onDraft({ thirteenthMode: event.target.value as Draft['thirteenthMode'] })
+                      }
+                    >
+                      <option value="estimate">Estimar pelo salário fixo (padrão)</option>
+                      <option value="actual">Informar remunerações reais por competência</option>
+                    </Select>
+                  </Field>
+                  {draft.thirteenthMode === 'estimate' ? (
+                    <p className="help mb-3">
+                      Cada mês com pelo menos 15 dias conta um avo. Quando novembro e dezembro estão
+                      no período, dividimos o 13º entre esses meses; nas rescisões cabíveis,
+                      estimamos o proporcional no término. O adiantamento pode não aparecer em
+                      períodos encerrados antes de dezembro.
+                    </p>
+                  ) : (
+                    <div className="mb-3">
+                      <p className="help mb-2">
+                        Informe a remuneração bruta de 13º efetivamente paga em cada competência,
+                        não o depósito de FGTS. Parcelas do mesmo mês são somadas. Esses valores não
+                        comprovam depósitos nem reproduzem índices históricos ou um extrato.
+                      </p>
+                      {draft.thirteenthEntries.map((entry, index) => (
+                        <fieldset
+                          key={index}
+                          className="border-border mb-3 grid gap-2 rounded-lg border p-3"
+                        >
+                          <legend className="px-1 text-sm font-medium">Parcela {index + 1}</legend>
+                          <div>
+                            <Label
+                              htmlFor={
+                                index === 0
+                                  ? 'field-thirteenthEntries'
+                                  : `thirteenth-month-${index}`
+                              }
+                            >
+                              Competência
+                            </Label>
+                            <Input
+                              id={
+                                index === 0
+                                  ? 'field-thirteenthEntries'
+                                  : `thirteenth-month-${index}`
+                              }
+                              type="month"
+                              value={entry.competencia}
+                              aria-invalid={errors.thirteenthEntries ? true : undefined}
+                              aria-describedby={
+                                errors.thirteenthEntries ? 'error-thirteenthEntries' : undefined
+                              }
+                              onChange={(event) =>
+                                onDraft({
+                                  thirteenthEntries: draft.thirteenthEntries.map((item, i) =>
+                                    i === index
+                                      ? { ...item, competencia: event.target.value }
+                                      : item,
+                                  ),
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`thirteenth-amount-${index}`}>
+                              Remuneração bruta (R$)
+                            </Label>
+                            <Input
+                              id={`thirteenth-amount-${index}`}
+                              inputMode="decimal"
+                              value={entry.remuneracao}
+                              aria-invalid={errors.thirteenthEntries ? true : undefined}
+                              aria-describedby={
+                                errors.thirteenthEntries ? 'error-thirteenthEntries' : undefined
+                              }
+                              onChange={(event) =>
+                                onDraft({
+                                  thirteenthEntries: draft.thirteenthEntries.map((item, i) =>
+                                    i === index
+                                      ? { ...item, remuneracao: event.target.value }
+                                      : item,
+                                  ),
+                                })
+                              }
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() =>
+                              onDraft({
+                                thirteenthEntries: draft.thirteenthEntries.filter(
+                                  (_, i) => i !== index,
+                                ),
+                              })
+                            }
+                          >
+                            Remover parcela {index + 1}
+                          </Button>
+                        </fieldset>
+                      ))}
+                      {errors.thirteenthEntries && (
+                        <p id="error-thirteenthEntries" className="field-error mb-2">
+                          {errors.thirteenthEntries}
+                        </p>
+                      )}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() =>
+                          onDraft({
+                            thirteenthEntries: [
+                              ...draft.thirteenthEntries,
+                              { competencia: '', remuneracao: '' },
+                            ],
+                          })
+                        }
+                      >
+                        Adicionar parcela de 13º
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="mt-2.5">
+                  {(draft.terminationType === TipoRescisao.JUSTA_CAUSA ||
+                    draft.terminationType === TipoRescisao.DOENCA_GRAVE) && (
+                    <p className="notice bg-muted mb-2">
+                      {draft.terminationType === TipoRescisao.JUSTA_CAUSA
+                        ? 'Na justa causa, 13º e férias proporcionais não são devidos.'
+                        : 'Doença grave libera o saldo, mas não é rescisão: 13º e férias não entram.'}
+                    </p>
+                  )}
                   {(
                     [
                       ['include13', 'thirteenthMonths', '13º salário'],
                       ['includeVacation', 'vacationMonths', 'Férias + 1/3'],
                     ] as const
-                  ).map(([toggle, avos, label]) => (
-                    <div key={toggle} className="mb-2">
-                      <div className="bg-muted flex min-h-12 items-center gap-3 rounded-lg px-3">
-                        <Checkbox
-                          id={`field-${toggle}`}
-                          checked={draft[toggle]}
-                          onCheckedChange={(checked) => onDraft({ [toggle]: checked === true })}
-                        />
-                        <Label htmlFor={`field-${toggle}`} className="flex-1 text-[15px]">
-                          {label}
-                        </Label>
-                        {draft[toggle] && (
-                          <span className="flex items-center gap-1.5">
-                            <Input
-                              id={`field-${avos}`}
-                              type="number"
-                              min={0}
-                              max={12}
-                              step={1}
-                              className="h-10 min-h-10! w-16 px-2 text-center"
-                              value={draft[avos]}
-                              aria-label={`Meses de ${label.toLowerCase()} que ainda faltam receber`}
-                              aria-invalid={errors[avos] ? true : undefined}
-                              onChange={(event) => onDraft({ [avos]: event.target.value })}
-                            />
-                            <span className="text-muted-foreground text-[13px]">de 12</span>
-                          </span>
-                        )}
+                  )
+                    .filter(
+                      () =>
+                        draft.terminationType !== TipoRescisao.JUSTA_CAUSA &&
+                        draft.terminationType !== TipoRescisao.DOENCA_GRAVE,
+                    )
+                    .map(([toggle, avos, label]) => (
+                      <div key={toggle} className="mb-2">
+                        <div className="bg-muted flex min-h-12 items-center gap-3 rounded-lg px-3">
+                          <Checkbox
+                            id={`field-${toggle}`}
+                            checked={draft[toggle]}
+                            onCheckedChange={(checked) => onDraft({ [toggle]: checked === true })}
+                          />
+                          <Label htmlFor={`field-${toggle}`} className="flex-1 text-[15px]">
+                            {label}
+                          </Label>
+                          {draft[toggle] && (
+                            <span className="flex items-center gap-1.5">
+                              <Input
+                                id={`field-${avos}`}
+                                type="number"
+                                min={0}
+                                max={12}
+                                step={1}
+                                className="h-10 min-h-10! w-16 px-2 text-center"
+                                value={draft[avos]}
+                                aria-label={`Meses de ${label.toLowerCase()} que ainda faltam receber`}
+                                aria-invalid={errors[avos] ? true : undefined}
+                                onChange={(event) => onDraft({ [avos]: event.target.value })}
+                              />
+                              <span className="text-muted-foreground text-[13px]">de 12</span>
+                            </span>
+                          )}
+                        </div>
+                        {errors[avos] && <p className="field-error mt-1">{errors[avos]}</p>}
                       </div>
-                      {errors[avos] && <p className="field-error mt-1">{errors[avos]}</p>}
-                    </div>
-                  ))}
+                    ))}
                 </div>
+                <p className="help mb-2">
+                  Cada mês com 15 dias ou mais conta como avo inteiro; férias também exigem mais de
+                  14 dias no mês.
+                </p>
 
+                <p className="help mb-2">
+                  Taxas de exemplo (nov/2026). Ajuste com a TR e o IPCA do mês que você quer
+                  simular.
+                </p>
                 <div className="grid grid-cols-2 gap-2.5">
                   {(
                     [

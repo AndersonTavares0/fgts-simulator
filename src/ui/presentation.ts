@@ -29,6 +29,29 @@ export function inputRows(input: SimulationInput): Array<[string, string]> {
     ['Contrato', contractLabels[input.contractType]],
     ['Motivo', FormatAdapter.getRescisaoLabel(input.terminationType)],
     [
+      'FGTS sobre 13º',
+      input.thirteenthMode === 'actual'
+        ? 'Remunerações informadas por competência'
+        : input.thirteenthMode === 'estimate'
+          ? 'Estimativa pelo salário fixo'
+          : 'Histórico anterior: sem dados de FGTS sobre 13º',
+    ],
+    [
+      'Remunerações de 13º informadas',
+      input.thirteenthMode === 'actual'
+        ? (input.thirteenthEntries ?? [])
+            .map(
+              (entry) =>
+                `${FormatAdapter.civilDate(entry.competencia)}: ${FormatAdapter.centsToBRL(entry.remuneracaoCents)}`,
+            )
+            .join('; ') || 'Nenhuma informada'
+        : 'Não informadas',
+    ],
+    [
+      'Limite das remunerações informadas',
+      'Não comprovam depósitos nem reproduzem índices históricos ou extrato.',
+    ],
+    [
       '13º proporcional',
       input.include13 ? `${input.thirteenthMonths} avos ainda devidos` : 'Não incluído',
     ],
@@ -44,8 +67,23 @@ export function inputRows(input: SimulationInput): Array<[string, string]> {
 }
 
 /** Legenda do total: o saldo retido nunca entra no valor estimado. */
-export function totalCaption(saldoRetidoCents: string): string {
-  return saldoRetidoCents !== '0'
+export function totalCaption(
+  result: Pick<
+    SimulationSnapshot['result'],
+    | 'saldoRetidoCents'
+    | 'saldoDisponivelCents'
+    | 'multaCents'
+    | 'decimoTerceiroCents'
+    | 'feriasCents'
+  >,
+): string {
+  const temVerbas =
+    result.multaCents !== '0' || result.decimoTerceiroCents !== '0' || result.feriasCents !== '0';
+  if (!temVerbas) return 'Saldo do FGTS para saque.';
+  if (result.saldoDisponivelCents === '0') {
+    return 'Verbas rescisórias; saldo retido no FGTS.';
+  }
+  return result.saldoRetidoCents !== '0'
     ? 'Disponível para saque + verbas da rescisão.'
     : 'Saldo do FGTS + verbas da rescisão.';
 }

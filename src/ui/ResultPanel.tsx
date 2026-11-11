@@ -110,9 +110,7 @@ export function ResultPanel({
       </p>
 
       <p className="mt-4 text-[13.5px]">
-        {hasTotal
-          ? totalCaption(snapshot.result.saldoRetidoCents)
-          : 'Nenhuma parcela a receber neste cenário.'}
+        {hasTotal ? totalCaption(snapshot.result) : 'Nenhuma parcela a receber neste cenário.'}
       </p>
       <p className="text-muted-foreground mt-1 text-[12.5px]">
         {describe(snapshot)} · estimativa bruta, sem descontos.

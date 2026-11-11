@@ -8,7 +8,7 @@ Use Node 24 LTS/npm 11 and scripts in package.json. Production Vite base is /fgt
 
 Read docs/legal/assumptions.md before changing calculation, deposit calendars, withdrawal availability or financial labels. Money/Decimal use integer cents internally. Perform financial operations in the domain, not DOM/chart/PDF adapters. A chart is account balance, not the sum of termination payments. The IPCA comparison is not an implementation of the annual ADI5090 compensation or a retroactive judicial credit.
 
-13th and vacation outstanding avos are separate explicit inputs, never total contract duration. Any change to financial rules/calendar/rounding requires calculationVersion and regression cases. Keep domestic 3.2% indemnity separate from standard termination fines. Preserve withdrawal exceptions and retained balance.
+13th and vacation outstanding avos are separate explicit inputs, never total contract duration. Any change to financial rules/calendar/rounding requires calculationVersion and regression cases. Keep the domestic 3.2% indemnity separate from standard termination fines and corrected like the FGTS balance. Domestic mutual agreement releases half the reserve. Just cause and grave-illness withdrawal carry no proportional 13th/vacation. Preserve withdrawal exceptions and retained balance.
 
 ## Shared results and privacy
 

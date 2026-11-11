@@ -10,17 +10,22 @@ Os resultados são estimativas. O aplicativo não consulta seu extrato CAIXA, n�
 
 - Contratos CLT, aprendizagem e doméstico; modalidades de saída e saque-aniversário.
 - Avos ainda não pagos de 13º e férias informados separadamente da duração do contrato.
+- FGTS sobre 13º: estimativa padrão pelo salário fixo ou remunerações brutas reais por competência em **Mais opções**, sem confundir com as verbas rescisórias.
 - Evolução mensal do saldo: depósitos, cenário TR + 3% a.a. e comparação pelo IPCA, com tabela acessível.
 - Histórico opcional em IndexedDB: reabrir, comparar duas simulações e excluir registros.
 - Relatório **PDF** monocromático (A4) gerado no próprio app: total, grupos FGTS/rescisão, dados contratuais, memória de cálculo, premissas, avisos e série mensal. Funciona offline.
 - PWA instalável nos navegadores compatíveis, com cálculo, gráfico, histórico e PDF offline após a preparação inicial.
 - Interface responsiva, temas claro/escuro e fontes locais.
 
+No modo estimado, cada mês civil com ao menos 15 dias conta um avo. Quando novembro e dezembro estão no período, o 13º estimado é dividido entre esses meses; nas rescisões cabíveis, estima-se o proporcional no término antecipado. Doença grave e aposentadoria não presumem término em ano incompleto. O crédito é situado no fim da competência; em períodos encerrados antes de dezembro o adiantamento pode não aparecer, e atrasos e distribuição de lucros ficam fora do modelo. No modo real, parcelas de 13º pagas no mesmo mês são somadas. Informar remunerações reais não comprova depósitos e não reproduz índices históricos ou extrato. Veja a [Nota FGTS Digital nº 11/2025](https://www.gov.br/trabalho-e-emprego/pt-br/servicos/empregador/fgtsdigital/manual-e-documentacao-tecnica/nota-orientativa-fd-11-2025-13-e-rescisao.pdf) e a orientação do [eSocial doméstico](https://www.gov.br/esocial/pt-br/empregador-domestico/orientacoes/saque-fgts).
+
+O cenário padrão soma TR mensal à taxa mensal equivalente a 3% efetivos ao ano; essa simplificação não reproduz necessariamente a combinação histórica oficial. Históricos antigos foram mantidos e não são recalculados automaticamente.
+
 ## Uso e armazenamento
 
 Preencha o contrato e escolha **Calcular**, ou clique em **Usar exemplo** para preencher e calcular um caso fictício sem salvar nada. Parcelas e taxas ficam em seções expansíveis. No celular, alterne entre **Dados** e **Resultado**; **Histórico** e **Ajuda** são áreas separadas, não seções de uma página longa. Alterar as entradas invalida as ações do resultado anterior até novo cálculo. **Salvar simulação** é uma decisão explícita; não registramos cada edição.
 
-O histórico fica neste navegador/dispositivo, sem conta ou sincronização. Limpeza de dados, sessão privada ou políticas do navegador podem removê-lo. Não é backup. A modalidade de doença grave exige consentimento de cálculo e uma autorização separada para salvar. Excluir o histórico não apaga arquivos `.tex`/PDFs já baixados.
+O histórico fica neste navegador/dispositivo, sem conta ou sincronização. Limpeza de dados, sessão privada ou políticas do navegador podem removê-lo. Não é backup. A modalidade de doença grave exige consentimento de cálculo e uma autorização separada para salvar. Excluir o histórico não apaga PDFs já baixados.
 
 Para usar offline, abra o aplicativo com internet e aguarde a indicação de disponibilidade. Instalação depende do navegador; no iOS, use Compartilhar → Adicionar à Tela de Início. Não há primeira instalação sem conexão. Quando houver atualização, conclua/salve o trabalho e feche todas as abas do simulador antes de reabrir. Não forçamos recarga dos formulários.
 

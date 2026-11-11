@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { TipoContrato, TipoRescisao } from '../../src/core/types';
 import type { SimulationSnapshot } from '../../src/application/Simulation';
-import { comparisonRows } from '../../src/ui/presentation';
+import { comparisonRows, inputRows } from '../../src/ui/presentation';
 import { FormatAdapter } from '../../src/adapters/FormatAdapter';
+import { draftFromInput, emptyDraft, toInput } from '../../src/ui/form';
 
 function snapshot(): SimulationSnapshot {
   return {
@@ -80,6 +81,82 @@ describe('UI comparison of original snapshots', () => {
     first.result.totalCents = '9007199254740000';
     second.result.totalCents = '9007199254740001';
     expect(comparisonRows(first, second).some((row) => row[3] === '+R$ 0,01')).toBe(true);
+  });
+});
+
+describe('FGTS sobre 13º no formulário', () => {
+  it('reabre histórico antigo sem inventar remunerações e preserva a apresentação antiga', () => {
+    const input = snapshot().input;
+    const draft = draftFromInput(input);
+    expect(draft.thirteenthMode).toBe('estimate');
+    expect(draft.thirteenthEntries).toEqual([]);
+    expect(inputRows(input)).toContainEqual([
+      'FGTS sobre 13º',
+      'Histórico anterior: sem dados de FGTS sobre 13º',
+    ]);
+  });
+
+  it('agrupa parcelas por competência, ordena e reabre valores efetivos', () => {
+    const draft = {
+      ...emptyDraft,
+      salary: '2.000,00',
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+      thirteenthMode: 'actual' as const,
+      thirteenthEntries: [
+        { competencia: '2025-12', remuneracao: '1.000,50' },
+        { competencia: '2025-11', remuneracao: '500,00' },
+        { competencia: '2025-12', remuneracao: '100,00' },
+      ],
+    };
+    const result = toInput(draft, false);
+    if (!('input' in result)) throw new Error('Entradas válidas foram rejeitadas');
+    expect(result.input.thirteenthEntries).toEqual([
+      { competencia: '2025-11', remuneracaoCents: '50000' },
+      { competencia: '2025-12', remuneracaoCents: '110050' },
+    ]);
+    expect(draftFromInput(result.input).thirteenthEntries).toEqual([
+      { competencia: '2025-11', remuneracao: '500,00' },
+      { competencia: '2025-12', remuneracao: '1100,50' },
+    ]);
+    expect(inputRows(result.input)).toContainEqual([
+      'Remunerações de 13º informadas',
+      '11/2025: R$ 500,00; 12/2025: R$ 1.100,50',
+    ]);
+  });
+
+  it('mantém valores zero e acima do limite salarial ao reabrir', () => {
+    const input = {
+      ...snapshot().input,
+      thirteenthMode: 'actual' as const,
+      thirteenthEntries: [
+        { competencia: '2025-01', remuneracaoCents: '0' },
+        { competencia: '2025-02', remuneracaoCents: '100000001' },
+      ],
+    };
+    const result = toInput(draftFromInput(input), false);
+    expect(result).toHaveProperty('input.thirteenthEntries', input.thirteenthEntries);
+  });
+
+  it('rejeita competência fora do período e valor inválido', () => {
+    const draft = {
+      ...emptyDraft,
+      salary: '2000',
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+      thirteenthMode: 'actual' as const,
+      thirteenthEntries: [{ competencia: '2026-01', remuneracao: '100' }],
+    };
+    expect(toInput(draft, false)).toHaveProperty('errors.thirteenthEntries');
+    expect(
+      toInput(
+        {
+          ...draft,
+          thirteenthEntries: [{ competencia: '2025-01', remuneracao: 'invalido' }],
+        },
+        false,
+      ),
+    ).toHaveProperty('errors.thirteenthEntries');
   });
 });
 

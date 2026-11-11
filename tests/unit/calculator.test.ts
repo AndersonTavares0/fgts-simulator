@@ -106,6 +106,15 @@ describe('CorrecaoMonetariaService — Juros Compostos', () => {
     expect(resultado.rendimentoTotal.isPositive()).toBe(true);
   });
 
+  it('aplica o equivalente mensal de 3% efetivos ao ano com TR zero', () => {
+    const resultado = CorrecaoMonetariaService.calcularSaldoComCorrecao(
+      Money.fromReais(100000),
+      2,
+      { trMensal: new Decimal(0), ipcaMensal: new Decimal(0) },
+    );
+    expect(resultado.saldoCorrigido.cents).toBe(20024663);
+  });
+
   it('deve retornar rendimento zero para 0 meses', () => {
     const deposito = Money.fromCents(24000);
     const resultado = CorrecaoMonetariaService.calcularSaldoComCorrecao(deposito, 0);
