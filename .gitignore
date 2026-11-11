@@ -69,3 +69,6 @@ logs/
 
 # Optional: husky is committed, but some prefer to ignore
 # .husky/
+
+# Generated LaTeX/PDF samples
+artifacts/

@@ -1,105 +1,69 @@
 /**
  * Adapter: FormatAdapter
- * Funções de formatação monetária e de datas para a camada de UI.
+ * Única fonte de formatação (dinheiro, datas, percentuais) para UI e relatório.
  */
 
+import Decimal from 'decimal.js';
 import { Money, TipoRescisao } from '../core/types';
+import { parseCivilDate } from '../core/CivilDate';
 
-const dateFullFormatter = new Intl.DateTimeFormat('pt-BR', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-
-/** Labels legíveis para cada tipo de rescisão */
-const LABELS_RESCISAO: Record<TipoRescisao, { label: string; cssClass: string }> = {
-  [TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA]: {
-    label: 'Dispensa sem justa causa',
-    cssClass: 'dispensa',
-  },
-  [TipoRescisao.DEMISSAO_VOLUNTARIA]: {
-    label: 'Demissão voluntária',
-    cssClass: 'voluntaria',
-  },
-  [TipoRescisao.JUSTA_CAUSA]: {
-    label: 'Justa causa',
-    cssClass: 'justa-causa',
-  },
-  [TipoRescisao.ACORDO_COMUM]: {
-    label: 'Acordo comum',
-    cssClass: 'acordo',
-  },
-  [TipoRescisao.DOENCA_GRAVE]: {
-    label: 'Doença grave',
-    cssClass: 'doenca',
-  },
-  [TipoRescisao.APOSENTADORIA]: {
-    label: 'Aposentadoria',
-    cssClass: 'aposentadoria',
-  },
-  [TipoRescisao.FALECIMENTO]: {
-    label: 'Falecimento',
-    cssClass: 'falecimento',
-  },
-  [TipoRescisao.CULPA_RECIPROCA]: {
-    label: 'Culpa recíproca',
-    cssClass: 'culpa-reciproca',
-  },
+const LABELS_RESCISAO: Record<TipoRescisao, string> = {
+  [TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA]: 'Dispensa sem justa causa',
+  [TipoRescisao.DEMISSAO_VOLUNTARIA]: 'Demissão voluntária',
+  [TipoRescisao.JUSTA_CAUSA]: 'Justa causa',
+  [TipoRescisao.ACORDO_COMUM]: 'Acordo comum',
+  [TipoRescisao.DOENCA_GRAVE]: 'Saque por doença grave',
+  [TipoRescisao.APOSENTADORIA]: 'Saque por aposentadoria',
+  [TipoRescisao.FALECIMENTO]: 'Saque por falecimento',
+  [TipoRescisao.CULPA_RECIPROCA]: 'Culpa recíproca',
 };
 
 export class FormatAdapter {
-  /** Calcula percentual formatado (ex: "45.2%") */
-  static formatPercent(part: number, total: number): string {
-    if (total <= 0) return '0%';
-    return ((part / total) * 100).toFixed(1) + '%';
+  /** Centavos em string (ex.: "-123456") para "R$ 1.234,56". */
+  static centsToBRL(cents: string): string {
+    const negative = cents.startsWith('-');
+    const digits = (negative ? cents.slice(1) : cents).padStart(3, '0');
+    const whole = digits.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${negative ? '-' : ''}R$ ${whole},${digits.slice(-2)}`;
   }
 
-  /** Formata data para exibição em pt-BR */
-  static formatDateFull(date: Date): string {
-    return dateFullFormatter.format(date);
+  /** "2025-01-31" para "31/01/2025"; "2025-01" para "01/2025". */
+  static civilDate(value: string): string {
+    return value.split('-').reverse().join('/');
   }
 
-  /** Retorna label e classe CSS para um tipo de rescisão */
-  static getRescisaoLabel(tipo: TipoRescisao): { label: string; cssClass: string } {
-    return LABELS_RESCISAO[tipo] ?? { label: 'Outra saída', cssClass: 'outra' };
+  /** Percentual informado pelo usuário ("0,08") para taxa decimal ("0.0008"). */
+  static rateFromPercent(value: string): string | null {
+    const normalized = value.trim().replace(',', '.');
+    if (!/^-?\d+(?:\.\d+)?$/.test(normalized)) return null;
+    return new Decimal(normalized).div(100).toFixed();
   }
 
-  /** Parse seguro de data no formato YYYY-MM-DD */
+  /** Taxa decimal ("0.0008") para percentual legível ("0,08"). */
+  static rateToPercent(value: string): string {
+    return new Decimal(value).times(100).toFixed().replace('.', ',');
+  }
+
+  static getRescisaoLabel(tipo: TipoRescisao): string {
+    return LABELS_RESCISAO[tipo] ?? 'Outra saída';
+  }
+
+  /** Parse seguro de data no formato YYYY-MM-DD. */
   static parseDate(dateString: string): Date | null {
-    if (!dateString || typeof dateString !== 'string') return null;
-
-    const parts = dateString.split('-');
-    if (parts.length !== 3) return null;
-
-    const year = parseInt(parts[0]!, 10);
-    const month = parseInt(parts[1]!, 10);
-    const day = parseInt(parts[2]!, 10);
-
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
-    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-
-    const date = new Date(year, month - 1, day);
-
-    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-      return null;
-    }
-
+    const civil = parseCivilDate(dateString);
+    if (!civil) return null;
+    const date = new Date(0);
+    date.setFullYear(civil.getUTCFullYear(), civil.getUTCMonth(), civil.getUTCDate());
+    date.setHours(0, 0, 0, 0);
     return date;
   }
 
-  /** Sanitiza valor monetário de string para Money */
+  /** Sanitiza valor monetário de string para Money. */
   static parseMonetaryInput(value: string): Money | null {
-    if (!value || typeof value !== 'string') return null;
-
-    const cleaned = value
-      .replace(/[R$\s]/g, '')
-      .replace(/\./g, '')
-      .replace(',', '.');
-    const parsed = parseFloat(cleaned);
-
-    if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) return null;
-
-    return Money.fromReais(parsed);
+    if (typeof value !== 'string' || value.length > 32) return null;
+    const text = value.trim().replace(/^R\$\s*/, '');
+    if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(text)) return null;
+    const money = Money.fromReais(text.replace(/\./g, '').replace(',', '.'));
+    return money.isPositive() && money.decimal.lessThanOrEqualTo(100_000_000) ? money : null;
   }
 }

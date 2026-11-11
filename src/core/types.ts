@@ -55,12 +55,12 @@ export enum TipoContrato {
   DOMESTICO = 'domestico',
 }
 
-/** Doenças graves que permitem saque integral (Lei 8.036/90, Art. 20, XI/XIII/XIV) */
+/** Doenças graves que permitem saque integral (Lei 8.036/90, art. 20, XI, XIII, XIV e XXII) */
 export enum TipoDoencaGrave {
   CANCER = 'cancer',
   HIV_AIDS = 'hiv_aids',
   DOENCA_TERMINAL = 'doenca_terminal',
-  OUTRA_GRAVE = 'outra_grave',
+  DOENCA_RARA = 'doenca_rara',
 }
 
 // ─── Value Object: Money ────────────────────────────────────────────────────
@@ -153,6 +153,13 @@ export interface ResultadoCorrecao {
   rendimentoTotal: Money;
   indexadorUtilizado: 'TR' | 'IPCA';
   taxaEfetivaAnual: Decimal;
+  serie: PontoCorrecao[];
+}
+
+export interface PontoCorrecao {
+  depositos: Money;
+  tr: Money;
+  ipca: Money;
 }
 
 export interface ResultadoMulta {
@@ -176,16 +183,6 @@ export interface ResultadoDoencaGrave {
   fundamentoLegal: string;
 }
 
-export interface ResultadoINSS {
-  salarioBruto: Money;
-  aliquotaEfetiva: number;
-  valorINSS: Money;
-  baseCalculo: Money;
-  salarioLiquido: Money;
-  faixaDescricao: string;
-  fundamentoLegal: string;
-}
-
 export interface ResultadoRescisao {
   saldoBase: Money;
   correcao: ResultadoCorrecao;
@@ -194,7 +191,6 @@ export interface ResultadoRescisao {
   ferias: Money;
   saqueAniversario: ResultadoSaqueAniversario | null;
   doencaGrave: ResultadoDoencaGrave | null;
-  inss: ResultadoINSS | null;
   saldoRetido: Money;
   saldoFinal: Money;
   multaFinal: Money;
@@ -206,7 +202,6 @@ export interface ResultadoRescisao {
     tipoContrato: TipoContrato;
     saqueAniversarioAtivo: boolean;
     correcaoEstimada: Money;
-    salarioLiquido: Money;
   };
 }
 
@@ -217,16 +212,17 @@ export interface ParametrosCalculo {
   tipoContrato: TipoContrato;
   incluirDecimoTerceiro: boolean;
   incluirFerias: boolean;
+  /** Avos pendentes informados, independentes da duração total do contrato (0..12). */
+  avosDecimoTerceiro: number;
+  avosFerias: number;
+  cenarioCorrecao?: 'TR' | 'IPCA';
+  /** Frações estimadas de competência civil; não usa a regra de 15 dias do 13º. */
+  periodosDeposito?: readonly Decimal[];
+  /** Remuneração bruta de 13º por competência, alinhada às frações de depósito. */
+  remuneracoesDecimoTerceiro?: readonly Money[];
   saqueAniversario: boolean;
   /** Total historical deposits (for fine calculation - Art. 18, Lei 8.036/1990) */
   depositoHistoricoTotal?: Money;
   doencaGrave?: TipoDoencaGrave;
   indicesCorrecao?: IndicesCorrecao;
-  /** Whether to calculate INSS contribution (tabela progressiva 2026) */
-  calcularINSS?: boolean;
-}
-
-export interface ValidationResult {
-  valid: boolean;
-  error?: string;
 }

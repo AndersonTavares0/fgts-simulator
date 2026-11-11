@@ -1,0 +1,114 @@
+# Releases e recuperação
+
+## Estado remoto e política declarada
+
+Em 11/11/2026, a migração via REST criou o ruleset ativo `main` (ID `27035196`) antes de remover a proteção legada. A conferência das respostas da API comprovou a cobertura de PR obrigatório com zero aprovações, administradores sem bypass, force push e exclusão bloqueados. A migração acrescentou conversas resolvidas e histórico linear; o repositório permite apenas squash merge. Não houve conversão pela interface nativa.
+
+O ruleset de tags `release-tags` (`27035237`) bloqueia alteração/exclusão de `v*`, sem bypass. Ele permite criar tags a quem já tem escrita; não restringe criação a uma identidade exclusiva. O GitHub habilitou imutabilidade para releases futuras; isso não modifica releases antigas.[^1]
+
+A sessão de implementação preservou as respostas anteriores em `local://governance-before.json` e a cobertura antes da exclusão em `local://governance-migration.json`. Esses arquivos são evidências locais, não backups versionados neste repositório.
+
+**Diferença live/desired:** o remoto ainda não exige `quality`. O arquivo [main.json](../.github/rulesets/main.json) declara a política desejada, incluindo `quality`, origem GitHub Actions e atualização obrigatória da base. Não aplicar esse JSON ao remoto antes de existir uma execução de PR bem-sucedida e recente do check real. O workflow local ainda precisa de commit/push autorizado e execução remota. Nenhuma configuração local prova que um PR com falha já está bloqueado.
+
+Para concluir esse gate, depois da autorização para publicar as mudanças:
+
+1. Abra PR para `main`; confirme execução do job `quality`, inclusive ao reabrir PR e em fork. Não use dispatch manual como substituto do check de PR.[^2]
+2. Consulte `GET /repos/AndersonTavares0/fgts-simulator/commits/{SHA_DO_MERGE_DE_TESTE_DO_PR}/check-runs`. Confira `name`, `app.id`, `conclusion=success`, SHA e execução nos últimos sete dias. O JSON espera `quality` e integração `15368`; ajuste o arquivo se a resposta real divergir.
+3. Salve o ruleset live anterior, confira que não houve mudança concorrente e aplique `PUT /repos/AndersonTavares0/fgts-simulator/rulesets/27035196` com o JSON revisado. Leia novamente o ruleset e `/rules/branches/main`.
+4. Em um PR descartável, provoque uma falha de qualidade, confirme merge bloqueado sem bypass administrativo; corrija e confirme squash permitido com zero aprovações. Não reduza proteção para passar esse teste.
+
+O environment `github-pages` continua autorizando somente a branch `main`. O fluxo abaixo não precisa de PAT, App adicional, push automático, aprovação de bot ou autorização para tags nesse environment.
+
+## Qualidade e permissões
+
+[quality.yml](../.github/workflows/quality.yml) atende PRs para `main` (`opened`, `synchronize`, `reopened`, `ready_for_review`), push em `main` e chamadas da release. O job de nome estável `quality` não tem filtros de caminhos nem condição que esconda verificações obrigatórias. Ele executa:
+
+```bash
+node scripts/check-release.mjs
+npm ci
+npm run format:check
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm audit --omit=dev --audit-level=high
+npm run build
+```
+
+O check `quality` usa cobertura com limite de 80% (linhas, branches, funções, statements) e auditoria apenas das dependências de produção. Push em `main` e PRs cancelam execuções anteriores do mesmo grupo; chamadas da release não são canceladas.
+
+Qualquer falha interrompe o job. O resumo usa `GITHUB_STEP_SUMMARY`, sem comentário em PR, `pull_request_target` ou permissão de escrita. Dependabot agrupa atualizações mensais das actions fixadas por SHA e atualizações npm minor/patch; majors continuam em PRs separados. A auditoria de dependências de produção é executada no check `quality`, e o CodeQL analisa `main` semanalmente.
+
+| Job | Permissões |
+| --- | --- |
+| Plano/qualidade/build | `contents: read` |
+| Publicador sem checkout/npm | `contents: write` |
+| Deploy | `contents: read`, `deployments: read`, `pages: write`, `id-token: write` |
+
+O plano preserva o script confiável do SHA de `main` em artefato separado antes de qualquer npm/build. Publicador e deploy usam esse script, não scripts contidos em pacotes de versões antigas.
+
+Rollback pula o job publicador; seus jobs não recebem `contents: write`.
+
+## Preparar e promover uma versão
+
+1. Em PR humano, atualize a versão de `package.json`, a versão raiz e a entrada raiz de `package-lock.json`, e as notas da mudança. Mantenha versões estáveis `MAJOR.MINOR.PATCH` sem zeros à esquerda.
+2. Passe `quality` e faça squash em `main`. Push/merge executa qualidade, **sem implantar produção** depois que estes workflows substituírem os antigos.
+3. Em **Actions → Release and Pages → Run workflow**, selecione a branch `main`, operação `release`, versão esperada sem `v` e o SHA completo de `main` capturado para essa publicação. O SHA informado precisa ser igual a `github.sha` do dispatch. Se `main` avançou antes do dispatch, use seu novo SHA e confira a versão; não mova tags para corrigir divergências.
+4. Confira os estados separados: pacote publicado na release e implantação concluída no environment. O último passo consulta `release.json` público para confirmar versão/SHA no Pages.
+
+[release.yml](../.github/workflows/release.yml) só atende `workflow_dispatch`. O script recusa outra branch/evento, SHA inválido, versão divergente entre pacote/lock/input, tag conflitante e origem fora do histórico de `main` fixado no dispatch. O build valida novamente o commit do dispatch; o fluxo não resolve `main` de novo no meio da publicação.
+
+A exclusão mútua `pages` cobre plano, publicação, deploy, retomada e rollback. Ela não cancela runs em andamento e usa `queue: max` (até 100 pendentes); a ordem depende da entrada na espera, não da ordem dos cliques.[^3] Antes de implantar sem rollback, o script consulta a implantação Pages bem-sucedida mais recente e exige que o SHA candidato não seja anterior/divergente do SHA daquele workflow. Uma retomada depois de rollback pode exigir `rollback` explícito mesmo quando os bytes já estiverem no site: o registro Pages identifica o workflow autorizado, não o SHA antigo do conteúdo. Essa recusa conservadora evita rebaixamento silencioso.
+
+O script também consulta a versão pública e recusa versão menor ou mesma versão com SHA diferente fora de `rollback`. Uma resposta 404 só permite o primeiro corte quando o último deploy veio de um commit sem o workflow moderno; indisponibilidade ou identidade ausente depois desse corte bloqueiam promoção.
+
+## Pacote preservado
+
+O build acrescenta `release.json` ao site e gera os três assets:
+
+| Asset | Conteúdo |
+| --- | --- |
+| `site.tar.gz` | Arquivos do build, sem links, e manifesto interno |
+| `manifest.json` | Versão, SHA, repositório, hash do lockfile, Node, run/attempt/URL |
+| `SHA256SUMS` | SHA-256 do pacote e do manifesto externo |
+
+O checksum fica fora do arquivo que valida. O pacote não pode exceder 100 MiB na recuperação. O publicador cria a tag no SHA validado, cria uma draft, anexa primeiro o pacote e depois manifesto/checksums, confere os bytes e publica. Ele exige a confirmação de release imutável antes do deploy. Em conflitos, ele falha sem mover tag ou usar clobber.
+
+O deploy baixa os assets publicados, confere hashes, versão, SHA, manifesto interno/externo e caminhos/tipos de arquivo. Depois extrai os mesmos arquivos e prepara o artefato Pages; não recompila. Artefatos Actions/Pages ficam por sete dias para operação; os assets da release são a fonte de recuperação após essa expiração. Imutabilidade depende também da permanência da release/repositório; mantenha uma cópia externa desses assets se precisar de backup independente.
+
+## Falhas parciais e retomada
+
+| Falha | Procedimento |
+| --- | --- |
+| Qualidade/build antes do pacote | Corrigir em PR; nenhuma tag/release/deploy deve ter ocorrido |
+| Tag/draft criada, sem pacote | Reexecutar `release` no run/SHA original; não mover a tag |
+| Pacote presente na draft, demais uploads incompletos | `resume` recupera o pacote; deriva o mesmo manifesto/checksum e envia apenas assets ausentes |
+| Asset de mesmo nome com bytes diferentes | Inspecionar conflito; o fluxo recusa sobrescrita e publicação |
+| Release imutável publicada, deploy falhou/artefato expirou | Novo dispatch em `main`, operação `resume`, versão e SHA daquela release |
+| Release publicada sem pacote completo, ou hash divergente | Recuperação bloqueada; não substituir por rebuild silencioso |
+| Pages terminou, confirmação pública falhou | Inspecionar environment e `release.json`; pacote publicado não equivale a produção confirmada |
+| Uma versão mais recente já chegou à produção | `resume` recusa; use `rollback` somente se pretende rebaixar |
+
+`resume` aceita somente SHA explicitamente informado e pertencente ao histórico do `main` usado pelo workflow atual. Uma draft com pacote preservado permite completar uploads; uma release publicada exige imutabilidade e os três assets íntegros. Se a falha ocorreu antes do primeiro pacote, retome o run original de `release`; um dispatch de `resume` não inventa bytes ausentes.
+
+Release e Pages não formam uma transação: uma falha de deploy conserva a release publicada e o site anterior. Não apague a release/tag para ocultar essa situação.
+
+## Rollback
+
+1. Escolha uma release publicada pelo novo fluxo, com `site.tar.gz`, `manifest.json` e `SHA256SUMS`; confira versão e SHA no manifesto.
+2. Execute o workflow **atual**, selecionando branch `main`, operação `rollback`, versão e SHA daquela release.
+3. O fluxo valida origem, imutabilidade e integridade, prepara novo artefato Pages e implanta os arquivos preservados. Nenhum script do código antigo roda; tag e `main` permanecem intactos.
+4. Confira o resumo, o environment e `release.json` público. Depois corrija o defeito em PR e prepare uma nova versão.
+
+As releases antigas sem assets não oferecem rollback dos mesmos bytes. O novo fluxo estabelece a primeira versão recuperável; reconstruir um commit antigo não prova identidade com o site que foi publicado.
+
+Rollback não diminui schema do IndexedDB, apaga histórico nem revoga a aplicação em clientes offline. Antes de produção, o aceite deve exercitar A → B → A com histórico salvo e duas abas; confira compatibilidade dos dados e recebimento da correção ao reconectar.
+
+## Verificação pendente antes de produção
+
+Os workflows/scripts foram implementados, mas a sessão não executou testes, builds, publicação, tag ou deploy. Execute o selfcheck Node e os comandos de qualidade. Em ambiente autorizado, exercite falhas após criação da draft, após publicação e durante deploy, corrupção de checksum, conflito de SHA/asset, retomada sem artefato temporário, tentativa antiga e rollback. Só essas execuções comprovam recuperação ponta a ponta e compatibilidade com o token/environment reais.
+
+## Referências
+
+[^1]: GitHub, [Immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
+[^2]: GitHub, [Troubleshooting required status checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+[^3]: GitHub, [Control workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).

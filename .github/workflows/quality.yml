@@ -1,0 +1,86 @@
+name: Quality
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_call:
+    inputs:
+      package:
+        type: boolean
+        default: false
+      version:
+        type: string
+        default: ''
+      sha:
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: node scripts/check-release.mjs
+      - run: npm ci
+      - id: format
+        run: npm run format:check
+      - id: lint
+        run: npm run lint
+      - id: types
+        run: npm run typecheck
+      - id: tests
+        run: npm run test:coverage
+      - id: audit
+        run: npm audit --omit=dev --audit-level=high
+      - id: build
+        run: npm run build
+      - name: Package validated bytes
+        if: ${{ inputs.package == true }}
+        run: node scripts/release.mjs pack
+        env:
+          OPERATION: release
+          EXPECTED_VERSION: ${{ inputs.version }}
+          EXPECTED_SHA: ${{ inputs.sha }}
+      - name: Preserve release bundle
+        if: ${{ inputs.package == true }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-bundle
+          path: release-bundle/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Quality summary
+        if: always()
+        env:
+          FORMAT: ${{ steps.format.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          TYPES: ${{ steps.types.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          AUDIT: ${{ steps.audit.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          printf '## Quality\n\nFormat: %s\n\nLint: %s\n\nTypes: %s\n\nTests + coverage: %s\n\nAudit (prod): %s\n\nBuild: %s\n' "$FORMAT" "$LINT" "$TYPES" "$TESTS" "$AUDIT" "$BUILD" >> "$GITHUB_STEP_SUMMARY"

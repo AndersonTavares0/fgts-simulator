@@ -1,107 +1,84 @@
-/**
- * Service: CorrecaoMonetariaService
- * Motor de correção monetária com suporte a TR/IPCA e estimativa conforme ADI 5090 (STF)
- *
- * Regras:
- *  - Rendimento legal: 3% a.a. + TR (Art. 13 da Lei 8.036/1990)
- *  - Piso ADI 5090: Se (TR + 3% a.a.) < IPCA, usa IPCA como piso estimado
- *
- * Base legal: Lei 8.036/1990, Art. 13; ADIs 5090 (STF)
- */
-
 import Decimal from 'decimal.js';
 import { Money } from '../types';
-import type { IndicesCorrecao, ResultadoCorrecao } from '../types';
+import type { IndicesCorrecao, PontoCorrecao, ResultadoCorrecao } from '../types';
 
-/** Constantes legais de rendimento do FGTS */
-const JUROS_ANUAL = new Decimal(3); // 3% ao ano
-const JUROS_MENSAL = new Decimal(1)
-  .plus(JUROS_ANUAL.dividedBy(100))
-  .pow(new Decimal(1).dividedBy(12))
-  .minus(1);
+const JUROS_MENSAL = new Decimal('1.03').pow(new Decimal(1).dividedBy(12)).minus(1);
+const TR_ESTIMADA_MENSAL = new Decimal('0.0008');
+const IPCA_ESTIMADO_MENSAL = new Decimal('0.004');
 
-/** TR estimada conservadora quando não há dados reais */
-const TR_ESTIMADA_MENSAL = new Decimal('0.0008'); // 0.08% ao mês
-
-/** IPCA estimado conservador quando não há dados reais */
-const IPCA_ESTIMADO_MENSAL = new Decimal('0.004'); // ~0.4% ao mês (~4.9% a.a.)
-
+/** Projeções independentes: TR + 3% a.a. ou comparação econômica pelo IPCA, sem piso automático. */
 export class CorrecaoMonetariaService {
-  /**
-   * Calcula o saldo FGTS acumulado com depósitos mensais e correção monetária.
-   * Aplica juros compostos mensais sobre série de pagamentos.
-   *
-   * Fórmula: Cada depósito rende (1 + taxa)^(meses_restantes)
-   * O resultado é a soma de todos os depósitos capitalizados.
-   *
-   * @param depositoMensal Valor do depósito mensal do FGTS
-   * @param meses Número de meses do contrato
-   * @param indices Índices TR/IPCA (usa estimativas se não fornecidos)
-   */
   static calcularSaldoComCorrecao(
     depositoMensal: Money,
     meses: number,
     indices?: IndicesCorrecao,
+    cenario: 'TR' | 'IPCA' = 'TR',
+    periodos?: readonly Decimal[],
+    depositosExtras?: readonly Money[],
   ): ResultadoCorrecao {
-    if (meses <= 0 || !depositoMensal.isPositive()) {
-      return {
-        saldoCorrigido: Money.zero(),
-        rendimentoTotal: Money.zero(),
-        indexadorUtilizado: 'TR',
-        taxaEfetivaAnual: new Decimal(0),
-      };
+    if (!Number.isFinite(meses) || meses < 0 || meses > 602) {
+      throw new Error('Período de correção inválido.');
     }
-
-    const trMensal = indices?.trMensal ?? TR_ESTIMADA_MENSAL;
-    const ipcaMensal = indices?.ipcaMensal ?? IPCA_ESTIMADO_MENSAL;
-
-    // Taxa legal: juros 3% a.a. (mensal) + TR
-    const taxaTRMensal = JUROS_MENSAL.plus(trMensal);
-
-    // Taxa anual efetiva de cada indexador
-    const taxaAnualTR = new Decimal(1).plus(taxaTRMensal).pow(12).minus(1);
-    const taxaAnualIPCA = new Decimal(1).plus(ipcaMensal).pow(12).minus(1);
-
-    // ADI 5090: Se rendimento TR+3% < IPCA, usa IPCA como piso estimado.
-    // O simulador nao substitui indices oficiais publicados; apenas projeta valores.
-    let taxaMensalEfetiva: Decimal;
-    let indexadorUtilizado: 'TR' | 'IPCA';
-
-    if (taxaAnualTR.lessThan(taxaAnualIPCA)) {
-      // IPCA é maior — usa IPCA como piso estimado (ADI 5090)
-      taxaMensalEfetiva = ipcaMensal;
-      indexadorUtilizado = 'IPCA';
-    } else {
-      taxaMensalEfetiva = taxaTRMensal;
-      indexadorUtilizado = 'TR';
+    if (cenario !== 'TR' && cenario !== 'IPCA') throw new Error('Cenário de correção inválido.');
+    const tr = indices?.trMensal ?? TR_ESTIMADA_MENSAL;
+    const ipca = indices?.ipcaMensal ?? IPCA_ESTIMADO_MENSAL;
+    if (
+      !tr.isFinite() ||
+      tr.lessThan(0) ||
+      tr.greaterThan('0.1') ||
+      !ipca.isFinite() ||
+      ipca.lessThanOrEqualTo(-1) ||
+      ipca.greaterThan('0.1')
+    ) {
+      throw new Error(
+        'Índices mensais inválidos: TR entre 0 e 10%; IPCA maior que -100% e até 10%.',
+      );
     }
-
-    // Cálculo de juros compostos sobre série de pagamentos (FV de anuidade)
-    // FV = P × [((1 + i)^n - 1) / i]
-    const depositoDecimal = depositoMensal.decimal;
-    let saldoAcumulado: Decimal;
-
-    if (taxaMensalEfetiva.greaterThan(0)) {
-      const fator = new Decimal(1)
-        .plus(taxaMensalEfetiva)
-        .pow(meses)
-        .minus(1)
-        .dividedBy(taxaMensalEfetiva);
-      saldoAcumulado = depositoDecimal.times(fator);
-    } else {
-      saldoAcumulado = depositoDecimal.times(meses);
+    const taxaTR = JUROS_MENSAL.plus(tr);
+    const taxaSelecionada = cenario === 'TR' ? taxaTR : ipca;
+    const fracoes = periodos ?? [
+      ...Array.from({ length: Math.floor(meses) }, () => new Decimal(1)),
+      ...(meses % 1 ? [new Decimal(meses).minus(Math.floor(meses))] : []),
+    ];
+    if (
+      fracoes.length > 602 ||
+      fracoes.some(
+        (fracao) => !fracao.isFinite() || fracao.lessThanOrEqualTo(0) || fracao.greaterThan(1),
+      )
+    ) {
+      throw new Error('Frações de competência inválidas.');
     }
-
-    const saldoSemCorrecao = depositoDecimal.times(meses);
-    const rendimento = saldoAcumulado.minus(saldoSemCorrecao);
-
-    const taxaEfetiva = new Decimal(1).plus(taxaMensalEfetiva).pow(12).minus(1);
-
+    if (
+      depositosExtras &&
+      (depositosExtras.length !== fracoes.length ||
+        depositosExtras.some((deposito) => deposito.decimal.lessThan(0)))
+    ) {
+      throw new Error('Depósitos extras inválidos.');
+    }
+    let saldoTR = new Decimal(0);
+    let saldoIPCA = new Decimal(0);
+    let depositos = new Decimal(0);
+    const serie: PontoCorrecao[] = [];
+    const depositoBase = depositoMensal.isPositive() ? depositoMensal.decimal : new Decimal(0);
+    for (const [index, fracao] of fracoes.entries()) {
+      const deposito = depositoBase.times(fracao).plus(depositosExtras?.[index]?.decimal ?? 0);
+      saldoTR = saldoTR.times(new Decimal(1).plus(taxaTR).pow(fracao)).plus(deposito);
+      saldoIPCA = saldoIPCA.times(new Decimal(1).plus(ipca).pow(fracao)).plus(deposito);
+      depositos = depositos.plus(deposito);
+      serie.push({
+        depositos: Money.fromCents(depositos),
+        tr: Money.fromCents(saldoTR),
+        ipca: Money.fromCents(saldoIPCA),
+      });
+    }
+    const ultimo = serie.at(-1);
+    const saldoCorrigido = (cenario === 'TR' ? ultimo?.tr : ultimo?.ipca) ?? Money.zero();
     return {
-      saldoCorrigido: Money.fromCents(saldoAcumulado.round()),
-      rendimentoTotal: Money.fromCents(rendimento.round()),
-      indexadorUtilizado,
-      taxaEfetivaAnual: taxaEfetiva,
+      saldoCorrigido,
+      rendimentoTotal: saldoCorrigido.subtract(ultimo?.depositos ?? Money.zero()),
+      indexadorUtilizado: cenario,
+      taxaEfetivaAnual: new Decimal(1).plus(taxaSelecionada).pow(12).minus(1),
+      serie,
     };
   }
 }

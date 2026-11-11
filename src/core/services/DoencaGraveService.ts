@@ -5,9 +5,9 @@
  * Regras:
  *  - Liberação de 100% do saldo da conta vinculada
  *  - Condições qualificadoras: câncer, HIV/AIDS, doença terminal
- *  - Extensível a doenças graves conforme portaria ministerial
+ *  - Doença rara reconhecida pelo Ministério da Saúde (art. 20, XXII)
  *
- * Base legal: Lei 8.036/1990, Art. 20, incisos XI, XIII e XIV
+ * Base legal: Lei 8.036/1990, art. 20, incisos XI, XIII, XIV e XXII
  */
 
 import { Money, TipoDoencaGrave } from '../types';
@@ -27,9 +27,9 @@ const DOENCAS_QUALIFICADAS: Record<TipoDoencaGrave, { descricao: string; fundame
     descricao: 'Doença em estágio terminal',
     fundamento: 'Lei 8.036/90, Art. 20, XIV — doença em estágio terminal',
   },
-  [TipoDoencaGrave.OUTRA_GRAVE]: {
-    descricao: 'Outra doença grave conforme rol ministerial',
-    fundamento: 'Lei 8.036/90, Art. 20 — conforme hipótese legal ou portaria vigente',
+  [TipoDoencaGrave.DOENCA_RARA]: {
+    descricao: 'Doença rara reconhecida pelo Ministério da Saúde',
+    fundamento: 'Lei 8.036/90, Art. 20, XXII — doença rara',
   },
 };
 

@@ -14,7 +14,6 @@ import type {
   ResultadoDoencaGrave,
 } from '../types';
 import { CorrecaoMonetariaService } from './CorrecaoMonetariaService';
-import { INSSService } from './INSSService';
 import { MultaService } from './MultaService';
 import { SaqueAniversarioService } from './SaqueAniversarioService';
 import { DoencaGraveService } from './DoencaGraveService';
@@ -57,38 +56,24 @@ export class FGTSCalculatorService {
     return salarioBruto.percentage(aliquota);
   }
 
-  /**
-   * Calcula 13º salário proporcional (Lei 4.090/62, Art. 146 CLT).
-   *
-   * IMPORTANTE: O parâmetro `mesesTrabalhados` deve ser pré-processado com a
-   * regra dos 15 dias (fração ≥ 15 dias = 1 avo adicional), conforme
-   * ContratoTrabalho.calcularMesesTrabalhados().
-   *
-   * @param salarioBruto Salário bruto
-   * @param mesesTrabalhados Meses trabalhados no ano, já ajustados pela regra dos 15 dias (máximo 12)
-   */
-  static calcularDecimoTerceiro(salarioBruto: Money, mesesTrabalhados: number): Money {
-    if (!salarioBruto.isPositive() || mesesTrabalhados <= 0) return Money.zero();
-    const mesesBase = Math.min(mesesTrabalhados, 12);
-    return salarioBruto.multiply(mesesBase).divide(12);
+  /** Avos pendentes informados; não derivar da duração total do vínculo. */
+  static calcularDecimoTerceiro(salarioBruto: Money, avos: number): Money {
+    this.validarAvos(avos);
+    return salarioBruto.isPositive() ? salarioBruto.multiply(avos).divide(12) : Money.zero();
   }
 
-  /**
-   * Calcula férias proporcionais + 1/3 constitucional (Art. 146 CLT, Art. 7º, XVII CF/88).
-   *
-   * IMPORTANTE: O parâmetro `mesesTrabalhados` deve ser pré-processado com a
-   * regra dos 15 dias (fração ≥ 15 dias = 1 avo adicional), conforme
-   * ContratoTrabalho.calcularMesesTrabalhados().
-   *
-   * @param salarioBruto Salário bruto
-   * @param mesesTrabalhados Meses trabalhados, já ajustados pela regra dos 15 dias (máximo 12)
-   */
-  static calcularFeriasProporcionais(salarioBruto: Money, mesesTrabalhados: number): Money {
-    if (!salarioBruto.isPositive() || mesesTrabalhados <= 0) return Money.zero();
-    const mesesBase = Math.min(mesesTrabalhados, 12);
-    const ferias = salarioBruto.multiply(mesesBase).divide(12);
-    const terco = ferias.divide(3);
-    return ferias.add(terco);
+  /** Férias proporcionais + 1/3, sem férias vencidas ou outras verbas. */
+  static calcularFeriasProporcionais(salarioBruto: Money, avos: number): Money {
+    this.validarAvos(avos);
+    if (!salarioBruto.isPositive()) return Money.zero();
+    const ferias = salarioBruto.multiply(avos).divide(12);
+    return ferias.add(ferias.divide(3));
+  }
+
+  private static validarAvos(avos: number): void {
+    if (!Number.isInteger(avos) || avos < 0 || avos > 12) {
+      throw new Error('Avos pendentes devem ser inteiros entre 0 e 12.');
+    }
   }
 
   /**
@@ -105,12 +90,18 @@ export class FGTSCalculatorService {
       tipoContrato,
       incluirDecimoTerceiro,
       incluirFerias,
+      avosDecimoTerceiro,
+      avosFerias,
+      cenarioCorrecao,
+      periodosDeposito,
+      remuneracoesDecimoTerceiro,
       saqueAniversario,
       doencaGrave,
       indicesCorrecao,
-      calcularINSS,
     } = params;
 
+    this.validarAvos(avosDecimoTerceiro);
+    this.validarAvos(avosFerias);
     // 1. Depósito mensal
     const depositoMensal = this.calcularDepositoMensal(salarioBruto, tipoContrato);
 
@@ -119,6 +110,11 @@ export class FGTSCalculatorService {
       depositoMensal,
       mesesTrabalhados,
       indicesCorrecao,
+      cenarioCorrecao,
+      periodosDeposito,
+      remuneracoesDecimoTerceiro?.map((remuneracao) =>
+        this.calcularDepositoMensal(remuneracao, tipoContrato),
+      ),
     );
 
     const saldoBase = correcao.saldoCorrigido;
@@ -126,28 +122,37 @@ export class FGTSCalculatorService {
     // 3. Multa rescisória
     let multa: import('../types').ResultadoMulta;
     if (tipoContrato === TipoContrato.DOMESTICO) {
-      const valorAcumuladoMulta = salarioBruto
-        .percentage(ALIQUOTA_MULTA_DOMESTICO)
-        .multiply(mesesTrabalhados);
+      // Art. 22, §4º, LC 150/2015: a reserva segue a Lei 8.036/90, inclusive a
+      // correção monetária e os juros do art. 13. Por isso não é soma nominal.
+      const correcaoReserva = CorrecaoMonetariaService.calcularSaldoComCorrecao(
+        salarioBruto.percentage(ALIQUOTA_MULTA_DOMESTICO),
+        mesesTrabalhados,
+        indicesCorrecao,
+        cenarioCorrecao,
+        periodosDeposito,
+        remuneracoesDecimoTerceiro?.map((remuneracao) =>
+          remuneracao.percentage(ALIQUOTA_MULTA_DOMESTICO),
+        ),
+      );
+      const valorAcumuladoMulta = correcaoReserva.saldoCorrigido;
 
-      // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal).
-      // Culpa recíproca usa interpretação analógica do Art. 484 CLT: 50% da indenização.
+      // O eSocial orienta liberar metade da reserva no acordo e na culpa recíproca.
       let valorMultaDomestico: Money;
       let fundamentoDomestico: string;
 
       if (tipoRescisao === TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA) {
         valorMultaDomestico = valorAcumuladoMulta;
         fundamentoDomestico = 'Art. 22, LC 150/2015 — 100% da reserva de indenização';
-      } else if (tipoRescisao === TipoRescisao.ACORDO_COMUM) {
-        valorMultaDomestico = valorAcumuladoMulta.percentage(50);
-        fundamentoDomestico = 'Art. 22 c/c Art. 484-A CLT — 50% da reserva de indenização';
       } else if (tipoRescisao === TipoRescisao.CULPA_RECIPROCA) {
         valorMultaDomestico = valorAcumuladoMulta.percentage(50);
-        fundamentoDomestico =
-          'Art. 22, LC 150/2015 c/c Art. 484, CLT — 50% da reserva de indenização (interpretação analógica)';
+        fundamentoDomestico = 'Art. 22, §2º, LC 150/2015 — metade da reserva';
+      } else if (tipoRescisao === TipoRescisao.ACORDO_COMUM) {
+        valorMultaDomestico = valorAcumuladoMulta.percentage(50);
+        fundamentoDomestico = 'Art. 484-A, CLT — acordo doméstico; metade da reserva';
       } else {
         valorMultaDomestico = Money.zero();
-        fundamentoDomestico = 'Art. 22, §2º, LC 150/2015 — Reserva retorna ao empregador';
+        fundamentoDomestico =
+          'Art. 22, LC 150/2015 — hipótese não prevista; reserva não liberada ao empregado';
       }
 
       multa = {
@@ -161,17 +166,22 @@ export class FGTSCalculatorService {
       multa = MultaService.calcular(baseCalculoMulta, tipoRescisao);
     }
 
-    // 4. Verbas proporcionais
-    const decimoTerceiro = incluirDecimoTerceiro
-      ? this.calcularDecimoTerceiro(salarioBruto, mesesTrabalhados)
-      : Money.zero();
+    // 4. Verbas proporcionais. Justa causa não gera 13º nem férias proporcionais
+    // (Súmula 171/TST; CLT 146, parágrafo único). Doença grave é hipótese de saque,
+    // não de rescisão: as verbas só entram se o vínculo realmente terminou.
+    const verbasRescisorias =
+      tipoRescisao !== TipoRescisao.JUSTA_CAUSA && tipoRescisao !== TipoRescisao.DOENCA_GRAVE;
+    const decimoTerceiro =
+      verbasRescisorias && incluirDecimoTerceiro
+        ? this.calcularDecimoTerceiro(salarioBruto, avosDecimoTerceiro)
+        : Money.zero();
 
-    const ferias = incluirFerias
-      ? this.calcularFeriasProporcionais(salarioBruto, mesesTrabalhados)
-      : Money.zero();
+    const ferias =
+      verbasRescisorias && incluirFerias
+        ? this.calcularFeriasProporcionais(salarioBruto, avosFerias)
+        : Money.zero();
 
-    // 5. INSS + saldo disponível para saque conforme modalidade de rescisão.
-    const resultadoINSS = calcularINSS ? INSSService.calcular(salarioBruto) : null;
+    // 5. Saldo disponível conforme modalidade de rescisão.
     const percentualSaldoDisponivel = PERCENTUAL_SALDO_DISPONIVEL[tipoRescisao];
     let saldoFinal = saldoBase.percentage(percentualSaldoDisponivel);
     let saldoRetido = saldoBase.subtract(saldoFinal);
@@ -204,11 +214,7 @@ export class FGTSCalculatorService {
     // 8. Total
     const total = saldoFinal.add(multaFinal).add(decimoTerceiro).add(ferias);
 
-    // 9. Correção estimada (diferença entre saldo corrigido e depósitos brutos)
-    const depositosBrutos = depositoMensal.multiply(mesesTrabalhados);
-    const correcaoEstimada = saldoBase.subtract(depositosBrutos);
-
-    const salarioLiquido = resultadoINSS?.salarioLiquido ?? salarioBruto;
+    const correcaoEstimada = correcao.rendimentoTotal;
 
     return {
       saldoBase,
@@ -218,7 +224,6 @@ export class FGTSCalculatorService {
       ferias,
       saqueAniversario: resultadoSaqueAniversario,
       doencaGrave: resultadoDoencaGrave,
-      inss: resultadoINSS,
       saldoRetido,
       saldoFinal,
       multaFinal,
@@ -230,7 +235,6 @@ export class FGTSCalculatorService {
         tipoContrato,
         saqueAniversarioAtivo: saqueAniversario,
         correcaoEstimada,
-        salarioLiquido,
       },
     };
   }

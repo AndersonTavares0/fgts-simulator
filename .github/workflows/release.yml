@@ -1,0 +1,151 @@
+name: Release and Pages
+run-name: ${{ inputs.operation }} v${{ inputs.version }} · ${{ inputs.sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'release: new/current dispatch SHA; resume: preserved bytes; rollback: explicit downgrade'
+        type: choice
+        options: [release, resume, rollback]
+        required: true
+      version:
+        description: 'Expected stable package version, without v (e.g. 2.1.0)'
+        type: string
+        required: true
+      sha:
+        description: 'Expected full source commit SHA (40 lowercase hex characters)'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  queue: max
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  OPERATION: ${{ inputs.operation }}
+  EXPECTED_VERSION: ${{ inputs.version }}
+  EXPECTED_SHA: ${{ inputs.sha }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      build: ${{ steps.plan.outputs.build }}
+    steps:
+      - name: Require main dispatch before checkout
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: test "$EVENT" = workflow_dispatch && test "$REF" = refs/heads/main
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - id: plan
+        run: node scripts/release.mjs plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Preserve trusted current-main release tools
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-tools
+          path: scripts/release.mjs
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve recovered bundle without rebuilding
+        if: steps.plan.outputs.build == 'false'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-bundle
+          path: release-bundle/
+          if-no-files-found: error
+          retention-days: 7
+
+  validate:
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/quality.yml
+    with:
+      package: true
+      version: ${{ inputs.version }}
+      sha: ${{ inputs.sha }}
+
+  publish:
+    needs: [plan, validate]
+    if: ${{ !cancelled() && inputs.operation != 'rollback' && needs.plan.result == 'success' && (needs.validate.result == 'success' || (needs.validate.result == 'skipped' && needs.plan.outputs.build == 'false')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-tools
+          path: scripts
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-bundle
+          path: release-bundle
+      - name: Publish complete immutable release, or validate rollback
+        run: node scripts/release.mjs publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  deploy:
+    needs: [plan, publish]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.publish.result == 'success' || (inputs.operation == 'rollback' && needs.publish.result == 'skipped')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      deployments: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-tools
+          path: scripts
+      - name: Refuse accidental downgrade
+        run: node scripts/release.mjs guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Fetch and verify published bytes (never run old code)
+        id: package
+        run: node scripts/release.mjs fetch
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: deploy-dist
+          retention-days: 7
+      - name: Deploy verified package
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+      - name: Confirm public version separately from release publication
+        run: node scripts/release.mjs confirm
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -1,78 +1,23 @@
-# Agent Guidelines for Projeto-FGTS
+# Agent guidelines
 
-## Setup
-- Node.js ≥ 18, npm ≥ 9 required
-- Install: `npm install`
+## Working conventions
 
-## Development Commands
-- Start dev server (HMR): `npm run dev` — serves from `src/` (Vite root: `src/index.html`)
-- Build for production: `npm run build` (**always runs `tsc --noEmit` first**)
-- Preview production build: `npm run preview`
-- Run tests: `npm test` (Vitest)
-- Run a single test file: `npx vitest run tests/unit/calculator.test.ts`
-- Watch tests: `npm run test:watch`
-- Type checking only: `npm run typecheck` (`tsc --noEmit`)
-- Lint: `npm run lint` (ESLint)
-- Lint & fix: `npm run lint:fix`
-- Format: `npm run format` (Prettier)
-- Check format: `npm run format:check`
-- Coverage: `npm run test:coverage` (80% threshold for lines/branches/functions/statements)
-- **All CI commands in order**: `npm run typecheck && npm run test && npm run build`
+Use Node 24 LTS/npm 11 and scripts in package.json. Production Vite base is /fgts-simulator/. index.html and public/ are at the repository root. Configuration options for Prettier live in package.json. Preserve TypeScript strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes and type-only imports.
 
-## Architecture
-- Domain-Driven Design (DDD) with layers:
-  - `src/core/` — domain (entities, services, types)
-  - `src/adapters/` – UI/formatting/theme adapters
-  - `src/main.ts` – entry point (bootstrapper)
-  - `src/index.html` – UI dashboard (Vite root)
-- Key services:
-  - `FGTSCalculatorService` – orchestrator; also has domestic worker logic (LC 150/2015, 3.2% monthly reserve)
-  - `CorrecaoMonetariaService` – TR/IPCA + ADI 5090 (compares annual rates: `(1+TR+3%)^12-1` vs `(1+IPCA)^12-1`)
-  - `MultaService` – rescisão multas (40% dispensa sem justa causa; 20% acordo comum/culpa recíproca; 0% demais)
-  - `SaqueAniversarioService` – 7 faixas oficiais Caixa
-  - `DoencaGraveService` – 100% saque para doenças graves (câncer, HIV/AIDS, terminal)
-- Value Object: `Money` (uses Decimal.js for financial precision)
-  - **Critical**: All monetary operations use cents internally to avoid IEEE 754 errors
-  - Constructors: `Money.fromCents(12345)` and `Money.fromReais(123.45)` — prefer `fromReais` for human inputs
-  - Global Decimal.js config: precision 20, rounding ROUND_HALF_EVEN (Banker's)
-  - Immutable operations: `.add()`, `.subtract()`, `.multiply()`, `.divide()`, `.percentage()`, `.isPositive()`, `.toBRL()`
-- `FormatAdapter` has critical helpers: `parseMonetaryInput(string → Money)`, `parseDate(YYYY-MM-DD → Date)`, `getRescisaoLabel`
-- Domestic worker (TipoContrato.DOMESTICO): FGTS deposit 8%, separate 3.2% monthly indenização reserve (LC 150/2015, Art. 22). Multa calculation bypasses MultaService entirely — handled directly in `FGTSCalculatorService.calcularRescisao`
-- **15-day CLT rule**: `ContratoTrabalho.calcularMesesTrabalhados` applies it. `calcularDecimoTerceiro` and `calcularFeriasProporcionais` trust the caller to pre-process months with this rule — if passing months directly, apply `dias >= 15 → +1 avo` yourself
-- Entry point (`src/main.ts`): initializes `ThemeAdapter` and `UIAdapter` on DOMContentLoaded
+## Financial changes
 
-## Testing
-- Test suite: Vitest (77 unit tests) in `tests/unit/`
-- Test file pattern: `tests/**/*.test.ts`
-- Coverage provider: v8 with 80% threshold on lines/branches/functions/statements
-- UI-dependent tests require `jsdom` environment (configured in vite.config.ts)
+Read docs/legal/assumptions.md before changing calculation, deposit calendars, withdrawal availability or financial labels. Money/Decimal use integer cents internally. Perform financial operations in the domain, not DOM/chart/PDF adapters. A chart is account balance, not the sum of termination payments. The IPCA comparison is not an implementation of the annual ADI5090 compensation or a retroactive judicial credit.
 
-## Code Quality
-- ESLint + Prettier configured via `lint-staged` (runs on pre-commit via Husky)
-- Pre-commit hook: `npx lint-staged` — runs `eslint --fix` then `prettier --write` on `*.ts`; also prettier on `*.html`, `*.css`
-- TypeScript strict mode with extras:
-  - `noUncheckedIndexedAccess` — accessing array elements returns `T | undefined`
-  - `exactOptionalPropertyTypes` — `prop?: T` means `T | undefined`, not `T | undefined | absent`
-  - `verbatimModuleSyntax: true` — must use `import type { ... }` for type-only imports
-  - `noPropertyAccessFromIndexSignature` — must use bracket notation for index signatures
-- Prettier: `semi: true`, `singleQuote: true`, `trailingComma: "all"`, `printWidth: 100`
-- ESLint: extends `typescript-eslint/recommended`; `no-unused-vars` error (ignore `_` prefix); `no-explicit-any` warn
+13th and vacation outstanding avos are separate explicit inputs, never total contract duration. Any change to financial rules/calendar/rounding requires calculationVersion and regression cases. Keep the domestic 3.2% indemnity separate from standard termination fines and corrected like the FGTS balance. Domestic mutual agreement releases half the reserve. Just cause and grave-illness withdrawal carry no proportional 13th/vacation. Preserve withdrawal exceptions and retained balance.
 
-## Important Constraints
-- **Only runtime dependency**: `decimal.js` — all other packages are dev dependencies
-- **Path alias**: `@/*` maps to `./src/*` (configured in tsconfig)
-- **No backend** — pure frontend static app, no server-side logic
-- Build output goes to `dist/` (outside Vite root since `outDir: '../dist'`)
-- Lucide icons loaded from unpkg at `@0.460.0` (pinned version)
-- Google Fonts: `Outfit` (UI) + `DM Mono` (monospace) with `display=swap`
+## Shared results and privacy
 
-## CI/CD
-- GitHub Actions in `.github/workflows/static.yml`
-- Builds and deploys to GitHub Pages on push to `main`
-- Pipeline: `npm ci` → `npm run typecheck` → `npm run test` (continue-on-error) → `npm run build` → deploy
+Read docs/architecture.md when changing the application snapshot, persistence or reporting. Screen, chart, history and PDF consume the same validated snapshot; saved records retain their original version and values. Validate database records before use. Health calculation and persistence require separate user choices. Never serialize consent as permission to bypass a new user action.
 
-## Repository State
-- If `graphify-out/` exists, a knowledge graph of this codebase has been built
-- `graphify-out/graph.json` — raw graph data (211 nodes, 303 edges, 21 communities)
-- `graphify-out/graph.html` — interactive knowledge graph (open in browser)
-- `graphify-out/GRAPH_REPORT.md` — full audit report with god nodes, surprising connections, and suggested questions
+Read docs/legal/privacy.md before changing storage. Explicit saves only; successful transaction commit precedes confirmation. Quota/blocked upgrades are recoverable; do not reset the database or silently delete records. Pages paths share an origin. Clear only this application's storage.
+
+## Offline and delivery
+
+Read docs/development.md for UI/offline acceptance and docs/releases.md before modifying GitHub governance or publication. PWA updates must not force a reload of pending forms or assume one tab's permission covers others. Keep fonts and required chunks local/precacheable. Rollback restores preserved release bytes, not retagging/rebuilding, and must preserve IndexedDB compatibility.
+
+Use behavior tests at public interfaces. For UI changes verify actual rendered desktop/mobile and reachable error/stale states. Report only checks exercised. docs/archive/ is historical evidence, not current product specification. No backend, accounts or server-side financial processing.
