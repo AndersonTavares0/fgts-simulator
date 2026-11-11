@@ -6,6 +6,7 @@
  * Este é o ponto de entrada principal para todo cálculo financeiro.
  */
 
+import Decimal from 'decimal.js';
 import { Money, TipoContrato, TipoRescisao } from '../types';
 import type {
   ParametrosCalculo,
@@ -57,38 +58,24 @@ export class FGTSCalculatorService {
     return salarioBruto.percentage(aliquota);
   }
 
-  /**
-   * Calcula 13º salário proporcional (Lei 4.090/62, Art. 146 CLT).
-   *
-   * IMPORTANTE: O parâmetro `mesesTrabalhados` deve ser pré-processado com a
-   * regra dos 15 dias (fração ≥ 15 dias = 1 avo adicional), conforme
-   * ContratoTrabalho.calcularMesesTrabalhados().
-   *
-   * @param salarioBruto Salário bruto
-   * @param mesesTrabalhados Meses trabalhados no ano, já ajustados pela regra dos 15 dias (máximo 12)
-   */
-  static calcularDecimoTerceiro(salarioBruto: Money, mesesTrabalhados: number): Money {
-    if (!salarioBruto.isPositive() || mesesTrabalhados <= 0) return Money.zero();
-    const mesesBase = Math.min(mesesTrabalhados, 12);
-    return salarioBruto.multiply(mesesBase).divide(12);
+  /** Avos pendentes informados; não derivar da duração total do vínculo. */
+  static calcularDecimoTerceiro(salarioBruto: Money, avos: number): Money {
+    this.validarAvos(avos);
+    return salarioBruto.isPositive() ? salarioBruto.multiply(avos).divide(12) : Money.zero();
   }
 
-  /**
-   * Calcula férias proporcionais + 1/3 constitucional (Art. 146 CLT, Art. 7º, XVII CF/88).
-   *
-   * IMPORTANTE: O parâmetro `mesesTrabalhados` deve ser pré-processado com a
-   * regra dos 15 dias (fração ≥ 15 dias = 1 avo adicional), conforme
-   * ContratoTrabalho.calcularMesesTrabalhados().
-   *
-   * @param salarioBruto Salário bruto
-   * @param mesesTrabalhados Meses trabalhados, já ajustados pela regra dos 15 dias (máximo 12)
-   */
-  static calcularFeriasProporcionais(salarioBruto: Money, mesesTrabalhados: number): Money {
-    if (!salarioBruto.isPositive() || mesesTrabalhados <= 0) return Money.zero();
-    const mesesBase = Math.min(mesesTrabalhados, 12);
-    const ferias = salarioBruto.multiply(mesesBase).divide(12);
-    const terco = ferias.divide(3);
-    return ferias.add(terco);
+  /** Férias proporcionais + 1/3, sem férias vencidas ou outras verbas. */
+  static calcularFeriasProporcionais(salarioBruto: Money, avos: number): Money {
+    this.validarAvos(avos);
+    if (!salarioBruto.isPositive()) return Money.zero();
+    const ferias = salarioBruto.multiply(avos).divide(12);
+    return ferias.add(ferias.divide(3));
+  }
+
+  private static validarAvos(avos: number): void {
+    if (!Number.isInteger(avos) || avos < 0 || avos > 12) {
+      throw new Error('Avos pendentes devem ser inteiros entre 0 e 12.');
+    }
   }
 
   /**
@@ -105,12 +92,18 @@ export class FGTSCalculatorService {
       tipoContrato,
       incluirDecimoTerceiro,
       incluirFerias,
+      avosDecimoTerceiro,
+      avosFerias,
+      cenarioCorrecao,
+      periodosDeposito,
       saqueAniversario,
       doencaGrave,
       indicesCorrecao,
       calcularINSS,
     } = params;
 
+    this.validarAvos(avosDecimoTerceiro);
+    this.validarAvos(avosFerias);
     // 1. Depósito mensal
     const depositoMensal = this.calcularDepositoMensal(salarioBruto, tipoContrato);
 
@@ -119,6 +112,8 @@ export class FGTSCalculatorService {
       depositoMensal,
       mesesTrabalhados,
       indicesCorrecao,
+      cenarioCorrecao,
+      periodosDeposito,
     );
 
     const saldoBase = correcao.saldoCorrigido;
@@ -128,7 +123,10 @@ export class FGTSCalculatorService {
     if (tipoContrato === TipoContrato.DOMESTICO) {
       const valorAcumuladoMulta = salarioBruto
         .percentage(ALIQUOTA_MULTA_DOMESTICO)
-        .multiply(mesesTrabalhados);
+        .multiply(
+          periodosDeposito?.reduce((sum, fraction) => sum.plus(fraction), new Decimal(0)) ??
+            mesesTrabalhados,
+        );
 
       // Art. 22, LC 150/2015: reserva de indenização (3,2% mensal).
       // Culpa recíproca usa interpretação analógica do Art. 484 CLT: 50% da indenização.
@@ -163,11 +161,11 @@ export class FGTSCalculatorService {
 
     // 4. Verbas proporcionais
     const decimoTerceiro = incluirDecimoTerceiro
-      ? this.calcularDecimoTerceiro(salarioBruto, mesesTrabalhados)
+      ? this.calcularDecimoTerceiro(salarioBruto, avosDecimoTerceiro)
       : Money.zero();
 
     const ferias = incluirFerias
-      ? this.calcularFeriasProporcionais(salarioBruto, mesesTrabalhados)
+      ? this.calcularFeriasProporcionais(salarioBruto, avosFerias)
       : Money.zero();
 
     // 5. INSS + saldo disponível para saque conforme modalidade de rescisão.
@@ -204,9 +202,7 @@ export class FGTSCalculatorService {
     // 8. Total
     const total = saldoFinal.add(multaFinal).add(decimoTerceiro).add(ferias);
 
-    // 9. Correção estimada (diferença entre saldo corrigido e depósitos brutos)
-    const depositosBrutos = depositoMensal.multiply(mesesTrabalhados);
-    const correcaoEstimada = saldoBase.subtract(depositosBrutos);
+    const correcaoEstimada = correcao.rendimentoTotal;
 
     const salarioLiquido = resultadoINSS?.salarioLiquido ?? salarioBruto;
 

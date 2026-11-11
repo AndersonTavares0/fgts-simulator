@@ -1,302 +1,79 @@
-# Projeto FGTS: Simulador de Rescisão e FGTS
+# Simulador FGTS
 
-[![GitHub AndersonTavares0](https://img.shields.io/badge/GitHub-AndersonTavares0-181717?style=flat-square&logo=github)](https://github.com/AndersonTavares0)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![Software Version](https://img.shields.io/badge/version-2.0.3-green?style=flat-square)](#)
-![TypeScript](https://img.shields.io/badge/TypeScript-%233178C6.svg?style=flat-square&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-%23646CFF.svg?style=flat-square&logo=vite&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-%236E9F18.svg?style=flat-square&logo=vitest&logoColor=white)
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=flat-square&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=flat-square&logo=css3&logoColor=white)
+Simule o saldo do FGTS e parcelas trabalhistas, compare cenários salvos no navegador e baixe um relatório para discutir com advogado ou sindicato.
 
-## Sumário
+**[Abrir o simulador](https://andersontavares0.github.io/fgts-simulator/)** · [Premissas financeiras](docs/legal/assumptions.md) · [Privacidade](docs/legal/privacy.md)
 
-- [Contexto Acadêmico](#contexto-acadêmico)
-- [Descrição do Projeto](#descrição-do-projeto)
-- [Arquitetura TypeScript (DDD)](#arquitetura-typescript-ddd)
-- [Motor de Regras Avançado](#motor-de-regras-avançado-clt--stf)
-- [Referência de Fórmulas](#referência-de-fórmulas)
-- [Testes Automatizados](#testes-automatizados)
-- [Instalação e Uso](#instalação-e-uso)
-- [Estrutura do Repositório](#estrutura-do-repositório)
-- [Proteções contra Inputs Inválidos](#proteções-contra-inputs-inválidos)
-- [Privacidade e LGPD](#privacidade-e-lgpd)
-- [Roadmap](#roadmap-futuras-melhorias)
-- [Aviso Legal](#aviso-legal)
+Os resultados são estimativas. O aplicativo não consulta seu extrato CAIXA, não apura uma rescisão completa e não garante valores devidos ou direito de saque. A comparação com IPCA não calcula crédito judicial retroativo.
 
-## Contexto Acadêmico
+## Funcionalidades
 
-Este projeto foi desenvolvido como atividade de **Extensão Universitária** para o curso de **Engenharia de Software** do Centro Universitário Internacional **UNINTER**. O objetivo central é utilizar o desenvolvimento de software como instrumento de promoção da justiça social, focando na literacia financeira e na inclusão digital de trabalhadores regidos pela CLT.
-> ⚠️ Este projeto foi desenvolvido como atividade acadêmica de extensão universitária. O uso indevido para submissão acadêmica por terceiros configura plágio e viola princípios de integridade acadêmica.
+- Contratos CLT, aprendizagem e doméstico; modalidades de saída e saque-aniversário.
+- Avos ainda não pagos de 13º e férias informados separadamente da duração do contrato.
+- Evolução mensal do saldo: depósitos, cenário TR + 3% a.a. e comparação pelo IPCA, com tabela acessível.
+- Histórico opcional em IndexedDB: reabrir, comparar duas simulações e excluir registros.
+- Relatório **PDF** monocromático (A4) gerado no próprio app: total, grupos FGTS/rescisão, dados contratuais, memória de cálculo, premissas, avisos e série mensal. Funciona offline.
+- PWA instalável nos navegadores compatíveis, com cálculo, gráfico, histórico e PDF offline após a preparação inicial.
+- Interface responsiva, temas claro/escuro e fontes locais.
 
-## Descrição do Projeto
+## Uso e armazenamento
 
-O sistema consiste em uma ferramenta de simulação trabalhista que permite ao usuário calcular estimativas de verbas rescisórias e saldo de FGTS de forma autônoma e ágil. A v2.0 implementa:
+Preencha o contrato e escolha **Calcular**, ou clique em **Usar exemplo** para preencher e calcular um caso fictício sem salvar nada. Parcelas e taxas ficam em seções expansíveis. No celular, alterne entre **Dados** e **Resultado**; **Histórico** e **Ajuda** são áreas separadas, não seções de uma página longa. Alterar as entradas invalida as ações do resultado anterior até novo cálculo. **Salvar simulação** é uma decisão explícita; não registramos cada edição.
 
-### Funcionalidades (v2.1)
+O histórico fica neste navegador/dispositivo, sem conta ou sincronização. Limpeza de dados, sessão privada ou políticas do navegador podem removê-lo. Não é backup. A modalidade de doença grave exige consentimento de cálculo e uma autorização separada para salvar. Excluir o histórico não apaga arquivos `.tex`/PDFs já baixados.
 
-* **TypeScript com Domain-Driven Design** — Arquitetura de camadas com Entities, Services e Adapters
-* **Precisão financeira com Decimal.js** — Eliminação completa de erros IEEE 754 via Value Object `Money`
-* **Correção Monetária TR/IPCA** — Motor de indexação com conformidade ADI 5090 (STF)
-* **Cálculo de INSS** — Tabela progressiva 2026 com 4 faixas e teto
-* **8 Modalidades de Rescisão** — Enum exaustivo com multas diferenciadas (40%, 20%, 0%)
-* **Saque por Doença Grave** — Liberação integral de 100% do saldo (Lei 8.036/90)
-* **Saque-Aniversário** — Tabela oficial de 7 faixas com parcela fixa
-* **77 Testes Automatizados** — Suíte Vitest cobrindo cálculos financeiros, INSS e validações legais
-* **Acessibilidade WCAG 2.1 AA** — ARIA labels, live regions, navegação por teclado
-* **Conformidade LGPD** — Política de privacidade, consentimento para dados sensíveis, banner de transparência
+Para usar offline, abra o aplicativo com internet e aguarde a indicação de disponibilidade. Instalação depende do navegador; no iOS, use Compartilhar → Adicionar à Tela de Início. Não há primeira instalação sem conexão. Quando houver atualização, conclua/salve o trabalho e feche todas as abas do simulador antes de reabrir. Não forçamos recarga dos formulários.
 
----
+## Desenvolvimento
 
-## Arquitetura TypeScript (DDD)
+Use **Node.js 24 LTS e npm 11**. O limite técnico declarado é Node 22.12 ou posterior; CI usa Node 24.
 
-O projeto segue **Domain-Driven Design** com separação em 3 camadas:
-
-```
-src/
-├── core/                         # 🏛️ DOMAIN LAYER (Regras de negócio puras)
-│   ├── types.ts                  # Enums, Interfaces, Value Object Money
-│   ├── entities/
-│   │   └── ContratoTrabalho.ts   # Entity: validação e cálculo de meses CLT
-│   └── services/
-│       ├── FGTSCalculatorService.ts       # Orquestrador central
-│       ├── CorrecaoMonetariaService.ts    # Motor TR/IPCA + ADI 5090
-│       ├── MultaService.ts               # Multas por tipo de rescisão
-│       ├── SaqueAniversarioService.ts     # Faixas oficiais Caixa
-│       └── DoencaGraveService.ts          # Saque integral 100%
-├── adapters/                     # 🔌 ADAPTER LAYER (UI / Formatação)
-│   ├── UIAdapter.ts              # Manipulação do DOM
-│   ├── FormatAdapter.ts          # Formatação BRL, parsing de datas
-│   └── ThemeAdapter.ts           # Tema claro/escuro com persistência
-├── main.ts                       # Entry point (bootstrapper)
-├── index.html                    # UI Dashboard
-└── css/                          # Estilos
+```sh
+npm ci
+npm run dev
 ```
 
-### Hierarquia de Classes
+Abra a URL exibida pelo Vite, incluindo `/fgts-simulator/`. Configurações de publicação usam esse subdiretório do Pages.
 
-| Camada | Classe | Responsabilidade |
-|--------|--------|------------------|
-| **Value Object** | `Money` | Encapsula valores monetários com `Decimal.js` — operações imutáveis |
-| **Entity** | `ContratoTrabalho` | Valida dados do contrato, calcula meses CLT |
-| **Service** | `FGTSCalculatorService` | Orquestra todos os serviços → `ResultadoRescisao` |
-| **Service** | `CorrecaoMonetariaService` | Juros compostos + TR/IPCA com piso ADI 5090 |
-| **Service** | `MultaService` | `Record<TipoRescisao, {percentual, fundamento}>` exaustivo |
-| **Service** | `SaqueAniversarioService` | 7 faixas oficiais + impacto na rescisão |
-| **Service** | `DoencaGraveService` | 100% de liberação para doenças qualificadas |
-| **Adapter** | `UIAdapter` | DOM binding, renderização de resultados |
-| **Adapter** | `FormatAdapter` | `Money → BRL string`, parsing de inputs |
-| **Adapter** | `ThemeAdapter` | localStorage + prefers-color-scheme |
-
-### Enum Exaustivo: `TipoRescisao`
-
-```typescript
-enum TipoRescisao {
-  DISPENSA_SEM_JUSTA_CAUSA  // Art. 477 CLT → Multa 40%
-  DEMISSAO_VOLUNTARIA       // Pedido do empregado → Multa 0%
-  JUSTA_CAUSA               // Art. 482 CLT → Multa 0%
-  ACORDO_COMUM              // Art. 484-A CLT (Reforma 2017) → Multa 20%
-  DOENCA_GRAVE              // Lei 8.036/90, Art. 20 XI/XIII/XIV → Multa 0% (saque integral)
-  APOSENTADORIA             // Lei 8.036/90, Art. 20 III → Multa 0% (saque integral)
-  FALECIMENTO               // Lei 8.036/90, Art. 20 IV → Multa 0% (saque por dependentes)
-  CULPA_RECIPROCA           // Art. 484 CLT → Multa 20%
-}
+```sh
+npm run typecheck
+npm test
+npm run lint
+npm run build
+npm run preview
 ```
 
----
+`npm run test:coverage` executa a cobertura; `npm run format` aplica Prettier. As opções do formatador ficam em `package.json`, sem `.prettierrc` separado.
 
-## Motor de Regras Avançado (CLT & STF)
+## Arquitetura
 
-### Correção Monetária: TR + 3% a.a. com piso IPCA
-
-O saldo do FGTS é corrigido mensalmente pelo motor `CorrecaoMonetariaService`:
-
-1. **Taxa legal**: Juros de 3% ao ano (Art. 13, Lei 8.036/1990) + TR mensal
-2. **Conversão mensal**: `taxaMensal = (1 + 0.03)^(1/12) - 1 + TR`
-3. **Piso estimado ADI 5090**: Se `(TR + 3%) anual < IPCA anual`, usa-se IPCA como piso de estimativa
-4. **Série de pagamentos**: `FV = Depósito × [((1 + i)^n - 1) / i]`
-
-### Saque por Doença Grave
-
-Conforme Lei 8.036/90, Art. 20 — liberação de **100% do saldo** para:
-- Neoplasia maligna (Câncer) — inciso XI
-- HIV/AIDS — inciso XIII
-- Doença em estágio terminal — inciso XIV
-- Doenças graves conforme portaria ministerial vigente
-
-### Saque-Aniversário (Tabela Oficial Caixa)
-
-| Faixa de Saldo | Alíquota | Parcela Adicional |
-|:---|:---:|:---|
-| Até R$ 500,00 | 50% | R$ 0,00 |
-| R$ 500,01 – R$ 1.000,00 | 40% | R$ 50,00 |
-| R$ 1.000,01 – R$ 5.000,00 | 30% | R$ 150,00 |
-| R$ 5.000,01 – R$ 10.000,00 | 20% | R$ 650,00 |
-| R$ 10.000,01 – R$ 15.000,00 | 15% | R$ 1.150,00 |
-| R$ 15.000,01 – R$ 20.000,00 | 10% | R$ 1.900,00 |
-| Acima de R$ 20.000,00 | 5% | R$ 2.900,00 |
-
-Na rescisão, o optante normalmente **não saca o saldo** (fica retido), mas **recebe a multa rescisória integralmente**. Hipóteses de saque integral, como aposentadoria, falecimento e doença grave, preservam a liberação do saldo.
-
----
-
-## Referência de Fórmulas
-
-| Cálculo | Fórmula | Base Legal |
-|---------|---------|------------|
-| **Depósito Mensal** | `Salário × 8%` (CLT) ou `× 2%` (Aprendiz) | Art. 15, Lei 8.036/1990 |
-| **Saldo com Correção** | `FV = P × [((1+i)^n - 1) / i]` | Art. 13, Lei 8.036/1990 |
-| **Taxa Mensal (TR)** | `(1 + 0.03)^(1/12) - 1 + TR` | Art. 13 + BCB |
-| **Piso IPCA (ADI 5090)** | `max(taxaTR, taxaIPCA)` aplicado mensalmente | STF, ADIs 5090 |
-| **Multa 40%** | `Saldo × 40%` | Art. 18, §1º, Lei 8.036/1990 |
-| **Multa 20% (Acordo)** | `Saldo × 20%` | Art. 484-A, §1º, CLT |
-| **13º Proporcional** | `Salário × (meses / 12)` — máx. 12 avos | Art. 1º, Lei 4.090/1962 |
-| **Férias + 1/3** | `Salário × (meses / 12) × (4/3)` | Art. 7º, XVII, CF/88 |
-| **Saque-Aniversário** | `Saldo × alíquota + parcela fixa` | Lei 13.932/2019 |
-| **Doença Grave** | `100% do saldo` | Art. 20, XI/XIII/XIV, Lei 8.036/90 |
-
----
-
-## Testes Automatizados
-
-O projeto inclui **77 testes automatizados** executados com **Vitest**:
-
-```bash
-npm test              # Executa todos os testes
-npm run test:watch    # Modo watch (desenvolvimento)
-npm run test:coverage # Relatório de cobertura (threshold 80%)
-```
-
-### Cobertura de Cenários
-
-| Arquivo | Testes | Escopo |
-|---------|--------|--------|
-| `calculator.test.ts` | 58 | Money VO, depósito, juros, multas (7 tipos), doença grave, ADI 5090, saque-aniversário, integração completa, validação, verbas proporcionais, INSS tabela progressiva 2026, FormatAdapter |
-| `legal-boundary.test.ts` | 19 | Doença grave (5), Acordo 484-A e saldo retido (4), integridade de multas (3), saque-aniversário (2), tipos de contrato e doméstico (5) |
-
----
-
-## Instalação e Uso
-
-### Pré-requisitos
-
-- Node.js ≥ 18
-- npm ≥ 9
-
-### Setup
-
-```bash
-git clone https://github.com/AndersonTavares0/fgts-simulator.git
-cd fgts-simulator
-npm install
-```
-
-### Scripts Disponíveis
-
-```bash
-npm run dev             # Inicia servidor Vite com HMR
-npm run build           # Type-check + build para produção (dist/)
-npm run preview         # Preview do build de produção
-npm test                # Executa testes (Vitest)
-npm run test:watch      # Testes em modo watch
-npm run test:coverage   # Relatório de cobertura (80% threshold)
-npm run typecheck       # Verificação de tipos (tsc --noEmit)
-npm run lint            # ESLint
-npm run lint:fix        # ESLint com correção automática
-npm run format          # Prettier
-npm run format:check    # Verificação de formatação
-```
-
----
-
-## Estrutura do Repositório
+**React 19 + TypeScript + Vite**, **Tailwind CSS v4**, **shadcn/ui + Radix** e **Heroicons**, sem backend. `decimal.js`/`Money` preservam precisão em centavos; `idb` gerencia IndexedDB, jsPDF gera o relatório e `vite-plugin-pwa` prepara os arquivos offline. O PDF é carregado sob demanda.
 
 ```text
-fgts-simulator/
-├── .github/workflows/       # CI/CD — GitHub Actions
-├── src/                     # Código-fonte
-│   ├── index.html           # UI Dashboard
-│   ├── main.ts              # Entry point TypeScript
-│   ├── core/                # Domain Layer (DDD)
-│   │   ├── types.ts         # Enums, Money, Interfaces
-│   │   ├── entities/        # Entities
-│   │   └── services/        # Services (cálculos puros)
-│   ├── adapters/            # Adapter Layer (UI/Formato)
-│   ├── public/              # Assets estáticos
-│   │   └── fonts/           # Fontes self-hosted (6 woff2)
-│   ├── css/                 # Estilos (CSS Variables)
-├── tests/unit/              # Testes automatizados
-│   ├── calculator.test.ts   # Suíte principal (58 testes)
-│   └── legal-boundary.test.ts # Limites legais (19 testes)
-├── docs/                    # Documentação técnica
-├── tsconfig.json            # Configuração TypeScript (strict)
-├── vite.config.ts           # Configuração Vite + Vitest
-├── package.json             # Scripts e dependências
-└── README.md                # Este documento
+src/core/          regras financeiras e Money
+src/application/   simulação validada e snapshot compartilhado
+src/ui/            componentes React: formulário, resultado, gráfico, histórico e ajuda
+src/adapters/      formatação, histórico e PDF
+src/styles/        tokens e camadas Tailwind
+src/pwa/           hook de instalação e atualização
+public/            fontes e ícones locais
+index.html         entrada do Vite (somente #root)
+tests/             contratos financeiros e persistência
+.github/           CI, releases e regras declarativas
 ```
 
----
+Tela, gráfico, PDF e histórico consomem a mesma simulação. Um registro preserva suas premissas e versão de cálculo; atualizar o aplicativo não recalcula o passado. Consulte [arquitetura](docs/architecture.md) e [desenvolvimento](docs/development.md).
 
-## Proteções contra Inputs Inválidos
+## Contribuição e releases
 
-O sistema implementa múltiplas camadas de validação:
+Use branches curtas e PR para `main`. Tipos, testes, lint e build devem passar; o deploy não pode ignorar falhas. O fluxo individual mantém zero aprovações obrigatórias, sem dispensar CI. Configurar o check obrigatório remoto exige que o novo workflow já esteja publicado e tenha executado: veja [governança e releases](docs/releases.md).
 
-| Proteção | Implementação | Camada |
-|----------|---------------|--------|
-| **Salário zero ou negativo** | `Money.isPositive()` retorna false → cálculo retorna zero | Service |
-| **Salário acima de R$ 1M** | `ContratoTrabalho.validar()` rejeita com mensagem de erro | Entity |
-| **Datas futuras inválidas** | `FormatAdapter.parseDate()` valida componentes da data | Adapter |
-| **Período invertido** | `dataTermino < dataInicio` → validação rejeita | Entity |
-| **Período > 50 anos** | Limite de 18.250 dias → proteção contra overflow | Entity |
-| **Input não-numérico** | `FormatAdapter.parseMonetaryInput()` sanitiza e valida | Adapter |
-| **IEEE 754 float errors** | `Money(Decimal.js)` — todas as operações em centavos | Value Object |
-| **Tipo de rescisão inválido** | `Record<TipoRescisao, ...>` — TypeScript garante exaustividade | Type System |
-| **Arredondamento** | `Decimal.ROUND_HALF_EVEN` (Banker's rounding) — norma contábil | Config |
-| **XSS / Injection** | Input sanitizado: `replace(/[R$\s]/g, '')` antes de parse | Adapter |
+Publicação é deliberada, separada de cada push na `main`. O fluxo guarda o pacote compilado, SHA e checksum antes de implantar; rollback usa os mesmos arquivos, não uma recompilação presumidamente idêntica. Detalhes operacionais, permissões e recuperação estão em [releases](docs/releases.md).
 
----
+Reporte problemas sem anexar salários, datas pessoais, extratos ou PDFs sensíveis em issues públicas. Para vulnerabilidades, veja [SECURITY.md](SECURITY.md).
 
-## Privacidade e LGPD
+## Contexto acadêmico e licença
 
-Este simulador está em conformidade com a **Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018)**:
+Projeto de extensão universitária de Engenharia de Software da UNINTER, voltado à educação financeira trabalhista. Preserve atribuição acadêmica; não apresente o trabalho de terceiros como autoria própria.
 
-- **Processamento 100% local** — Nenhum dado é enviado a servidores externos
-- **Consentimento explícito** — Dados sensíveis de saúde requerem consentimento específico
-- **Transparência** — Banner de privacidade + política completa acessível na interface
-- **Direitos do titular** — Política detalha acesso, correção, eliminação e portabilidade
-
-📄 **[Política de Privacidade Completa (POLICY-LGPD.md)](POLICY-LGPD.md)**
-
----
-
-## Roadmap (Futuras Melhorias)
-
-*Priorizadas por alinhamento com o propósito educacional e client-side:*
-
-- [ ] **PWA (Progressive Web App)** — Instalação offline e cache para áreas sem internet estável
-- [ ] **Exportação de Relatórios em PDF** — Resumo detalhado para levar a advogados ou sindicatos
-- [ ] **Persistência de Histórico** — IndexedDB para comparar simulações anteriores (armazenamento local, sem backend)
-- [ ] **Visualização Avançada** — Gráfico de evolução temporal do saldo com correção TR+IPCA
-
-### Em Estudo
-
-- **Cálculo de INSS sobre verbas rescisórias** — Aumenta significativamente a complexidade (tabela progressiva, alíquotas por verba, atualização anual) e desvia o foco do FGTS. Pode ser considerado em versão futura como módulo separado.
-
----
-
-## Aviso Legal
-
-Os cálculos fornecidos são **estimativas educativas** e servem como ferramenta de conscientização sobre direitos vigentes. Eles não substituem o cálculo oficial e recomenda-se sempre consultar um **advogado trabalhista** ou sindicato para validação legal.
-
----
-
-## Documentação Técnica
-
-Para detalhes sobre arquitetura de dados, regras de negócio CLT, segurança, acessibilidade e manutenibilidade, consulte a documentação técnica completa:
-
-📄 **[Acessar Documentação Técnica (technical_doc.md)](docs/technical_doc.md)**
-
----
-
-**Projeto de Extensão Universitária — UNINTER**
-Curso de Engenharia de Software | v2.0.3 (TypeScript + DDD)
+Código sob [licença MIT](LICENSE). Documentos em `docs/archive/` registram versões anteriores; não descrevem o comportamento atual.

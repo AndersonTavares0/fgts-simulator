@@ -153,6 +153,13 @@ export interface ResultadoCorrecao {
   rendimentoTotal: Money;
   indexadorUtilizado: 'TR' | 'IPCA';
   taxaEfetivaAnual: Decimal;
+  serie: PontoCorrecao[];
+}
+
+export interface PontoCorrecao {
+  depositos: Money;
+  tr: Money;
+  ipca: Money;
 }
 
 export interface ResultadoMulta {
@@ -217,6 +224,12 @@ export interface ParametrosCalculo {
   tipoContrato: TipoContrato;
   incluirDecimoTerceiro: boolean;
   incluirFerias: boolean;
+  /** Avos pendentes informados, independentes da duração total do contrato (0..12). */
+  avosDecimoTerceiro: number;
+  avosFerias: number;
+  cenarioCorrecao?: 'TR' | 'IPCA';
+  /** Frações estimadas de competência civil; não usa a regra de 15 dias do 13º. */
+  periodosDeposito?: readonly Decimal[];
   saqueAniversario: boolean;
   /** Total historical deposits (for fine calculation - Art. 18, Lei 8.036/1990) */
   depositoHistoricoTotal?: Money;
@@ -224,9 +237,4 @@ export interface ParametrosCalculo {
   indicesCorrecao?: IndicesCorrecao;
   /** Whether to calculate INSS contribution (tabela progressiva 2026) */
   calcularINSS?: boolean;
-}
-
-export interface ValidationResult {
-  valid: boolean;
-  error?: string;
 }

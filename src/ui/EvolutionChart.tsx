@@ -1,0 +1,250 @@
+import { useId, useState } from 'react';
+import { FormatAdapter } from '../adapters/FormatAdapter';
+import { Button } from './components/ui/button';
+import type { SimulationSnapshot } from '../application/Simulation';
+
+type Point = SimulationSnapshot['timeline'][number];
+type Series = 'tr' | 'ipca' | 'depositos';
+
+// Depósitos são lineares e redundantes no gráfico; ficam na tabela mensal.
+const SERIES: Array<{ key: Series; label: string; dashed: boolean; color: string }> = [
+  { key: 'tr', label: 'Saldo acumulado (TR + 3%)', dashed: false, color: 'var(--chart-1)' },
+  { key: 'ipca', label: 'Referência IPCA', dashed: true, color: 'var(--chart-2)' },
+];
+
+const FIELD: Record<Series, 'trCents' | 'ipcaCents' | 'depositosCents'> = {
+  tr: 'trCents',
+  ipca: 'ipcaCents',
+  depositos: 'depositosCents',
+};
+
+const cents = (point: Point, key: Series): number => Number(point[FIELD[key]]) / 100;
+
+export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
+  const [active, setActive] = useState<number | null>(null);
+  const areaId = `area-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const data = snapshot.timeline;
+  const total = data.length;
+  const rawMax = Math.max(...data.map((point) => Number(point.trCents) / 100), 1);
+  // Round the axis to a readable step so labels are "3 mil", not "2,9 mil".
+  const step = 10 ** Math.max(0, Math.floor(Math.log10(rawMax)) - 1);
+  const max = Math.ceil(rawMax / step) * step;
+  const compact = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 });
+
+  // Geometry lives in a 0..100 box; the SVG stretches to the container.
+  const x = (index: number): number => (total < 2 ? 50 : (index / (total - 1)) * 100);
+  const y = (value: number): number => 98 - (value / max) * 94;
+  const path = (key: Series): string =>
+    data.map((point, index) => `${index ? 'L' : 'M'}${x(index)} ${y(cents(point, key))}`).join(' ');
+  const area = `${path('tr')} L${x(total - 1)} 98 L${x(0)} 98 Z`;
+
+  if (total === 0) return null;
+  const shown = active === null ? data[total - 1] : data[active];
+
+  return (
+    <section className="border-border mt-10 border-t pt-6" aria-labelledby="evolution-title">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h2 id="evolution-title" className="text-[13.5px] font-medium">
+          Saldo acumulado no FGTS
+        </h2>
+        <span className="text-muted-foreground text-[11.5px]">
+          {snapshot.result.saldoRetidoCents !== '0' ? 'Inclui retido · Em R$' : 'Em R$'}
+        </span>
+      </div>
+      <ul className="text-muted-foreground mb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px]">
+        {SERIES.map((serie) => (
+          <li key={serie.key} className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="h-[3px] w-4 rounded-full"
+              style={
+                serie.dashed
+                  ? {
+                      height: 0,
+                      borderTop: `3px ${serie.key === 'depositos' ? 'dotted' : 'dashed'} ${serie.color}`,
+                    }
+                  : { background: serie.color }
+              }
+            />
+            {serie.label}
+          </li>
+        ))}
+      </ul>
+
+      <div
+        className="relative h-[210px] w-full"
+        role="img"
+        aria-label={`Evolução mensal do saldo simulado em ${total} competências. Os mesmos valores estão na tabela abaixo.`}
+        onPointerLeave={() => setActive(null)}
+        onPointerMove={(event) => {
+          const box = event.currentTarget.getBoundingClientRect();
+          const ratio = (event.clientX - box.left) / box.width;
+          setActive(Math.min(total - 1, Math.max(0, Math.round(ratio * (total - 1)))));
+        }}
+      >
+        <div className="absolute inset-0 flex flex-col justify-between pb-5 pl-10">
+          {[1, 0.5, 0].map((share) => (
+            <div key={share} className="relative h-0">
+              <span className="text-muted-foreground absolute -top-1.5 -left-10 w-9 text-right text-[11px]">
+                {compact.format(max * share)}
+              </span>
+              <div className="border-border h-px border-t" />
+            </div>
+          ))}
+        </div>
+
+        <svg
+          className="absolute inset-y-0 right-0 bottom-5 left-10 h-[calc(100%-1.25rem)] w-[calc(100%-2.5rem)]"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id={areaId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--chart-1)" stopOpacity="0.07" />
+              <stop offset="100%" stopColor="var(--chart-1)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d={area} fill={`url(#${areaId})`} />
+          {SERIES.map((serie) => (
+            <path
+              key={serie.key}
+              d={path(serie.key)}
+              fill="none"
+              stroke={serie.color}
+              strokeWidth={serie.key === 'tr' ? 2.5 : 1.5}
+              strokeDasharray={
+                serie.dashed ? (serie.key === 'depositos' ? '2 3' : '5 4') : undefined
+              }
+              vectorEffect="non-scaling-stroke"
+              strokeLinejoin="round"
+            />
+          ))}
+          {active !== null && (
+            <line
+              x1={x(active)}
+              x2={x(active)}
+              y1="0"
+              y2="100"
+              stroke="var(--line)"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+        </svg>
+
+        {total > 0 && (
+          <span
+            aria-hidden="true"
+            className="bg-foreground absolute size-2 rounded-full"
+            style={{
+              left: `calc(2.5rem + (100% - 2.5rem) * 1 - 8px)`,
+              top: `calc((100% - 1.25rem) * ${y(cents(data[total - 1]!, 'tr')) / 100} - 4px)`,
+            }}
+          />
+        )}
+
+        <div
+          className="text-muted-foreground pointer-events-none absolute bottom-0 left-10 flex w-[calc(100%-2.5rem)] justify-between text-[11px]"
+          aria-hidden="true"
+        >
+          <span>{FormatAdapter.civilDate(data[0]!.competencia)}</span>
+          <span>{FormatAdapter.civilDate(data[total - 1]!.competencia)}</span>
+        </div>
+
+        {active !== null && (
+          <div
+            className="bg-foreground text-background pointer-events-none absolute top-0 z-10 w-max max-w-[240px] rounded-lg px-2.5 py-1.5 text-[12px] shadow-lg"
+            style={{
+              left: `calc(2.5rem + (100% - 2.5rem) * ${x(active) / 100})`,
+              // Flip to the other side near the right edge so the box never overflows.
+              transform: x(active) > 60 ? 'translateX(calc(-100% - 8px))' : 'translateX(8px)',
+            }}
+          >
+            <p className="font-medium whitespace-nowrap">
+              {FormatAdapter.civilDate(shown!.competencia)}
+            </p>
+            {SERIES.map((serie) => (
+              <p key={serie.key} className="num whitespace-nowrap opacity-90">
+                {serie.label}: {FormatAdapter.centsToBRL(shown![FIELD[serie.key]])}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <p className="help mt-2">
+        {total} meses · saldo acumulado em {snapshot.input.scenario}:{' '}
+        {FormatAdapter.centsToBRL(snapshot.result.saldoBaseCents)}
+        {snapshot.result.saldoRetidoCents !== '0' &&
+          ' · o gráfico não representa o valor disponível para saque.'}
+      </p>
+      <TableToggle snapshot={snapshot} />
+    </section>
+  );
+}
+
+function TableToggle({ snapshot }: { snapshot: SimulationSnapshot }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground hover:text-primary mt-1 h-auto min-h-10 px-0 text-[13px] hover:bg-transparent"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {open ? 'Ocultar dados mensais' : 'Ver dados mensais em tabela'}
+      </Button>
+      {open && (
+        <div
+          className="mt-1 max-h-[320px] overflow-auto"
+          tabIndex={0}
+          role="region"
+          aria-label="Dados mensais do gráfico"
+        >
+          <table className="w-full border-collapse text-left text-[13px]">
+            <caption className="text-muted-foreground pb-2 text-left">
+              Valores acumulados por competência
+            </caption>
+            <thead>
+              <tr>
+                {['Competência', 'Depósitos', 'TR + 3% a.a.', 'IPCA'].map((heading) => (
+                  <th
+                    key={heading}
+                    scope="col"
+                    className="bg-muted border-border sticky top-0 border-b px-2 py-2 font-medium"
+                  >
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {snapshot.timeline.map((point) => (
+                <tr key={point.competencia}>
+                  <th
+                    scope="row"
+                    className="border-border border-b px-2 py-2 font-normal whitespace-nowrap"
+                  >
+                    {FormatAdapter.civilDate(point.competencia)}
+                  </th>
+                  {(['depositosCents', 'trCents', 'ipcaCents'] as const).map((key) => (
+                    <td
+                      key={key}
+                      className="num border-border border-b px-2 py-2 whitespace-nowrap"
+                    >
+                      {FormatAdapter.centsToBRL(point[key])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}

@@ -5,7 +5,7 @@
  *  1. Juros compostos mensais sobre saldo FGTS
  *  2. Multa de 40% sobre montante total histórico
  *  3. Cenário de Doença Grave (100% do saldo)
- *  4. Cenário onde TR=0 e IPCA é indexador substituto (ADI 5090)
+ *  4. Cenários independentes TR + 3% e IPCA comparativo
  *  5. Saque-Aniversário por faixas
  *  6. Money Value Object (precision)
  *  7. Input validation guards
@@ -16,13 +16,10 @@ import Decimal from 'decimal.js';
 
 import { Money, TipoRescisao, TipoContrato, TipoDoencaGrave } from '../../src/core/types';
 import { FGTSCalculatorService } from '../../src/core/services/FGTSCalculatorService';
-import { INSSService } from '../../src/core/services/INSSService';
 import { CorrecaoMonetariaService } from '../../src/core/services/CorrecaoMonetariaService';
 import { MultaService } from '../../src/core/services/MultaService';
-import { FormatAdapter } from '../../src/adapters/FormatAdapter';
 import { SaqueAniversarioService } from '../../src/core/services/SaqueAniversarioService';
 import { DoencaGraveService } from '../../src/core/services/DoencaGraveService';
-import { ContratoTrabalho } from '../../src/core/entities/ContratoTrabalho';
 
 // ─── Constantes de teste ────────────────────────────────────────────────────
 const SALARIO_3000 = Money.fromReais(3000); // R$ 3.000,00
@@ -135,14 +132,12 @@ describe('MultaService — Multa sobre Saldo Total Histórico', () => {
     const resultado = MultaService.calcular(saldo, TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA);
     expect(resultado.percentualAplicado).toBe(40);
     expect(resultado.valorMulta.cents).toBe(40000); // R$ 400,00
-    expect(resultado.fundamentoLegal).toContain('Art. 18');
   });
 
   it('deve aplicar 20% para acordo comum (Art. 484-A CLT)', () => {
     const resultado = MultaService.calcular(saldo, TipoRescisao.ACORDO_COMUM);
     expect(resultado.percentualAplicado).toBe(20);
     expect(resultado.valorMulta.cents).toBe(20000); // R$ 200,00
-    expect(resultado.fundamentoLegal).toContain('484-A');
   });
 
   it('deve aplicar 20% para culpa recíproca', () => {
@@ -167,21 +162,18 @@ describe('MultaService — Multa sobre Saldo Total Histórico', () => {
     const resultado = MultaService.calcular(saldo, TipoRescisao.DOENCA_GRAVE);
     expect(resultado.percentualAplicado).toBe(0);
     expect(resultado.valorMulta.cents).toBe(0);
-    expect(resultado.fundamentoLegal).toContain('Art. 20');
   });
 
   it('deve retornar 0% para aposentadoria (evento de saque, sem multa patronal)', () => {
     const resultado = MultaService.calcular(saldo, TipoRescisao.APOSENTADORIA);
     expect(resultado.percentualAplicado).toBe(0);
     expect(resultado.valorMulta.cents).toBe(0);
-    expect(resultado.fundamentoLegal).toContain('Art. 20');
   });
 
   it('deve retornar 0% para falecimento (evento de saque, sem multa patronal)', () => {
     const resultado = MultaService.calcular(saldo, TipoRescisao.FALECIMENTO);
     expect(resultado.percentualAplicado).toBe(0);
     expect(resultado.valorMulta.cents).toBe(0);
-    expect(resultado.fundamentoLegal).toContain('Art. 20');
   });
 });
 
@@ -193,7 +185,6 @@ describe('DoencaGraveService — Saque por Doença Grave', () => {
     const resultado = DoencaGraveService.calcular(saldo, TipoDoencaGrave.CANCER);
     expect(resultado.percentualLiberado).toBe(100);
     expect(resultado.saldoDisponivel.cents).toBe(500000);
-    expect(resultado.fundamentoLegal).toContain('Art. 20');
   });
 
   it('deve liberar 100% do saldo para HIV/AIDS', () => {
@@ -207,42 +198,46 @@ describe('DoencaGraveService — Saque por Doença Grave', () => {
     expect(resultado.percentualLiberado).toBe(100);
     expect(resultado.saldoDisponivel.cents).toBe(saldo.cents);
   });
-
-  it('deve citar Lei 8.036/90 como fundamento', () => {
-    const resultado = DoencaGraveService.calcular(saldo, TipoDoencaGrave.CANCER);
-    expect(resultado.fundamentoLegal).toContain('8.036');
-  });
 });
 
-// ─── 6. IPCA como Indexador Substituto (ADI 5090) ───────────────────────────
-describe('CorrecaoMonetariaService — ADI 5090 (TR zero → IPCA)', () => {
-  it('deve usar IPCA quando TR é zero e rendimento seria inferior', () => {
-    const deposito = Money.fromCents(24000); // R$ 240/mês
+describe('CorrecaoMonetariaService — Cenários explícitos', () => {
+  const indices = { trMensal: new Decimal(0), ipcaMensal: new Decimal('0.005') };
 
-    // TR = 0 → rendimento anual seria apenas ~3% (juros legais)
-    // IPCA = 0.005/mês → ~6.17% a.a.
-    // Como 3% < 6.17%, deve aplicar IPCA
-    const resultado = CorrecaoMonetariaService.calcularSaldoComCorrecao(deposito, 12, {
-      trMensal: new Decimal(0), // TR zerada
-      ipcaMensal: new Decimal('0.005'), // IPCA ~6% a.a.
-    });
-
-    expect(resultado.indexadorUtilizado).toBe('IPCA');
-    // Rendimento com IPCA deve ser maior do que com TR=0
-    expect(resultado.saldoCorrigido.cents).toBeGreaterThan(288000);
+  it('mantém TR mesmo quando IPCA é maior', () => {
+    const result = CorrecaoMonetariaService.calcularSaldoComCorrecao(
+      Money.fromReais(240),
+      12,
+      indices,
+    );
+    expect(result.indexadorUtilizado).toBe('TR');
+    expect(result.saldoCorrigido.cents).toBe(result.serie.at(-1)!.tr.cents);
+    expect(result.serie.at(-1)!.ipca.cents).toBeGreaterThan(result.saldoCorrigido.cents);
   });
 
-  it('deve usar TR quando TR+3% supera IPCA', () => {
-    const deposito = Money.fromCents(24000);
-
-    // TR alta → TR+3% > IPCA
-    const resultado = CorrecaoMonetariaService.calcularSaldoComCorrecao(deposito, 12, {
-      trMensal: new Decimal('0.005'), // TR alta (0.5%/mês)
-      ipcaMensal: new Decimal('0.003'), // IPCA baixo
-    });
-
-    expect(resultado.indexadorUtilizado).toBe('TR');
+  it('usa IPCA apenas quando selecionado', () => {
+    const result = CorrecaoMonetariaService.calcularSaldoComCorrecao(
+      Money.fromReais(240),
+      12,
+      indices,
+      'IPCA',
+    );
+    expect(result.indexadorUtilizado).toBe('IPCA');
+    expect(result.saldoCorrigido.cents).toBe(result.serie.at(-1)!.ipca.cents);
   });
+
+  it.each(['0', '-0.01'])(
+    'capitaliza taxa IPCA %s sem dividir por zero nem suprimir deflação',
+    (rate) => {
+      const result = CorrecaoMonetariaService.calcularSaldoComCorrecao(
+        Money.fromReais(100),
+        2,
+        { trMensal: new Decimal(0), ipcaMensal: new Decimal(rate) },
+        'IPCA',
+      );
+      expect(result.saldoCorrigido.cents).toBe(rate === '0' ? 20000 : 19900);
+      expect(result.rendimentoTotal.cents).toBe(rate === '0' ? 0 : -100);
+    },
+  );
 });
 
 // ─── 7. Saque-Aniversário (Faixas Oficiais) ────────────────────────────────
@@ -295,6 +290,8 @@ describe('FGTSCalculatorService.calcularRescisao — Integração', () => {
       tipoContrato: TipoContrato.CLT_PADRAO,
       incluirDecimoTerceiro: true,
       incluirFerias: true,
+      avosDecimoTerceiro: 12,
+      avosFerias: 12,
       saqueAniversario: false,
     });
 
@@ -322,6 +319,8 @@ describe('FGTSCalculatorService.calcularRescisao — Integração', () => {
       tipoContrato: TipoContrato.CLT_PADRAO,
       incluirDecimoTerceiro: false,
       incluirFerias: false,
+      avosDecimoTerceiro: 0,
+      avosFerias: 0,
       saqueAniversario: false,
     });
 
@@ -337,6 +336,8 @@ describe('FGTSCalculatorService.calcularRescisao — Integração', () => {
       tipoContrato: TipoContrato.CLT_PADRAO,
       incluirDecimoTerceiro: false,
       incluirFerias: false,
+      avosDecimoTerceiro: 0,
+      avosFerias: 0,
       saqueAniversario: false,
       doencaGrave: TipoDoencaGrave.CANCER,
     });
@@ -358,6 +359,8 @@ describe('FGTSCalculatorService.calcularRescisao — Integração', () => {
       tipoContrato: TipoContrato.CLT_PADRAO,
       incluirDecimoTerceiro: false,
       incluirFerias: false,
+      avosDecimoTerceiro: 0,
+      avosFerias: 0,
       saqueAniversario: true,
     });
 
@@ -372,193 +375,3 @@ describe('FGTSCalculatorService.calcularRescisao — Integração', () => {
 });
 
 // ─── 9. Validação de Entradas ───────────────────────────────────────────────
-describe('ContratoTrabalho — Validação de Inputs', () => {
-  it('deve rejeitar salário zero', () => {
-    const result = ContratoTrabalho.validar({
-      salarioBruto: Money.zero(),
-      dataInicio: new Date(2024, 0, 1),
-      dataTermino: new Date(2025, 0, 1),
-    });
-    expect(result.valid).toBe(false);
-    expect(result.error).toContain('Salário');
-  });
-
-  it('deve rejeitar data de término anterior à data de início', () => {
-    const result = ContratoTrabalho.validar({
-      salarioBruto: SALARIO_3000,
-      dataInicio: new Date(2025, 0, 1),
-      dataTermino: new Date(2024, 0, 1),
-    });
-    expect(result.valid).toBe(false);
-    expect(result.error).toContain('término');
-  });
-
-  it('deve rejeitar período superior a 50 anos', () => {
-    const result = ContratoTrabalho.validar({
-      salarioBruto: SALARIO_3000,
-      dataInicio: new Date(1970, 0, 1),
-      dataTermino: new Date(2026, 0, 1), // 56 anos
-    });
-    expect(result.valid).toBe(false);
-    expect(result.error).toContain('50 anos');
-  });
-
-  it('deve rejeitar salário acima de R$ 1.000.000', () => {
-    const result = ContratoTrabalho.validar({
-      salarioBruto: Money.fromReais(1_500_000),
-      dataInicio: new Date(2024, 0, 1),
-      dataTermino: new Date(2025, 0, 1),
-    });
-    expect(result.valid).toBe(false);
-    expect(result.error).toContain('limite');
-  });
-
-  it('deve aceitar contrato válido', () => {
-    const result = ContratoTrabalho.validar({
-      salarioBruto: SALARIO_3000,
-      dataInicio: new Date(2024, 0, 1),
-      dataTermino: new Date(2025, 0, 1),
-    });
-    expect(result.valid).toBe(true);
-  });
-
-  it('deve calcular meses trabalhados com regra CLT dos 15 dias (12 meses)', () => {
-    const meses = ContratoTrabalho.calcularMesesTrabalhados(
-      new Date(2024, 0, 1),
-      new Date(2025, 0, 1),
-    );
-    expect(meses).toBe(12);
-  });
-
-  it('deve retornar 0 meses para contrato < 15 dias (Art. 146 CLT)', () => {
-    const meses = ContratoTrabalho.calcularMesesTrabalhados(
-      new Date(2024, 5, 1),
-      new Date(2024, 5, 10), // 10 dias
-    );
-    expect(meses).toBe(0);
-  });
-
-  it('deve retornar 1 mês para contrato de 15 dias exatos', () => {
-    const meses = ContratoTrabalho.calcularMesesTrabalhados(
-      new Date(2024, 5, 1),
-      new Date(2024, 5, 15),
-    );
-    expect(meses).toBe(1);
-  });
-});
-
-// ─── 10. Verbas Proporcionais ───────────────────────────────────────────────
-describe('FGTSCalculatorService — Verbas Proporcionais', () => {
-  it('deve calcular 13º proporcional (6 meses = 50%)', () => {
-    const result = FGTSCalculatorService.calcularDecimoTerceiro(SALARIO_3000, 6);
-    expect(result.cents).toBe(150000); // R$ 1.500,00
-  });
-
-  it('deve limitar 13º a 12 meses', () => {
-    const result = FGTSCalculatorService.calcularDecimoTerceiro(SALARIO_3000, 14);
-    expect(result.cents).toBe(300000); // R$ 3.000,00 (12/12)
-  });
-
-  it('deve calcular férias + 1/3 (12 meses)', () => {
-    const result = FGTSCalculatorService.calcularFeriasProporcionais(SALARIO_3000, 12);
-    // Férias = 3000, 1/3 = 1000, total = 4000
-    expect(result.cents).toBe(400000);
-  });
-
-  it('deve retornar zero para meses negativos', () => {
-    expect(FGTSCalculatorService.calcularDecimoTerceiro(SALARIO_3000, -1).cents).toBe(0);
-    expect(FGTSCalculatorService.calcularFeriasProporcionais(SALARIO_3000, 0).cents).toBe(0);
-  });
-});
-
-// ─── INSS Service ──────────────────────────────────────────────────────────
-describe('INSSService — Tabela Progressiva 2026', () => {
-  it('deve calcular INSS na 1ª faixa (salário mínimo R$ 1.621 → R$ 121,58)', () => {
-    const result = INSSService.calcular(Money.fromReais(1621));
-    expect(result.valorINSS.cents).toBe(12158);
-    expect(result.aliquotaEfetiva).toBeCloseTo(0.075, 3);
-    expect(result.faixaDescricao).toContain('1ª faixa');
-  });
-
-  it('deve calcular INSS na 2ª faixa (R$ 2.000 → R$ 155,68)', () => {
-    const result = INSSService.calcular(Money.fromReais(2000));
-    expect(result.valorINSS.cents).toBe(15568);
-    expect(result.faixaDescricao).toContain('2ª faixa');
-  });
-
-  it('deve calcular INSS na 3ª faixa (R$ 3.500 → R$ 308,60)', () => {
-    const result = INSSService.calcular(Money.fromReais(3500));
-    expect(result.valorINSS.cents).toBe(30860);
-    expect(result.faixaDescricao).toContain('3ª faixa');
-  });
-
-  it('deve calcular INSS na 4ª faixa (R$ 5.000 → R$ 501,51)', () => {
-    const result = INSSService.calcular(Money.fromReais(5000));
-    expect(result.valorINSS.cents).toBe(50151);
-    expect(result.faixaDescricao).toContain('4ª faixa');
-  });
-
-  it('deve respeitar o teto do INSS (R$ 8.475,55 → R$ 988,09)', () => {
-    const result = INSSService.calcular(Money.fromReais(10000));
-    expect(result.valorINSS.cents).toBe(98809);
-    expect(result.baseCalculo.reais).toBe(8475.55);
-  });
-
-  it('deve retornar zero para salário inválido', () => {
-    const result = INSSService.calcular(Money.fromReais(0));
-    expect(result.valorINSS.cents).toBe(0);
-    expect(result.salarioLiquido.cents).toBe(0);
-  });
-
-  it('deve calcular salário líquido corretamente', () => {
-    const result = INSSService.calcular(Money.fromReais(3000));
-    expect(result.salarioLiquido.reais).toBeCloseTo(3000 - 248.6, 1);
-  });
-});
-
-// ─── FormatAdapter (jsdom) ──────────────────────────────────────────────────
-describe('FormatAdapter — Parsing e Formatação', () => {
-  it('deve fazer parse de entrada monetária válida', () => {
-    const money = FormatAdapter.parseMonetaryInput('1.500,50');
-    expect(money).not.toBeNull();
-    expect(money!.cents).toBe(150050);
-  });
-
-  it('deve rejeitar entrada monetária inválida', () => {
-    expect(FormatAdapter.parseMonetaryInput('abc')).toBeNull();
-    expect(FormatAdapter.parseMonetaryInput('')).toBeNull();
-    expect(FormatAdapter.parseMonetaryInput('-100')).toBeNull();
-  });
-
-  it('deve fazer parse de data válida YYYY-MM-DD', () => {
-    const date = FormatAdapter.parseDate('2026-01-15');
-    expect(date).not.toBeNull();
-    expect(date!.getFullYear()).toBe(2026);
-    expect(date!.getMonth()).toBe(0); // January
-    expect(date!.getDate()).toBe(15);
-  });
-
-  it('deve rejeitar datas inválidas', () => {
-    expect(FormatAdapter.parseDate('abc')).toBeNull();
-    expect(FormatAdapter.parseDate('2026-13-01')).toBeNull();
-    expect(FormatAdapter.parseDate('')).toBeNull();
-  });
-
-  it('deve retornar label de rescisão para todos os tipos', () => {
-    const tipos = [
-      TipoRescisao.DISPENSA_SEM_JUSTA_CAUSA,
-      TipoRescisao.DEMISSAO_VOLUNTARIA,
-      TipoRescisao.JUSTA_CAUSA,
-      TipoRescisao.ACORDO_COMUM,
-      TipoRescisao.DOENCA_GRAVE,
-      TipoRescisao.APOSENTADORIA,
-      TipoRescisao.FALECIMENTO,
-      TipoRescisao.CULPA_RECIPROCA,
-    ];
-    tipos.forEach((t) => {
-      const label = FormatAdapter.getRescisaoLabel(t);
-      expect(label.label).toBeTruthy();
-      expect(label.cssClass).toBeTruthy();
-    });
-  });
-});

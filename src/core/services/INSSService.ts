@@ -86,9 +86,7 @@ export class INSSService {
     const deducao = Money.fromReais(faixaEfetiva.parcelaDeduzir);
     const valorINSS = valorBruto.subtract(deducao);
 
-    const aliquotaEfetiva = baseCalculoReais > 0
-      ? valorINSS.reais / baseCalculoReais
-      : 0;
+    const aliquotaEfetiva = baseCalculoReais > 0 ? valorINSS.reais / baseCalculoReais : 0;
 
     const salarioLiquido = salarioBruto.subtract(valorINSS);
 
