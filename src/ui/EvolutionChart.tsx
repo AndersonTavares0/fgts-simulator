@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { FormatAdapter } from '../adapters/FormatAdapter';
 import { Button } from './components/ui/button';
 import { chartMax } from './chartScale';
@@ -20,6 +20,8 @@ const FIELD: Record<Series, 'trCents' | 'ipcaCents' | 'depositosCents'> = {
 };
 
 const cents = (point: Point, key: Series): number => Number(point[FIELD[key]]) / 100;
+const xAt = (index: number, total: number): number => (total < 2 ? 50 : (index / (total - 1)) * 100);
+const yAt = (value: number, max: number): number => 98 - (value / max) * 94;
 
 export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   const [active, setActive] = useState<number | null>(null);
@@ -32,15 +34,23 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   const max = Math.ceil(rawMax / step) * step;
   const compact = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 });
 
-  // Geometry lives in a 0..100 box; the SVG stretches to the container.
-  const x = (index: number): number => (total < 2 ? 50 : (index / (total - 1)) * 100);
-  const y = (value: number): number => 98 - (value / max) * 94;
-  const path = (key: Series): string =>
-    data.map((point, index) => `${index ? 'L' : 'M'}${x(index)} ${y(cents(point, key))}`).join(' ');
-  const area = `${path('tr')} L${x(total - 1)} 98 L${x(0)} 98 Z`;
+  // Geometry lives in a 0..100 box; the SVG stretches to the container. The strings are
+  // rebuilt only when the snapshot changes: hovering sets state and would otherwise
+  // recompute two 602-point paths on every pointer move.
+  const { paths, area } = useMemo(() => {
+    const path = (key: Series): string =>
+      data
+        .map((point, index) => `${index ? 'L' : 'M'}${xAt(index, total)} ${yAt(cents(point, key), max)}`)
+        .join(' ');
+    return {
+      paths: { tr: path('tr'), ipca: path('ipca') },
+      area: `${path('tr')} L${xAt(total - 1, total)} 98 L${xAt(0, total)} 98 Z`,
+    };
+  }, [data, total, max]);
 
   if (total === 0) return null;
   const shown = active === null ? data[total - 1] : data[active];
+  const activeX = active === null ? 0 : total < 2 ? 50 : (active / (total - 1)) * 100;
 
   return (
     <section className="border-border mt-10 border-t pt-6" aria-labelledby="evolution-title">
@@ -110,7 +120,7 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
           {SERIES.map((serie) => (
             <path
               key={serie.key}
-              d={path(serie.key)}
+              d={paths[serie.key]}
               fill="none"
               stroke={serie.color}
               strokeWidth={serie.key === 'tr' ? 2.5 : 1.5}
@@ -123,8 +133,8 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
           ))}
           {active !== null && (
             <line
-              x1={x(active)}
-              x2={x(active)}
+              x1={activeX}
+              x2={activeX}
               y1="0"
               y2="100"
               stroke="var(--line)"
@@ -140,7 +150,7 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
             className="bg-foreground absolute size-2 rounded-full"
             style={{
               left: `calc(2.5rem + (100% - 2.5rem) * 1 - 8px)`,
-              top: `calc((100% - 1.25rem) * ${y(cents(data[total - 1]!, 'tr')) / 100} - 4px)`,
+              top: `calc((100% - 1.25rem) * ${yAt(cents(data[total - 1]!, 'tr'), max) / 100} - 4px)`,
             }}
           />
         )}
@@ -157,9 +167,9 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
           <div
             className="bg-foreground text-background pointer-events-none absolute top-0 z-10 w-max max-w-[240px] rounded-lg px-2.5 py-1.5 text-[12px] shadow-lg"
             style={{
-              left: `calc(2.5rem + (100% - 2.5rem) * ${x(active) / 100})`,
+              left: `calc(2.5rem + (100% - 2.5rem) * ${activeX / 100})`,
               // Flip to the other side near the right edge so the box never overflows.
-              transform: x(active) > 60 ? 'translateX(calc(-100% - 8px))' : 'translateX(8px)',
+              transform: activeX > 60 ? 'translateX(calc(-100% - 8px))' : 'translateX(8px)',
             }}
           >
             <p className="font-medium whitespace-nowrap">

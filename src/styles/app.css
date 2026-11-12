@@ -104,6 +104,8 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* Evita a última linha com uma palavra só nas legendas e textos de apoio. */
+    text-wrap: pretty;
   }
   :focus-visible {
     outline: 2px solid var(--ring);
