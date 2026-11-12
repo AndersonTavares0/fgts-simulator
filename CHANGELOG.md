@@ -5,7 +5,7 @@
 - FGTS sobre 13º passa a oferecer estimativa por salário fixo ou remunerações brutas reais por competência; valores informados não comprovam recolhimento nem reproduzem índices históricos. O calendário simplificado divide o 13º entre novembro e dezembro quando ambos estão no período e estima o proporcional nas rescisões cabíveis; adiantamentos anteriores, atrasos e lucros não são reproduzidos.
 - Preservados históricos anteriores sem recálculo; reabrir para novo cálculo usa a regra atual. TR soma a taxa mensal equivalente a 3% efetivos ao ano, aproximação que não necessariamente reproduz a combinação histórica oficial.
 - Interface responsiva reorganizada em simulação, histórico e metodologia.
-- Interface migrada para React 19 + TypeScript, Tailwind CSS v4, Recharts e lucide-react; gráfico e PDF carregam sob demanda.
+- Interface migrada para React 19 + TypeScript, Tailwind CSS v4, Heroicons e ícones SVG locais; gráfico e PDF carregam sob demanda.
 - Área de trabalho compacta: histórico e ajuda separados, detalhes recolhidos, alternância Dados/Resultado no celular e botão Usar exemplo sem salvamento automático.
 - Série temporal comparativa TR + 3%/IPCA, com dados equivalentes em tabela.
 - Histórico local opcional e comparação de simulações com versões preservadas.

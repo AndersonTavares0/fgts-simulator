@@ -7,6 +7,9 @@ interface InstallPrompt extends Event {
 }
 
 let registered = false;
+// skipWaiting/clientsClaim stay off so an update never reloads a half-filled form;
+// the waiter is activated only by this explicit call.
+let applyUpdate: ((reloadPage?: boolean) => Promise<void>) | null = null;
 
 export function usePwa() {
   const [offlineReady, setOfflineReady] = useState(false);
@@ -27,7 +30,7 @@ export function usePwa() {
       setRegisterError(true);
     } else if (!registered) {
       registered = true;
-      registerSW({
+      applyUpdate = registerSW({
         onOfflineReady: () => setOfflineReady(true),
         onNeedRefresh: () => setUpdateReady(true),
         onRegisterError: () => setRegisterError(true),
@@ -46,9 +49,13 @@ export function usePwa() {
       event.preventDefault();
       setPrompt(event as InstallPrompt);
     };
+    const installed = (): void => setPrompt(null);
     window.addEventListener('beforeinstallprompt', capture);
-    window.addEventListener('appinstalled', () => setPrompt(null));
-    return () => window.removeEventListener('beforeinstallprompt', capture);
+    window.addEventListener('appinstalled', installed);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', capture);
+      window.removeEventListener('appinstalled', installed);
+    };
   }, []);
 
   async function install(): Promise<void> {
@@ -63,6 +70,11 @@ export function usePwa() {
     }
   }
 
+  function update(): void {
+    if (!applyUpdate) return;
+    void applyUpdate(true);
+  }
+
   return {
     offlineReady,
     online,
@@ -71,5 +83,6 @@ export function usePwa() {
     canInstall: prompt !== null,
     installFailed,
     install,
+    update,
   };
 }

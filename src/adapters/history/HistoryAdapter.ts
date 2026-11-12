@@ -66,6 +66,13 @@ function getDatabase(): Promise<IDBPDatabase<HistoryDatabase>> {
           database = db;
           if (closed) {
             db.close();
+            // Another tab asked for an upgrade while this one was opening: settle the
+            // promise instead of leaving every later read pending forever.
+            rejectOpening(
+              new Error(
+                'Histórico bloqueado. Feche outras abas deste aplicativo e tente novamente.',
+              ),
+            );
             return;
           }
           resolve(db);
@@ -108,22 +115,28 @@ async function withDatabase<T>(
   }
 }
 
-export async function listSimulations(): Promise<SimulationSnapshot[]> {
+export interface StoredSimulations {
+  snapshots: SimulationSnapshot[];
+  /** Registros de outra versão ou corrompidos: preservados no banco, nunca listados. */
+  skipped: number;
+}
+
+export async function listSimulations(): Promise<StoredSimulations> {
   return withDatabase('ler', async (db) => {
     const transaction = db.transaction('simulations', 'readonly');
     const [records] = await Promise.all([transaction.store.getAll(), transaction.done]);
     const snapshots: SimulationSnapshot[] = [];
+    let skipped = 0;
     for (const record of records) {
-      if (!isSimulationSnapshot(record)) {
-        throw new Error(
-          'Há um registro inválido ou incompatível. Nenhum registro foi apagado. Atualize o aplicativo; use a exclusão do histórico apenas se desejar remover os dados locais.',
-        );
-      }
-      snapshots.push(record);
+      if (isSimulationSnapshot(record)) snapshots.push(record);
+      else skipped += 1;
     }
-    return snapshots.sort(
-      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || a.id.localeCompare(b.id),
-    );
+    return {
+      snapshots: snapshots.sort(
+        (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || a.id.localeCompare(b.id),
+      ),
+      skipped,
+    };
   });
 }
 

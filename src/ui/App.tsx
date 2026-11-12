@@ -74,13 +74,15 @@ export function App() {
 
   const refreshHistory = useCallback(async (): Promise<void> => {
     try {
-      const stored = await listSimulations();
-      setHistory(stored);
-      setSelected((ids) => ids.filter((id) => stored.some((snapshot) => snapshot.id === id)));
+      const { snapshots, skipped } = await listSimulations();
+      setHistory(snapshots);
+      setSelected((ids) => ids.filter((id) => snapshots.some((snapshot) => snapshot.id === id)));
       setHistoryStatus(
-        stored.length
-          ? `${stored.length} ${stored.length === 1 ? 'simulação salva' : 'simulações salvas'}.`
-          : 'Nenhuma simulação salva. Calcule e use “Salvar” para guardar uma estimativa.',
+        `${snapshots.length ? `${snapshots.length} ${snapshots.length === 1 ? 'simulação salva' : 'simulações salvas'}.` : 'Nenhuma simulação salva. Calcule e use “Salvar” para guardar uma estimativa.'}${
+          skipped
+            ? ` ${skipped} ${skipped === 1 ? 'registro incompatível foi mantido' : 'registros incompatíveis foram mantidos'} no navegador sem exibição. Atualize o aplicativo; use a exclusão do histórico apenas se desejar remover esses dados locais.`
+            : ''
+        }`,
       );
     } catch (error) {
       setHistoryStatus(`${errorMessage(error)} O cálculo e o PDF continuam disponíveis.`);
@@ -413,7 +415,14 @@ export function App() {
           )}
           {pwa.updateReady && (
             <span className="text-warn-ink" role="status">
-              Nova versão disponível. Recarregue para atualizar.
+              Nova versão disponível.{' '}
+              <button
+                type="button"
+                className="underline underline-offset-2"
+                onClick={pwa.update}
+              >
+                Atualizar agora
+              </button>
             </span>
           )}
           <span className="flex flex-wrap items-center gap-x-4 gap-y-2">

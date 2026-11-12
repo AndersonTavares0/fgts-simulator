@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { FormatAdapter } from '../adapters/FormatAdapter';
 import { Button } from './components/ui/button';
+import { chartMax } from './chartScale';
 import type { SimulationSnapshot } from '../application/Simulation';
 
 type Point = SimulationSnapshot['timeline'][number];
@@ -25,7 +26,7 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   const areaId = `area-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const data = snapshot.timeline;
   const total = data.length;
-  const rawMax = Math.max(...data.map((point) => Number(point.trCents) / 100), 1);
+  const rawMax = chartMax(data);
   // Round the axis to a readable step so labels are "3 mil", not "2,9 mil".
   const step = 10 ** Math.max(0, Math.floor(Math.log10(rawMax)) - 1);
   const max = Math.ceil(rawMax / step) * step;

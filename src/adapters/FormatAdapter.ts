@@ -19,12 +19,18 @@ const LABELS_RESCISAO: Record<TipoRescisao, string> = {
 };
 
 export class FormatAdapter {
-  /** Centavos em string (ex.: "-123456") para "R$ 1.234,56". */
-  static centsToBRL(cents: string): string {
+  /** Centavos em string (ex.: "-123456") para "1.234,56"; sinal antes dos dígitos. */
+  static amount(cents: string): string {
     const negative = cents.startsWith('-');
     const digits = (negative ? cents.slice(1) : cents).padStart(3, '0');
     const whole = digits.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return `${negative ? '-' : ''}R$ ${whole},${digits.slice(-2)}`;
+    return `${negative ? '-' : ''}${whole},${digits.slice(-2)}`;
+  }
+
+  /** Centavos em string (ex.: "-123456") para "-R$ 1.234,56". */
+  static centsToBRL(cents: string): string {
+    const negative = cents.startsWith('-');
+    return `${negative ? '-' : ''}R$ ${FormatAdapter.amount(negative ? cents.slice(1) : cents)}`;
   }
 
   /** "2025-01-31" para "31/01/2025"; "2025-01" para "01/2025". */

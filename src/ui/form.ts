@@ -91,8 +91,8 @@ export function toInput(
   const end = FormatAdapter.parseDate(draft.endDate);
   if (!start) errors.startDate = 'Informe uma data de início válida.';
   if (!end) errors.endDate = 'Informe uma data final válida.';
-  if (start && end && draft.endDate < draft.startDate)
-    errors.endDate = 'A data final deve ser igual ou posterior ao início.';
+  if (start && end && draft.endDate <= draft.startDate)
+    errors.endDate = 'A data final deve ser posterior à data de início.';
   const tr = FormatAdapter.rateFromPercent(draft.trMonthly);
   const ipca = FormatAdapter.rateFromPercent(draft.ipcaMonthly);
   if (tr === null || new Decimal(tr).isNegative() || new Decimal(tr).gt('0.1'))
