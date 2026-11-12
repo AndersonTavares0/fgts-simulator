@@ -1,6 +1,6 @@
 # Alterações
 
-## 2.1.0
+## 2.1.0-beta.1 (beta)
 
 - FGTS sobre 13º passa a oferecer estimativa por salário fixo ou remunerações brutas reais por competência; valores informados não comprovam recolhimento nem reproduzem índices históricos. O calendário simplificado divide o 13º entre novembro e dezembro quando ambos estão no período e estima o proporcional nas rescisões cabíveis; adiantamentos anteriores, atrasos e lucros não são reproduzidos.
 - Preservados históricos anteriores sem recálculo; reabrir para novo cálculo usa a regra atual. TR soma a taxa mensal equivalente a 3% efetivos ao ano, aproximação que não necessariamente reproduz a combinação histórica oficial.

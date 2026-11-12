@@ -17,6 +17,9 @@ on:
       sha:
         type: string
         default: ''
+      operation:
+        type: string
+        default: release
 
 permissions:
   contents: read
@@ -60,7 +63,7 @@ jobs:
         if: ${{ inputs.package == true }}
         run: node scripts/release.mjs pack
         env:
-          OPERATION: release
+          OPERATION: ${{ inputs.operation }}
           EXPECTED_VERSION: ${{ inputs.version }}
           EXPECTED_SHA: ${{ inputs.sha }}
       - name: Preserve release bundle

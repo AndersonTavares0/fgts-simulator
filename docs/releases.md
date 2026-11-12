@@ -49,12 +49,14 @@ Rollback pula o job publicador; seus jobs não recebem `contents: write`.
 
 ## Preparar e promover uma versão
 
-1. Em PR humano, atualize a versão de `package.json`, a versão raiz e a entrada raiz de `package-lock.json`, e as notas da mudança. Mantenha versões estáveis `MAJOR.MINOR.PATCH` sem zeros à esquerda.
+1. Em PR humano, atualize `package.json`, a versão raiz e a entrada raiz de `package-lock.json`, e as notas da mudança. Para beta use `MAJOR.MINOR.PATCH-beta.N`; para produção estável use `MAJOR.MINOR.PATCH`, ambos sem zeros à esquerda.
 2. Passe `quality` e faça squash em `main`. Push/merge executa qualidade, **sem implantar produção** depois que estes workflows substituírem os antigos.
-3. Em **Actions → Release and Pages → Run workflow**, selecione a branch `main`, operação `release`, versão esperada sem `v` e o SHA completo de `main` capturado para essa publicação. O SHA informado precisa ser igual a `github.sha` do dispatch. Se `main` avançou antes do dispatch, use seu novo SHA e confira a versão; não mova tags para corrigir divergências.
-4. Confira os estados separados: pacote publicado na release e implantação concluída no environment. O último passo consulta `release.json` público para confirmar versão/SHA no Pages.
+3. Para beta, despache `Release and Pages` na branch `main`, operação `beta`, versão exata e SHA completo do `main`. O fluxo publica uma GitHub prerelease imutável com os três assets e **pula o job Pages**; é somente para download, sem URL de staging. Se falhar após criar draft/tag, repita `beta` com a mesma versão/SHA para validar e concluir; não use `resume` para beta.
+4. Para produção estável, em **Actions → Release and Pages → Run workflow**, selecione `main`, operação `release`, versão sem `v` e o SHA completo de `main` capturado para essa publicação. O SHA precisa ser igual a `github.sha` do dispatch. Se `main` avançou antes do dispatch, use seu novo SHA e confira a versão; não mova tags para corrigir divergências.
+5. Na release estável, confira os estados separados: pacote publicado na release e implantação concluída no environment. O último passo consulta `release.json` público para confirmar versão/SHA no Pages.
+O canal é explícito: `release` aceita somente versão estável e publica/implanta no Pages; `beta` aceita somente `MAJOR.MINOR.PATCH-beta.N`, marca a release como prerelease e não faz deploy. `resume` e `rollback` são somente estáveis. Reexecutar `beta` é a retomada da mesma draft/asset. Uma beta não é a confirmação de produção nem o endereço de uma instância de teste.
 
-[release.yml](../.github/workflows/release.yml) só atende `workflow_dispatch`. O script recusa outra branch/evento, SHA inválido, versão divergente entre pacote/lock/input, tag conflitante e origem fora do histórico de `main` fixado no dispatch. O build valida novamente o commit do dispatch; o fluxo não resolve `main` de novo no meio da publicação.
+`release.yml` só atende `workflow_dispatch`. O script recusa outra branch/evento, SHA inválido, versão divergente entre pacote/lock/input, canal incompatível, tag conflitante e origem fora do histórico de `main` fixado no dispatch. O build valida novamente o commit do dispatch; o fluxo não resolve `main` de novo no meio da publicação. O job `deploy` é condicionado ao canal e permanece pulado para beta.
 
 A exclusão mútua `pages` cobre plano, publicação, deploy, retomada e rollback. Ela não cancela runs em andamento e usa `queue: max` (até 100 pendentes); a ordem depende da entrada na espera, não da ordem dos cliques.[^3] Antes de implantar sem rollback, o script consulta a implantação Pages bem-sucedida mais recente e exige que o SHA candidato não seja anterior/divergente do SHA daquele workflow. Uma retomada depois de rollback pode exigir `rollback` explícito mesmo quando os bytes já estiverem no site: o registro Pages identifica o workflow autorizado, não o SHA antigo do conteúdo. Essa recusa conservadora evita rebaixamento silencioso.
 
@@ -100,7 +102,7 @@ Release e Pages não formam uma transação: uma falha de deploy conserva a rele
 
 As releases antigas sem assets não oferecem rollback dos mesmos bytes. O novo fluxo estabelece a primeira versão recuperável; reconstruir um commit antigo não prova identidade com o site que foi publicado.
 
-Rollback não diminui schema do IndexedDB, apaga histórico nem revoga a aplicação em clientes offline. Antes de produção, o aceite deve exercitar A → B → A com histórico salvo e duas abas; confira compatibilidade dos dados e recebimento da correção ao reconectar.
+Rollback não diminui schema do IndexedDB, apaga histórico nem revoga a aplicação em clientes offline. Antes da primeira promoção estável ao Pages, o aceite deve exercitar A → B → A com histórico salvo e duas abas; confira compatibilidade dos dados e recebimento da correção ao reconectar. A beta GitHub-only não altera clientes nem Pages.
 
 ## Validação e limites operacionais
 

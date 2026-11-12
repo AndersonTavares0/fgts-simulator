@@ -9,14 +9,23 @@ export const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex'
 const json = (value) => `${JSON.stringify(value, null, 2)}\n`;
 const fail = (message) => { throw new Error(message); };
 
+const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+const betaVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-beta\.(0|[1-9]\d*)$/;
+export const isBetaVersion = (version) => betaVersion.test(version ?? '');
+
 export function validateIdentity(version, sha) {
-  if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version ?? '')) fail('Use versão estável MAJOR.MINOR.PATCH, sem prefixo v.');
+  if (!stableVersion.test(version ?? '') && !isBetaVersion(version)) fail('Use versão estável MAJOR.MINOR.PATCH ou beta MAJOR.MINOR.PATCH-beta.N, sem prefixo v.');
   if (!/^[a-f0-9]{40}$/.test(sha ?? '')) fail('Informe o SHA completo de 40 caracteres.');
 }
 
-export function assertPromotion(version, sha, current) {
+function validateStableIdentity(version, sha) {
+  if (!stableVersion.test(version ?? '')) fail('Esta operação exige versão estável MAJOR.MINOR.PATCH.');
   validateIdentity(version, sha);
-  validateIdentity(current.version, current.sha);
+}
+
+export function assertPromotion(version, sha, current) {
+  validateStableIdentity(version, sha);
+  validateStableIdentity(current.version, current.sha);
   const next = version.split('.').map(BigInt);
   const previous = current.version.split('.').map(BigInt);
   for (let index = 0; index < 3; index++) {
@@ -99,10 +108,15 @@ async function main(command) {
   const sha = env.EXPECTED_SHA;
   validateIdentity(version, sha);
   const operation = env.OPERATION;
-  if (!['release', 'resume', 'rollback'].includes(operation)) fail('Operação inválida.');
+  if (!['release', 'beta', 'resume', 'rollback'].includes(operation)) fail('Operação inválida.');
+  if (operation === 'release' && isBetaVersion(version)) fail('Operação release exige versão estável.');
+  if (operation === 'beta' && !isBetaVersion(version)) fail('Operação beta exige versão MAJOR.MINOR.PATCH-beta.N.');
+  if (operation === 'rollback' && isBetaVersion(version)) fail('Rollback de Pages exige uma versão estável.');
+  if (operation === 'resume' && isBetaVersion(version)) fail('Retome uma beta repetindo a operação beta.');
+  if (isBetaVersion(version) && ['fetch', 'guard', 'confirm'].includes(command)) fail('Pré-release beta não pode publicar nem confirmar Pages.');
   if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_REF !== 'refs/heads/main') fail('Publicação/recuperação somente por workflow_dispatch na branch main.');
   if (!/^[a-f0-9]{40}$/.test(env.GITHUB_SHA ?? '') || !/^[\w.-]+\/[\w.-]+$/.test(env.GITHUB_REPOSITORY ?? '')) fail('Contexto GitHub inválido.');
-  if (operation === 'release' && sha !== env.GITHUB_SHA) fail('Nova release exige SHA idêntico ao SHA fixado no dispatch; use resume para uma versão anterior.');
+  if (['release', 'beta'].includes(operation) && sha !== env.GITHUB_SHA) fail('Nova release exige SHA idêntico ao SHA fixado no dispatch.');
   const repository = env.GITHUB_REPOSITORY;
   const base = `https://api.github.com/repos/${repository}`;
   const tag = `v${version}`;
@@ -147,6 +161,7 @@ async function main(command) {
     return request(`releases/assets/${asset.id}`, { binary: true });
   }
   async function download(found, allowDraft) {
+    if (found.prerelease !== isBetaVersion(version)) fail('Canal da release incompatível com a versão solicitada.');
     if ((!allowDraft && found.draft) || (!found.draft && !found.immutable)) fail('Recuperação exige release publicada e imutável (ou draft preservada na retomada).');
     await checkTag();
     mkdirSync(bundle, { recursive: true });
@@ -178,11 +193,12 @@ async function main(command) {
   if (command === 'plan') {
     await checkTag(false);
     const found = await release(false);
+    if (found && found.prerelease !== isBetaVersion(version)) fail('Canal da release incompatível com a versão solicitada.');
     if (found?.assets.some((asset) => asset.name === 'site.tar.gz')) {
       await download(found, operation !== 'rollback');
       output('build', 'false');
     } else {
-      if (operation !== 'release' || (found && !found.draft)) fail('Não existe pacote recuperável; somente release nova no SHA original pode gerar pacote.');
+      if (!['release', 'beta'].includes(operation) || (found && !found.draft)) fail('Não existe pacote recuperável; somente release/beta nova no SHA original pode gerar pacote.');
       if (found?.assets.length) fail('Draft inconsistente: assets existem sem site.tar.gz; intervenção humana necessária, sem clobber.');
       output('build', 'true');
     }
@@ -199,7 +215,8 @@ async function main(command) {
     if (!immutable.enabled) fail('Ative imutabilidade de releases antes de publicar.');
     if (!(await checkTag(false))) await request('git/refs', { method: 'POST', body: { ref: `refs/tags/${tag}`, sha } });
     let found = await release(false);
-    if (!found) found = await request('releases', { method: 'POST', body: { tag_name: tag, target_commitish: sha, name: tag, draft: true, body: `Pacote validado de ${sha}. Publicação do pacote não confirma implantação no Pages.\n\nRecuperação: site.tar.gz + manifest.json + SHA256SUMS.` } });
+    if (found && found.prerelease !== isBetaVersion(version)) fail('Canal da release incompatível com a versão solicitada.');
+    if (!found) found = await request('releases', { method: 'POST', body: { tag_name: tag, target_commitish: sha, name: tag, draft: true, prerelease: isBetaVersion(version), make_latest: isBetaVersion(version) ? 'false' : 'true', body: isBetaVersion(version) ? `Pré-release beta validada de ${sha}. Não implanta no GitHub Pages.\n\nRecuperação: site.tar.gz + manifest.json + SHA256SUMS.` : `Pacote validado de ${sha}. Publicação do pacote não confirma implantação no Pages.\n\nRecuperação: site.tar.gz + manifest.json + SHA256SUMS.` } });
     for (const name of assetNames) {
       const expected = readFileSync(`${bundle}/${name}`);
       const existing = found.assets.find((asset) => asset.name === name);
@@ -211,10 +228,10 @@ async function main(command) {
       }
     }
     found = await release();
-    if (found.draft) found = await request(`releases/${found.id}`, { method: 'PATCH', body: { draft: false, make_latest: 'true' } });
+    if (found.draft) found = await request(`releases/${found.id}`, { method: 'PATCH', body: { draft: false, prerelease: isBetaVersion(version), make_latest: isBetaVersion(version) ? 'false' : 'true' } });
     if (!found.immutable) fail('GitHub não confirmou release imutável; implantação bloqueada.');
     await download(found, false);
-    summary(`Pacote publicado e imutável: [${tag}](${found.html_url}), SHA ${sha}, SHA-256 ${digest}. **Produção ainda não confirmada.**`);
+    summary(`${isBetaVersion(version) ? 'Pré-release beta' : 'Pacote'} publicado e imutável: [${tag}](${found.html_url}), SHA ${sha}, SHA-256 ${digest}. ${isBetaVersion(version) ? '**GitHub Pages não foi implantado.**' : '**Produção ainda não confirmada.**'}`);
     return;
   }
   if (command === 'fetch') {
