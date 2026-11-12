@@ -54,33 +54,44 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
 
   return (
     <section className="border-border mt-10 border-t pt-6" aria-labelledby="evolution-title">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 id="evolution-title" className="text-[14px] font-medium">
-          Saldo acumulado no FGTS
-        </h2>
-        <span className="text-muted-foreground text-[11.5px]">
-          {snapshot.result.saldoRetidoCents !== '0' ? 'Inclui retido · Em R$' : 'Em R$'}
-        </span>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
+        <div>
+          <h2
+            id="evolution-title"
+            className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]"
+          >
+            Saldo acumulado em {FormatAdapter.civilDate(data[total - 1]!.competencia)}
+          </h2>
+          <p className="num mt-1.5 text-[26px] leading-none font-semibold tracking-[-0.03em]">
+            {FormatAdapter.centsToBRL(snapshot.result.saldoBaseCents)}
+          </p>
+          <p className="text-muted-foreground mt-2 text-[13px]">
+            {total} competências ·{' '}
+            {snapshot.input.scenario === 'TR' ? 'TR + 3% ao ano' : 'IPCA comparativo'} · valores em
+            R$
+            {snapshot.result.saldoRetidoCents !== '0' && ' · inclui saldo retido'}
+          </p>
+        </div>
+        <ul className="text-muted-foreground flex flex-col gap-1.5 text-[12px]">
+          {SERIES.map((serie) => (
+            <li key={serie.key} className="flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="h-[3px] w-4 rounded-full"
+                style={
+                  serie.dashed
+                    ? {
+                        height: 0,
+                        borderTop: `3px ${serie.key === 'depositos' ? 'dotted' : 'dashed'} ${serie.color}`,
+                      }
+                    : { background: serie.color }
+                }
+              />
+              {serie.label}
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className="text-muted-foreground mb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px]">
-        {SERIES.map((serie) => (
-          <li key={serie.key} className="flex items-center gap-1.5">
-            <span
-              aria-hidden="true"
-              className="h-[3px] w-4 rounded-full"
-              style={
-                serie.dashed
-                  ? {
-                      height: 0,
-                      borderTop: `3px ${serie.key === 'depositos' ? 'dotted' : 'dashed'} ${serie.color}`,
-                    }
-                  : { background: serie.color }
-              }
-            />
-            {serie.label}
-          </li>
-        ))}
-      </ul>
 
       <div
         className="relative h-[210px] w-full"
@@ -184,12 +195,6 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
         )}
       </div>
 
-      <p className="help mt-2">
-        {total} meses · saldo acumulado em {snapshot.input.scenario}:{' '}
-        {FormatAdapter.centsToBRL(snapshot.result.saldoBaseCents)}
-        {snapshot.result.saldoRetidoCents !== '0' &&
-          ' · o gráfico não representa o valor disponível para saque.'}
-      </p>
       <TableToggle snapshot={snapshot} />
     </section>
   );
