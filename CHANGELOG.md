@@ -24,7 +24,7 @@ Pré-release publicada como `v2.1.0-beta.3`.
 
 ## 2.1.0-beta.2 - 2026-11-12
 
-Pré-release publicada como `v2.1.0-beta.2`.
+Pré-release publicada como `v2.1.0-beta.2`. A release e a tag foram removidas depois, substituídas pela `v2.1.0-beta.3`; o conteúdo abaixo permanece no histórico de commits.
 
 ### Changed
 
