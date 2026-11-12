@@ -116,7 +116,8 @@ async function main(command) {
   if (isBetaVersion(version) && ['fetch', 'guard', 'confirm'].includes(command)) fail('Pré-release beta não pode publicar nem confirmar Pages.');
   if (env.GITHUB_EVENT_NAME !== 'workflow_dispatch' || env.GITHUB_REF !== 'refs/heads/main') fail('Publicação/recuperação somente por workflow_dispatch na branch main.');
   if (!/^[a-f0-9]{40}$/.test(env.GITHUB_SHA ?? '') || !/^[\w.-]+\/[\w.-]+$/.test(env.GITHUB_REPOSITORY ?? '')) fail('Contexto GitHub inválido.');
-  if (['release', 'beta'].includes(operation) && sha !== env.GITHUB_SHA) fail('Nova release exige SHA idêntico ao SHA fixado no dispatch.');
+  // A new bundle must come from the dispatch head; recovery reuses the SHA already recorded in the draft/release.
+  if (command === 'pack' && sha !== env.GITHUB_SHA) fail('Nova release exige SHA idêntico ao SHA fixado no dispatch.');
   const repository = env.GITHUB_REPOSITORY;
   const base = `https://api.github.com/repos/${repository}`;
   const tag = `v${version}`;
