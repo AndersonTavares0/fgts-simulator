@@ -262,8 +262,8 @@ export function App() {
       <header className="border-border border-b print:hidden">
         <div className="mx-auto flex h-14 w-full max-w-[1200px] items-center px-5 md:gap-6 md:px-8">
           <a href="#simular" className="text-primary flex items-baseline gap-2 no-underline">
-            <span className="text-[15px] font-semibold tracking-[-0.01em]">FGTS</span>
-            <span className="text-muted-foreground hidden text-[12.5px] sm:inline">Simulador</span>
+            <span className="text-[16px] font-semibold tracking-[-0.01em]">FGTS</span>
+            <span className="text-muted-foreground hidden text-[13px] sm:inline">Simulador</span>
           </a>
           <nav aria-label="Navegação principal" className="ml-auto flex items-center md:gap-1">
             {(
@@ -277,7 +277,7 @@ export function App() {
                 key={href}
                 href={href}
                 aria-current={area === target ? 'page' : undefined}
-                className={`flex h-9 items-center rounded-md px-2 text-[13.5px] no-underline transition-colors md:px-3 ${
+                className={`flex h-10 items-center rounded-md px-2 text-[14px] no-underline transition-colors md:px-3 ${
                   area === target
                     ? 'text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground'
@@ -308,22 +308,15 @@ export function App() {
       <main id="conteudo" className="mx-auto w-full max-w-[1200px] flex-1 px-5 md:px-8">
         {area === 'simulate' && (
           <>
-            <div className="flex flex-wrap items-end justify-between gap-6 pt-10 md:pt-14 print:hidden">
+            <div className="pt-10 md:pt-14 print:hidden">
               <div>
                 <h1 className="text-[32px] leading-[1.05] font-semibold tracking-[-0.03em] text-balance md:text-[44px]">
                   Simule seu FGTS e sua rescisão
                 </h1>
-                <p className="text-muted-foreground mt-4 max-w-[60ch] text-[15px] leading-relaxed">
-                  Saldo estimado do FGTS e verbas da saída: multa, 13º e férias. Cálculo no seu
-                  aparelho, sem cadastro.
+                <p className="text-muted-foreground mt-4 max-w-[60ch] text-[14px] leading-relaxed">
+                  Saldo estimado do FGTS e verbas da saída: multa, 13º e férias.
                 </p>
               </div>
-              <a
-                href="#metodologia"
-                className="text-muted-foreground hover:text-foreground hidden pb-1 text-[13px] no-underline md:block"
-              >
-                Como o cálculo funciona
-              </a>
             </div>
 
             <div className="border-border mt-8 flex gap-6 border-b lg:hidden print:hidden">

@@ -55,7 +55,7 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   return (
     <section className="border-border mt-10 border-t pt-6" aria-labelledby="evolution-title">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 id="evolution-title" className="text-[13.5px] font-medium">
+        <h2 id="evolution-title" className="text-[14px] font-medium">
           Saldo acumulado no FGTS
         </h2>
         <span className="text-muted-foreground text-[11.5px]">
@@ -96,7 +96,7 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
         <div className="absolute inset-0 flex flex-col justify-between pb-5 pl-10">
           {[1, 0.5, 0].map((share) => (
             <div key={share} className="relative h-0">
-              <span className="text-muted-foreground absolute -top-1.5 -left-10 w-9 text-right text-[11px]">
+              <span className="text-muted-foreground absolute -top-1.5 -left-10 w-9 text-right text-[12px]">
                 {compact.format(max * share)}
               </span>
               <div className="border-border h-px border-t" />
@@ -156,7 +156,7 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
         )}
 
         <div
-          className="text-muted-foreground pointer-events-none absolute bottom-0 left-10 flex w-[calc(100%-2.5rem)] justify-between text-[11px]"
+          className="text-muted-foreground pointer-events-none absolute bottom-0 left-10 flex w-[calc(100%-2.5rem)] justify-between text-[12px]"
           aria-hidden="true"
         >
           <span>{FormatAdapter.civilDate(data[0]!.competencia)}</span>

@@ -73,7 +73,7 @@ export function ResultPanel({
         <p className="mt-4 max-w-[34ch] text-[22px] leading-snug font-medium tracking-[-0.02em]">
           O saldo e as verbas aparecem aqui depois do cálculo.
         </p>
-        <p className="text-muted-foreground mt-3 max-w-[42ch] text-[13.5px] leading-relaxed">
+        <p className="text-muted-foreground mt-3 max-w-[42ch] text-[14px] leading-relaxed">
           Preencha os dados ao lado. Nada é enviado para a internet.
         </p>
         <Button variant="secondary" className="mt-6" onClick={onExample}>
@@ -109,15 +109,15 @@ export function ResultPanel({
         </span>
       </p>
 
-      <p className="mt-4 text-[13.5px]">
+      <p className="mt-4 text-[14px]">
         {hasTotal ? totalCaption(snapshot.result) : 'Nenhuma parcela a receber neste cenário.'}
       </p>
-      <p className="text-muted-foreground mt-1 text-[12.5px]">
+      <p className="text-muted-foreground mt-1 text-[13px]">
         {describe(snapshot)} · estimativa bruta, sem descontos.
       </p>
 
       {retained && (
-        <p className="text-muted-foreground mt-2 text-[12.5px]">
+        <p className="text-muted-foreground mt-2 text-[13px]">
           {FormatAdapter.centsToBRL(snapshot.result.saldoRetidoCents)} ficam retidos no FGTS e não
           entram no total.
         </p>
@@ -134,7 +134,7 @@ export function ResultPanel({
           <h3 className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]">
             FGTS
           </h3>
-          <dl className="mt-3.5 space-y-2.5 text-[13.5px]">
+          <dl className="mt-3.5 space-y-2.5 text-[14px]">
             <Row label="Saldo total no FGTS" cents={snapshot.result.saldoBaseCents} />
             <Row label="Disponível para saque" cents={snapshot.result.saldoDisponivelCents} />
             <Row label="Retido no FGTS" cents={snapshot.result.saldoRetidoCents} />
@@ -144,7 +144,7 @@ export function ResultPanel({
           <h3 className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]">
             Rescisão
           </h3>
-          <dl className="mt-3.5 space-y-2.5 text-[13.5px]">
+          <dl className="mt-3.5 space-y-2.5 text-[14px]">
             <Row label="Multa rescisória" cents={snapshot.result.multaCents} />
             <Row label="13º proporcional" cents={snapshot.result.decimoTerceiroCents} />
             <Row label="Férias + 1/3" cents={snapshot.result.feriasCents} />
@@ -202,7 +202,7 @@ export function ResultPanel({
       </p>
 
       <details className="border-border group mt-8 border-t">
-        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-[13.5px] font-medium">
+        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-medium">
           Como chegamos nesses valores
           <ChevronDownIcon
             className="text-muted-foreground size-4 transition-transform group-open:rotate-180"
@@ -239,7 +239,7 @@ export function ResultPanel({
             </div>
           ))}
         </dl>
-        <ul className="text-muted-foreground mt-4 list-disc pl-5 text-[12.5px] leading-relaxed">
+        <ul className="text-muted-foreground mt-4 list-disc pl-5 text-[13px] leading-relaxed">
           {snapshot.assumptions.map((assumption) => (
             <li key={assumption}>{assumption}</li>
           ))}

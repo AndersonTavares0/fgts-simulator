@@ -4,7 +4,7 @@ export function HelpPage() {
       <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.025em] md:text-[38px]">
         Ajuda
       </h1>
-      <p className="text-muted-foreground mt-3 text-[15px] leading-relaxed">
+      <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
         Como a estimativa é feita e o que acontece com seus dados.
       </p>
 
@@ -61,7 +61,7 @@ export function HelpPage() {
               rescisórias com 1/3 são isentas e a multa não sofre retenção.
             </p>
             <a
-              className="text-foreground mt-3 inline-block text-[13.5px] underline underline-offset-2"
+              className="text-foreground mt-3 inline-block text-[14px] underline underline-offset-2"
               href="https://www.stf.jus.br/arquivo/cms/noticiaNoticiaStf/anexo/ADI5090Infoasociedade.pdf"
               target="_blank"
               rel="noopener noreferrer"
@@ -101,7 +101,7 @@ export function HelpPage() {
               offline depende da instalação completa dos recursos.
             </p>
             <a
-              className="text-foreground mt-3 inline-block text-[13.5px] underline underline-offset-2"
+              className="text-foreground mt-3 inline-block text-[14px] underline underline-offset-2"
               href="https://github.com/AndersonTavares0/fgts-simulator/blob/main/docs/legal/privacy.md"
               target="_blank"
               rel="noopener noreferrer"

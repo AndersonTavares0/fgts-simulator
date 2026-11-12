@@ -159,7 +159,11 @@
   *,
   *::before,
   *::after {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    /* Movimento sai; cor e opacidade continuam comunicando estado. */
+    transition-property: color, background-color, border-color, opacity, fill, stroke !important;
+    transition-duration: 150ms !important;
   }
 }

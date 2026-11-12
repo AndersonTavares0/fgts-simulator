@@ -266,7 +266,7 @@ export function SimulationForm({
               variant="ghost"
               className="border-border mt-2 flex w-full items-center justify-between gap-3 rounded-none border-x-0 border-b-0 border-t px-0 pt-4 text-left hover:bg-transparent"
             >
-              <span className="text-[15px] font-medium">
+              <span className="text-[16px] font-medium">
                 Mais opções
                 <span className="help block">Contrato, 13º, férias e taxas</span>
               </span>
@@ -321,7 +321,7 @@ export function SimulationForm({
                     onCheckedChange={(checked) => onDraft({ birthdayWithdrawal: checked === true })}
                   />
                   <div>
-                    <Label htmlFor="field-birthdayWithdrawal" className="text-[15px] font-normal">
+                    <Label htmlFor="field-birthdayWithdrawal" className="text-[16px] font-normal">
                       Recebo pelo saque-aniversário
                     </Label>
                     <span className="help block">É o dinheiro que a Caixa libera todo ano.</span>
@@ -483,7 +483,7 @@ export function SimulationForm({
                             checked={draft[toggle]}
                             onCheckedChange={(checked) => onDraft({ [toggle]: checked === true })}
                           />
-                          <Label htmlFor={`field-${toggle}`} className="flex-1 text-[15px]">
+                          <Label htmlFor={`field-${toggle}`} className="flex-1 text-[16px]">
                             {label}
                           </Label>
                           {draft[toggle] && (
