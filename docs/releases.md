@@ -28,15 +28,14 @@ node scripts/check-release.mjs
 npm ci
 npm run format:check
 npm run lint
-npm run typecheck
 npm run test:coverage
-npm audit --omit=dev --audit-level=high
+npm audit --audit-level=high
 npm run build
 ```
 
-O check `quality` usa cobertura com limite de 80% (linhas, branches, funções, statements) e auditoria apenas das dependências de produção. Push em `main` e PRs cancelam execuções anteriores do mesmo grupo; chamadas da release não são canceladas.
+O check `quality` usa cobertura com limite de 80% (linhas, branches, funções, statements), audita dependências de produção e desenvolvimento e falha para vulnerabilidades de severidade alta ou crítica. O build executa `tsc --noEmit` antes do Vite, evitando repetir o typecheck. Push em `main` e PRs cancelam execuções anteriores do mesmo grupo; chamadas da release não são canceladas.
 
-Qualquer falha interrompe o job. O resumo usa `GITHUB_STEP_SUMMARY`, sem comentário em PR, `pull_request_target` ou permissão de escrita. Dependabot agrupa atualizações mensais das actions fixadas por SHA e atualizações npm minor/patch; majors continuam em PRs separados. A auditoria de dependências de produção é executada no check `quality`, e o CodeQL analisa `main` semanalmente.
+Qualquer falha interrompe o job. O resumo usa `GITHUB_STEP_SUMMARY`, sem comentário em PR, `pull_request_target` ou permissão de escrita. Dependabot agrupa atualizações mensais das actions fixadas por SHA e atualizações npm minor/patch; majors continuam em PRs separados. `quality` audita todas as dependências em PRs, pushes e validações de release; `dependency-audit.yml` repete a auditoria semanalmente (segunda-feira, 04:47 UTC) e sob demanda. CodeQL analisa `main` semanalmente.
 
 | Job | Permissões |
 | --- | --- |
@@ -103,9 +102,9 @@ As releases antigas sem assets não oferecem rollback dos mesmos bytes. O novo f
 
 Rollback não diminui schema do IndexedDB, apaga histórico nem revoga a aplicação em clientes offline. Antes de produção, o aceite deve exercitar A → B → A com histórico salvo e duas abas; confira compatibilidade dos dados e recebimento da correção ao reconectar.
 
-## Verificação pendente antes de produção
+## Validação e limites operacionais
 
-Os workflows/scripts foram implementados, mas a sessão não executou testes, builds, publicação, tag ou deploy. Execute o selfcheck Node e os comandos de qualidade. Em ambiente autorizado, exercite falhas após criação da draft, após publicação e durante deploy, corrupção de checksum, conflito de SHA/asset, retomada sem artefato temporário, tentativa antiga e rollback. Só essas execuções comprovam recuperação ponta a ponta e compatibilidade com o token/environment reais.
+Os checks automatizados confirmam qualidade e integridade do pacote; não demonstram a recuperação completa de cada falha do GitHub Pages. Confirme cada publicação pelo run de Actions e por `release.json` público. Em ambiente autorizado, exercite falhas após criação da draft, publicação e durante deploy, checksum corrompido, conflito de SHA/asset, retomada sem artefato temporário e rollback; a aceitação A → B → A com histórico salvo e duas abas é pré-requisito de promoção.
 
 ## Referências
 
