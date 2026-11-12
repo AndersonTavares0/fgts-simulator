@@ -193,7 +193,7 @@ function TableToggle({ snapshot }: { snapshot: SimulationSnapshot }) {
         type="button"
         variant="ghost"
         size="sm"
-        className="text-muted-foreground hover:text-primary mt-1 h-auto min-h-10 px-0 text-[13px] hover:bg-transparent"
+        className="text-muted-foreground hover:text-primary mt-1 h-auto min-h-10 px-0 text-[13px] hover:bg-transparent print:hidden"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >

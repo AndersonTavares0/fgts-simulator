@@ -141,6 +141,18 @@
   }
 }
 
+@media print {
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+  /* Uma resposta por página impressa: resumo, composição e gráfico. */
+  section {
+    break-inside: avoid;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

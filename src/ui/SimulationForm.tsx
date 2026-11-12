@@ -100,6 +100,13 @@ export function SimulationForm({
     if (advancedError) setAdvancedOpen(true);
   }, [advancedError]);
 
+  const firstError = fields[0]?.[0];
+
+  useEffect(() => {
+    // Submit only reports errors; the caret must land on the first invalid control.
+    if (firstError) focusField(firstError);
+  }, [firstError]);
+
   function focusField(key: string): void {
     const field = document.getElementById(`field-${key}`);
     if (!field) {

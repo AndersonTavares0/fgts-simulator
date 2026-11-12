@@ -129,6 +129,18 @@ describe('Data final do formulário', () => {
       'A data final deve ser posterior à data de início.',
     );
   });
+
+  it('reporta primeiro o campo mais alto, que recebe o foco após o envio', () => {
+    const result = toInput(
+      { ...emptyDraft, trMonthly: 'abc', startDate: '2026-05-01', endDate: '2026-01-01' },
+      false,
+    );
+    expect('errors' in result ? Object.keys(result.errors) : []).toEqual([
+      'salary',
+      'endDate',
+      'trMonthly',
+    ]);
+  });
 });
 
 describe('Formatação de centavos', () => {
