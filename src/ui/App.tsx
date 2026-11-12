@@ -243,12 +243,12 @@ export function App() {
       </a>
 
       <header className="border-border border-b">
-        <div className="mx-auto flex h-14 w-full max-w-[1200px] items-center gap-6 px-5 md:px-8">
-          <a href="#simular" className="text-foreground flex items-baseline gap-2 no-underline">
+        <div className="mx-auto flex h-14 w-full max-w-[1200px] items-center px-5 md:gap-6 md:px-8">
+          <a href="#simular" className="text-primary flex items-baseline gap-2 no-underline">
             <span className="text-[15px] font-semibold tracking-[-0.01em]">FGTS</span>
             <span className="text-muted-foreground hidden text-[12.5px] sm:inline">Simulador</span>
           </a>
-          <nav aria-label="Navegação principal" className="ml-auto flex items-center gap-1">
+          <nav aria-label="Navegação principal" className="ml-auto flex items-center md:gap-1">
             {(
               [
                 ['#simular', 'Calcular', 'simulate'],
@@ -260,9 +260,9 @@ export function App() {
                 key={href}
                 href={href}
                 aria-current={area === target ? 'page' : undefined}
-                className={`flex h-9 items-center rounded-md px-2.5 text-[13.5px] no-underline transition-colors md:px-3 ${
+                className={`flex h-9 items-center rounded-md px-2 text-[13.5px] no-underline transition-colors md:px-3 ${
                   area === target
-                    ? 'text-foreground font-medium'
+                    ? 'text-primary font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -274,7 +274,7 @@ export function App() {
             type="button"
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-foreground -mr-2 shrink-0"
+            className="text-muted-foreground hover:text-primary -mr-2 shrink-0"
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
             aria-pressed={theme === 'dark'}
@@ -394,7 +394,7 @@ export function App() {
         <footer className="border-border text-muted-foreground mt-16 flex flex-col items-start gap-3 border-t py-6 text-[12px] md:mt-20 lg:flex-row lg:items-center lg:justify-between">
           <span role="status" className="flex items-center gap-1.5">
             <span
-              className={`size-1.5 rounded-full ${pwa.online ? 'bg-foreground' : 'bg-warn-ink'}`}
+              className={`size-1.5 rounded-full ${pwa.online ? 'bg-primary' : 'bg-warn-ink'}`}
               aria-hidden="true"
             />
             {offlineStatus}
