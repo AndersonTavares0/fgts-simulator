@@ -36,8 +36,9 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Drafts (and their preserved assets) are visible only to tokens with write access.
     permissions:
-      contents: read
+      contents: write
     outputs:
       build: ${{ steps.plan.outputs.build }}
     steps:
