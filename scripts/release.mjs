@@ -31,6 +31,31 @@ const compareVersions = (left, right) => {
   return BigInt(leftPre) === BigInt(rightPre) ? 0 : BigInt(leftPre) > BigInt(rightPre) ? 1 : -1;
 };
 
+/** Blocos "## ..." do arquivo, na ordem em que aparecem. */
+function parseChangelog(markdown) {
+  const blocks = [];
+  let current = null;
+  for (const line of String(markdown ?? '').split('\n')) {
+    if (line.startsWith('## ')) {
+      current = { heading: line.trim(), body: [] };
+      blocks.push(current);
+    } else if (current) current.body.push(line);
+  }
+  return blocks;
+}
+
+/** Texto da seção da versão, usado como corpo da release publicada. */
+export function changelogSection(markdown, version) {
+  validateIdentity(version, 'a'.repeat(40));
+  const block = parseChangelog(markdown).find(
+    (item) => changelogHeading.exec(item.heading)?.[1] === version,
+  );
+  if (!block) fail(`Seção da versão ${version} ausente no CHANGELOG.md.`);
+  const text = block.body.join('\n').trim();
+  if (!text) fail(`Seção da versão ${version} vazia no CHANGELOG.md.`);
+  return text;
+}
+
 /** Problemas do CHANGELOG.md frente ao padrão declarado; lista vazia significa conforme. */
 export function checkChangelog(markdown, version) {
   validateIdentity(version, 'a'.repeat(40));
@@ -39,14 +64,7 @@ export function checkChangelog(markdown, version) {
   const lines = text.split('\n');
   if (lines[0]?.trim() !== changelogTitle) problems.push(`Primeira linha deve ser "${changelogTitle}".`);
   if (/\p{Extended_Pictographic}|\uFE0F/u.test(text)) problems.push('Emojis não são permitidos.');
-  const blocks = [];
-  let current = null;
-  for (const line of lines) {
-    if (line.startsWith('## ')) {
-      current = { heading: line.trim(), body: [] };
-      blocks.push(current);
-    } else if (current) current.body.push(line);
-  }
+  const blocks = parseChangelog(text);
   const unreleased = blocks.find((block) => block.heading === changelogUnreleased);
   if (!unreleased) problems.push(`Seção "${changelogUnreleased}" ausente.`);
   const released = blocks
@@ -281,13 +299,15 @@ async function main(command) {
       return;
     }
     const { digest } = verifyBundle(bundle, version, sha);
+    // Notas vêm do CHANGELOG.md preservado junto ao script; o corpo da release deixa de ser só um aviso.
+    const notes = changelogSection(readFileSync('CHANGELOG.md', 'utf8'), version);
     // GITHUB_TOKEN gets 403 here (endpoint needs admin); the published release must still report immutable below.
     const immutable = await request('immutable-releases').catch(() => null);
     if (immutable && !immutable.enabled) fail('Ative imutabilidade de releases antes de publicar.');
     if (!(await checkTag(false))) await request('git/refs', { method: 'POST', body: { ref: `refs/tags/${tag}`, sha } });
     let found = await release(false);
     if (found && found.prerelease !== isBetaVersion(version)) fail('Canal da release incompatível com a versão solicitada.');
-    if (!found) found = await request('releases', { method: 'POST', body: { tag_name: tag, target_commitish: sha, name: tag, draft: true, prerelease: isBetaVersion(version), make_latest: isBetaVersion(version) ? 'false' : 'true', body: isBetaVersion(version) ? `Pré-release beta validada de ${sha}. Não implanta no GitHub Pages.\n\nRecuperação: site.tar.gz + manifest.json + SHA256SUMS.` : `Pacote validado de ${sha}. Publicação do pacote não confirma implantação no Pages.\n\nRecuperação: site.tar.gz + manifest.json + SHA256SUMS.` } });
+    if (!found) found = await request('releases', { method: 'POST', body: { tag_name: tag, target_commitish: sha, name: tag, draft: true, prerelease: isBetaVersion(version), make_latest: isBetaVersion(version) ? 'false' : 'true', body: `${isBetaVersion(version) ? `Pré-release beta validada de ${sha}. Não implanta no GitHub Pages.` : `Pacote validado de ${sha}. Publicação do pacote não confirma implantação no Pages.`}\n\n${notes}\n\nRecuperação: site.tar.gz + manifest.json + SHA256SUMS.` } });
     for (const name of assetNames) {
       const expected = readFileSync(`${bundle}/${name}`);
       const existing = found.assets.find((asset) => asset.name === name);

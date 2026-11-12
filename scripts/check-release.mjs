@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { assetNames, assertPromotion, assertSameAsset, checkChangelog, pack, sha256, validateIdentity, verifyBundle } from './release.mjs';
+import { assetNames, assertPromotion, assertSameAsset, changelogSection, checkChangelog, pack, sha256, validateIdentity, verifyBundle } from './release.mjs';
 
 const changelog = readFileSync('CHANGELOG.md', 'utf8');
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
@@ -13,6 +13,11 @@ assert.ok(checkChangelog(changelog.replace(`## ${version} - `, '## '), version).
 assert.ok(checkChangelog(`${changelog}\n- \u2728\n`, version).length > 0, 'emoji precisa falhar.');
 assert.ok(checkChangelog(changelog.replace('### Fixed', '### Correções'), version).length > 0, 'seção fora do padrão precisa falhar.');
 assert.ok(checkChangelog(changelog.replace(/ - \d{4}-\d{2}-\d{2}/, ' - 2026-13-40'), version).length > 0, 'data inválida precisa falhar.');
+const notes = changelogSection(changelog, version);
+assert.ok(notes.includes('### '), 'notas da release precisam trazer as seções da versão.');
+assert.ok(!notes.split('\n').some((line) => line.startsWith('## ')), 'notas da release não podem vazar outra versão.');
+assert.throws(() => changelogSection(changelog, '9.9.9'), /ausente/);
+assert.throws(() => changelogSection(changelog.replace(`## ${version} - `, '## 9.9.9 - '), version), /ausente/);
 
 const root = mkdtempSync(join(tmpdir(), 'fgts-release-'));
 try {
