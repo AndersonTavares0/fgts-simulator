@@ -15,6 +15,6 @@
 - Avos de 13º/férias informados separadamente da duração do contrato; cenários TR/IPCA explícitos, sem apresentação do máximo mensal como cumprimento da ADI 5090.
 - Correções legais: reserva doméstica de 3,2% corrigida como FGTS; acordo doméstico libera metade da reserva; justa causa e doença grave não somam 13º/férias; avisos fiscais e de hipóteses de saque.
 - Organização de arquivos, privacidade, CI bloqueante e publicação recuperável.
-- Paleta verde discreta nos temas claro/escuro, sincronização de `theme-color`, cabeçalho sem overflow a 320 px e auditoria semanal de CVEs em dependências npm de produção e desenvolvimento, bloqueando severidades alta/crítica.
+- Paleta verde discreta nos temas claro/escuro, sincronização de `theme-color`, cabeçalho sem overflow a 320 px, auditoria semanal de CVEs e atualização do lockfile para corrigir vulnerabilidades npm altas/críticas identificadas.
 
 As séries usam premissas estimadas, não um extrato oficial ou apuração integral do passivo trabalhista. Publicação de código/workflow e ativação do check remoto são etapas operacionais separadas da edição local.

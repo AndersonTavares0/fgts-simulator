@@ -33,7 +33,7 @@ npm audit --audit-level=high
 npm run build
 ```
 
-O check `quality` usa cobertura com limite de 80% (linhas, branches, funções, statements), audita dependências de produção e desenvolvimento e falha para vulnerabilidades de severidade alta ou crítica. O build executa `tsc --noEmit` antes do Vite, evitando repetir o typecheck. Push em `main` e PRs cancelam execuções anteriores do mesmo grupo; chamadas da release não são canceladas.
+O check `quality` usa cobertura com limite de 80% (linhas, branches, funções, statements), audita dependências de produção e desenvolvimento e falha para vulnerabilidades de severidade alta ou crítica; severidades baixa e moderada são reportadas, mas não bloqueiam. O build executa `tsc --noEmit` antes do Vite, evitando repetir o typecheck. Push em `main` e PRs cancelam execuções anteriores do mesmo grupo; chamadas da release não são canceladas.
 
 Qualquer falha interrompe o job. O resumo usa `GITHUB_STEP_SUMMARY`, sem comentário em PR, `pull_request_target` ou permissão de escrita. Dependabot agrupa atualizações mensais das actions fixadas por SHA e atualizações npm minor/patch; majors continuam em PRs separados. `quality` audita todas as dependências em PRs, pushes e validações de release; `dependency-audit.yml` repete a auditoria semanalmente (segunda-feira, 04:47 UTC) e sob demanda. CodeQL analisa `main` semanalmente.
 
