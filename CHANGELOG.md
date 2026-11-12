@@ -7,15 +7,59 @@ Versões anteriores a 2.0.0 não tinham `package.json` nem tag; o material hist�
 
 ## Unreleased
 
-### Fixed
+Nada pendente.
 
-- Interação do gráfico: o mês agora corresponde exatamente ao ponto sob o cursor (antes a medida incluía a margem dos rótulos e deslocava a leitura), com linha-guia visível, marcador em cada série e a competência escrita no eixo.
+## 2.1.0 - 2026-11-12
+
+Primeira versão estável da linha 2.1, publicada no GitHub Pages. Reúne o redesenho da interface, o FGTS do 13º, histórico, PDF, gráfico, PWA, a esteira de release e as correções da auditoria, incluindo os ajustes feitos depois da beta.4.
+
+### Added
+
+- FGTS sobre o 13º em dois modos: estimativa por salário fixo com avos por mês de ao menos 15 dias, ou remunerações brutas informadas por competência.
+- Histórico local em IndexedDB, com reabertura de resultados e comparação entre duas simulações.
+- Relatório PDF monocromático com total em destaque, memória de cálculo, dados contratuais, evolução mensal e um aviso curto ao final.
+- Gráfico de evolução do saldo em TR + 3% ao ano e referência IPCA, com leitura exata por competência e os mesmos valores em tabela.
+- PWA com instalação, uso offline e atualização aplicada por ação explícita do usuário.
+- Auditoria semanal de CVEs, CodeQL e Dependabot agrupado por atualizações de actions e npm minor/patch.
+- Canal beta protegido e canal estável com release imutável de três assets e implantação verificada no Pages.
+- Ruleset ativo em `main` com o check `quality` obrigatório, squash-only, histórico linear e sem bypass administrativo.
+- Validação do `CHANGELOG.md` em todo PR e no job de release: título, `Unreleased` no topo, data real, ordem decrescente, seções permitidas, itens por versão e ausência de emojis.
 
 ### Changed
 
-- Relatório PDF substitui a lista completa de premissas e avisos por um único aviso curto; o caso típico cai de três para duas páginas.
-- Seção do saldo acumulado abre com o valor final em destaque, as competências e o cenário; a legenda foi para o topo e a linha repetida abaixo do gráfico saiu.
-- Estado vazio do resultado mostra o exemplo já calculado (total, saldo, multa, 13º e férias) com selo de exemplo; o botão carrega exatamente esse caso.
+- Interface reescrita em React 19 + TypeScript + Tailwind CSS v4, com Heroicons e gráfico em SVG local.
+- Escala tipográfica reduzida a quatro degraus, rótulos em caixa de frase e fonte pré-carregada.
+- Fluxo de release recuperável em quatro etapas: plano, qualidade, publicação imutável e Pages com verificação pública.
+- Corpo da release é montado com a seção desta versão no `CHANGELOG.md`, o SHA validado e a instrução de recuperação.
+- Documentação reorganizada em `docs/` (arquitetura, desenvolvimento, releases, premissas legais e privacidade), com os documentos anteriores em `docs/archive/`.
+- Cache offline reduzido de 21 para 12 entradas: dependências do `html()` do jsPDF não são mais baixadas na instalação.
+- Comparação de simulações deixou de exibir o formato interno do registro.
+- Formatação de moeda com uma única implementação para tela, gráfico, histórico e PDF.
+- Seção do saldo acumulado abre com o valor final em destaque, as competências e o cenário.
+- Estado vazio do resultado mostra o exemplo já calculado, com selo de exemplo e o mesmo caso que o botão carrega.
+- Impressão mostra apenas resumo e gráfico, sem formulário, navegação ou botões.
+
+### Removed
+
+- Módulos legados `UIAdapter`, `ThemeAdapter`, `ContratoTrabalho`, `INSSService` e o CSS modular anterior.
+- Cálculo de INSS próprio: o app declara explicitamente que não retém IRRF nem INSS.
+
+### Fixed
+
+- Escala do gráfico cobre IPCA e TR; a linha de referência não sai mais da área e o eixo acompanha o cenário selecionado.
+- Interação do gráfico corresponde exatamente à competência sob o cursor, com linha-guia, marcador em cada série e mês escrito no eixo; arrasto horizontal funciona no toque.
+- Atualização do PWA ativa a versão baixada pelo botão **Atualizar agora**; recarregar a página sozinho não aplicava a versão nova.
+- Histórico: registro inválido ou de outra versão deixou de esconder os válidos; a tela informa quantos ficaram fora da lista e nada é apagado.
+- Abertura do IndexedDB não fica mais pendente quando outra aba pede migração do banco.
+- Datas iguais no início e no fim são recusadas com a mesma regra e a mesma mensagem do cálculo, no campo correspondente.
+- Reserva doméstica de 3,2% passou a ser corrigida como FGTS; acordo doméstico libera metade da reserva.
+- Justa causa e saque por doença grave não somam 13º nem férias proporcionais.
+- Fundamentos legais de doença grave, aposentadoria e saque-aniversário alinhados ao art. 20 da Lei 8.036/1990.
+
+### Security
+
+- Contraste elevado: série IPCA de 2,64 para 4,13:1 no tema claro; bordas de campo de 3,31:1 no claro e de 3,49:1 no escuro.
+- CSP por meta tag no build, com hash do script de tema; o modo de desenvolvimento continua sem a regra.
 
 ## 2.1.0-beta.4 - 2026-11-12
 
