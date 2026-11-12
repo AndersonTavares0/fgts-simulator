@@ -62,6 +62,10 @@ export function ResultPanel({
   onExample,
 }: Props) {
   if (!snapshot) {
+    const preview = [
+      ['FGTS', ['Saldo total no FGTS', 'Disponível para saque', 'Retido no FGTS']],
+      ['Rescisão', ['Multa rescisória', '13º proporcional', 'Férias + 1/3']],
+    ] as const;
     return (
       <section aria-labelledby="result-title" className="border-border lg:pt-0">
         <h2
@@ -76,9 +80,38 @@ export function ResultPanel({
         <p className="text-muted-foreground mt-3 max-w-[42ch] text-[14px] leading-relaxed">
           Preencha os dados ao lado. Nada é enviado para a internet.
         </p>
-        <Button variant="secondary" className="mt-6" onClick={onExample}>
-          Ver exemplo
-        </Button>
+
+        {/* Amostra sem valores: mostra o que o cálculo devolve sem inventar números. */}
+        <div className="border-border mt-8 grid gap-6 rounded-lg border border-dashed p-4 sm:grid-cols-2">
+          {preview.map(([title, labels]) => (
+            <div key={title}>
+              <p className="text-muted-foreground text-[12px] font-medium">{title}</p>
+              <ul aria-hidden="true" className="mt-3 space-y-2.5">
+                {labels.map((label) => (
+                  <li
+                    key={label}
+                    className="text-muted-foreground flex items-baseline justify-between gap-3 text-[14px]"
+                  >
+                    <span>{label}</span>
+                    <span className="border-border w-14 border-b border-dashed" />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <p className="text-muted-foreground text-[13px] sm:col-span-2">
+            Saldo, multa, 13º e férias, com o total em destaque.
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Button variant="secondary" onClick={onExample}>
+            Ver exemplo
+          </Button>
+          <span className="text-muted-foreground text-[13px]">
+            Preenche o formulário com um caso completo.
+          </span>
+        </div>
       </section>
     );
   }
