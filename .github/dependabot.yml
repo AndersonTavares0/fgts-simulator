@@ -16,6 +16,11 @@ updates:
       # shortcut: typescript-eslint peer requires typescript <6.1.0; remove when it supports TS 7.
       - dependency-name: typescript
         versions: ['>=7']
+      # shortcut: eslint-plugin-jsx-a11y@6.10.2 peer caps eslint at ^9; bump eslint and @eslint/js together when it widens.
+      - dependency-name: eslint
+        versions: ['>=10']
+      - dependency-name: '@eslint/js'
+        versions: ['>=10']
     groups:
       minor-patch:
         patterns: ['*']
