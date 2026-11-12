@@ -1,32 +1,115 @@
-# Alterações
+# Changelog
 
-## 2.1.0-beta.2 (beta)
+Formato do Keep a Changelog 1.1.0, versionamento semântico (SemVer 2.0.0) e texto em português.
+Sem emojis. Cada release publicada tem uma seção com data; o trabalho aberto fica em **Unreleased** e vira
+seção no PR que muda a versão. Seções permitidas: Added, Changed, Deprecated, Removed, Fixed, Security.
+Versões anteriores a 2.0.0 não tinham `package.json` nem tag; o material histórico está em `docs/archive/`.
 
-- Gráfico cobre as duas séries: quando o IPCA supera a TR, a linha de referência e o eixo deixam de sair da área; o eixo passa a acompanhar o cenário selecionado.
-- Atualização do PWA: o rodapé oferece **Atualizar agora** e ativa a versão baixada sem recarregar formulário pendente. Recarregar a página sozinho não aplicava a versão nova.
-- Histórico: um registro inválido ou de outra versão deixou de esconder os válidos; a tela informa quantos ficaram fora da lista e nada é apagado. Corrigida a abertura que ficava pendente quando outra aba pedia migração do banco.
-- Datas iguais no início e no fim passam a ser recusadas com a mesma regra e a mesma mensagem do cálculo, no campo correspondente.
-- Contraste: série IPCA de 2,64 para 4,13:1 no tema claro; bordas de campo de 1,38 para 3,31:1 no claro e de 2,05 para 3,49:1 no escuro.
+## Unreleased
+
+Nada pendente.
+
+## 2.1.0-beta.2 - 2026-11-12
+
+Pré-release publicada como `v2.1.0-beta.2`.
+
+### Changed
+
+- Cache offline reduzido de 21 para 12 entradas: dependências do `html()` do jsPDF não são mais baixadas na instalação; PDF e uso offline continuam funcionando.
+- Comparação de simulações deixou de exibir o formato interno do registro.
+- Notas da 2.1.0-beta.1 corrigidas no repositório: a interface usa Heroicons e SVG local, não Recharts nem lucide-react.
+
+### Fixed
+
+- Escala do gráfico passou a cobrir IPCA e TR; a linha de referência não sai mais da área e o eixo acompanha o cenário selecionado.
+- Atualização do PWA: o rodapé oferece **Atualizar agora** e ativa a versão baixada; recarregar a página sozinho não aplicava a versão nova.
+- Histórico: registro inválido ou de outra versão deixou de esconder os válidos; a tela informa quantos ficaram fora da lista e nada é apagado.
+- Abertura do IndexedDB não fica mais pendente quando outra aba pede migração do banco.
+- Datas iguais no início e no fim são recusadas com a mesma regra e a mesma mensagem do cálculo, no campo correspondente.
+- Formatação de moeda com uma única implementação para tela, gráfico, histórico e PDF.
+
+### Security
+
+- Contraste elevado: série IPCA de 2,64 para 4,13:1 no tema claro; bordas de campo de 1,38 para 3,31:1 no claro e de 2,05 para 3,49:1 no escuro.
 - CSP por meta tag no build, com hash do script de tema; o modo de desenvolvimento continua sem a regra.
-- Cache offline de 21 para 12 entradas: dependências do `html()` do jsPDF não são mais baixadas na instalação; PDF e uso offline continuam funcionando.
-- Formatação de moeda com uma única implementação para tela, gráfico, histórico e PDF; a comparação não exibe mais o formato interno do registro.
-- Notas da 2.1.0-beta.1 corrigidas: a interface usa Heroicons e SVG local, não Recharts nem lucide-react.
 
-## 2.1.0-beta.1 (beta)
+## 2.1.0-beta.1 - 2026-11-12
 
-- FGTS sobre 13º passa a oferecer estimativa por salário fixo ou remunerações brutas reais por competência; valores informados não comprovam recolhimento nem reproduzem índices históricos. O calendário simplificado divide o 13º entre novembro e dezembro quando ambos estão no período e estima o proporcional nas rescisões cabíveis; adiantamentos anteriores, atrasos e lucros não são reproduzidos.
-- Preservados históricos anteriores sem recálculo; reabrir para novo cálculo usa a regra atual. TR soma a taxa mensal equivalente a 3% efetivos ao ano, aproximação que não necessariamente reproduz a combinação histórica oficial.
-- Interface responsiva reorganizada em simulação, histórico e metodologia.
-- Interface migrada para React 19 + TypeScript, Tailwind CSS v4, Heroicons e ícones SVG locais; gráfico e PDF carregam sob demanda.
-- Área de trabalho compacta: histórico e ajuda separados, detalhes recolhidos, alternância Dados/Resultado no celular e botão Usar exemplo sem salvamento automático.
-- Série temporal comparativa TR + 3%/IPCA, com dados equivalentes em tabela.
-- Histórico local opcional e comparação de simulações com versões preservadas.
-- Relatório PDF reformulado: cabeçalho com identificação, resumo em destaque, faixa de três saldos, dados do contrato em duas colunas, composição com total enfatizado e evolução mensal em tabela zebrada com cabeçalho repetido.
-- Impressão do site mostra apenas resumo e gráfico, sem formulário, em uma página.
-- PWA com recursos offline e atualização sem recarga forçada.
-- Avos de 13º/férias informados separadamente da duração do contrato; cenários TR/IPCA explícitos, sem apresentação do máximo mensal como cumprimento da ADI 5090.
-- Correções legais: reserva doméstica de 3,2% corrigida como FGTS; acordo doméstico libera metade da reserva; justa causa e doença grave não somam 13º/férias; avisos fiscais e de hipóteses de saque.
-- Organização de arquivos, privacidade, CI bloqueante e publicação recuperável.
-- Paleta verde discreta nos temas claro/escuro, sincronização de `theme-color`, cabeçalho sem overflow a 320 px, auditoria semanal de CVEs e atualização do lockfile para corrigir vulnerabilidades npm altas/críticas identificadas.
+Pré-release publicada como `v2.1.0-beta.1`. A release foi removida depois, mantendo-se a tag.
 
-As séries usam premissas estimadas, não um extrato oficial ou apuração integral do passivo trabalhista. Publicação de código/workflow e ativação do check remoto são etapas operacionais separadas da edição local.
+### Added
+
+- FGTS sobre o 13º em dois modos: estimativa por salário fixo com avos por mês de ao menos 15 dias, ou remunerações brutas informadas por competência.
+- Histórico local em IndexedDB, com reabertura de resultados e comparação entre duas simulações.
+- Relatório PDF monocromático com total em destaque, memória de cálculo, dados contratuais, evolução mensal, premissas e avisos.
+- Gráfico de evolução do saldo em TR + 3% ao ano e referência IPCA, com os mesmos valores em tabela.
+- PWA com instalação, uso offline e atualização sem recarga forçada.
+- Auditoria semanal de CVEs, CodeQL e Dependabot agrupado por atualizações de actions e npm minor/patch.
+- Canal beta protegido: publicação de pré-release imutável com três assets e sem implantação no GitHub Pages.
+- Ruleset ativo em `main` com o check `quality` obrigatório, squash-only, histórico linear e sem bypass administrativo.
+
+### Changed
+
+- Interface reescrita em React 19 + TypeScript + Tailwind CSS v4, com Heroicons e gráfico em SVG local.
+- Fluxo de release recuperável em quatro etapas: plano, qualidade, publicação imutável e Pages com verificação pública.
+- Documentação reorganizada em `docs/` (arquitetura, desenvolvimento, releases, premissas legais e privacidade), com os documentos anteriores em `docs/archive/`.
+
+### Removed
+
+- Módulos legados `UIAdapter`, `ThemeAdapter`, `ContratoTrabalho`, `INSSService` e o CSS modular anterior.
+- Cálculo de INSS próprio: o app declara explicitamente que não retém IRRF nem INSS.
+
+### Fixed
+
+- Reserva doméstica de 3,2% passou a ser corrigida como FGTS; acordo doméstico libera metade da reserva.
+- Justa causa e saque por doença grave não somam 13º nem férias proporcionais.
+- Fundamentos legais de doença grave, aposentadoria e saque-aniversário alinhados ao art. 20 da Lei 8.036/1990.
+
+## 2.0.3 - 2026-06-19
+
+### Changed
+
+- Classes CSS refinadas, breakpoints consistentes e espaçamento compacto.
+
+## 2.0.2 - 2026-06-19
+
+### Added
+
+- Cálculo de INSS (primeira fase do roadmap da época).
+
+### Fixed
+
+- Correções legais, de segurança e de interface consolidadas em uma única entrega de 24 commits.
+- IDs de passos e proteção contra nulos no workflow de PR.
+- Escala visual, banner LGPD, cabeçalho em telas pequenas, grade em tablet e o acordeão "Sobre o projeto".
+
+## 2.0.1 - 2026-06-18
+
+### Added
+
+- Migração para TypeScript com arquitetura modular, estratégia de inteiros para valores financeiros e testes unitários.
+- Política de privacidade LGPD, consentimento para dado de saúde, banner de transparência e divulgação de CDN de terceiros.
+- Acessibilidade WCAG: foco visível, contraste, semântica e navegação por teclado.
+- Tema claro e escuro com detecção do sistema e CSS modular com variáveis.
+- Suporte a empregado doméstico (LC 150/2015) e contrato de aprendizagem.
+- Pipeline de CI/CD com Vite, TypeScript e Node 24.
+
+### Removed
+
+- Teto artificial de FGTS aplicado ao cálculo.
+
+### Fixed
+
+- Multa indevida em eventos de saque e cálculo da reserva do empregado doméstico.
+- Regra dos 15 dias em contratos mais curtos que um mês.
+- Carregamento de assets no GitHub Pages com caminho base relativo.
+- Fundamentos legais de doença grave e aposentadoria alinhados ao art. 20 da Lei 8.036/1990.
+
+## 2.0.0 - 2026-05-07
+
+Definição inicial de versão no `package.json`, sem tag de release.
+
+### Added
+
+- Aplicação estática migrada para TypeScript com Vite.
+- Documentação técnica inicial e padronização do repositório.

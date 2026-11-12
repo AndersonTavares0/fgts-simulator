@@ -13,6 +13,74 @@ const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const betaVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-beta\.(0|[1-9]\d*)$/;
 export const isBetaVersion = (version) => betaVersion.test(version ?? '');
 
+const changelogTitle = '# Changelog';
+const changelogUnreleased = '## Unreleased';
+const changelogSections = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security'];
+const changelogHeading = /^## (\d+\.\d+\.\d+(?:-beta\.\d+)?) - (\d{4}-\d{2}-\d{2})$/;
+
+const compareVersions = (left, right) => {
+  const [leftCore, leftPre] = left.split('-beta.');
+  const [rightCore, rightPre] = right.split('-beta.');
+  const core = leftCore.split('.').map(BigInt);
+  const other = rightCore.split('.').map(BigInt);
+  for (let index = 0; index < 3; index++) {
+    if (core[index] !== other[index]) return core[index] > other[index] ? 1 : -1;
+  }
+  if (leftPre === undefined) return rightPre === undefined ? 0 : 1;
+  if (rightPre === undefined) return -1;
+  return BigInt(leftPre) === BigInt(rightPre) ? 0 : BigInt(leftPre) > BigInt(rightPre) ? 1 : -1;
+};
+
+/** Problemas do CHANGELOG.md frente ao padrão declarado; lista vazia significa conforme. */
+export function checkChangelog(markdown, version) {
+  validateIdentity(version, 'a'.repeat(40));
+  const problems = [];
+  const text = String(markdown ?? '');
+  const lines = text.split('\n');
+  if (lines[0]?.trim() !== changelogTitle) problems.push(`Primeira linha deve ser "${changelogTitle}".`);
+  if (/\p{Extended_Pictographic}|\uFE0F/u.test(text)) problems.push('Emojis não são permitidos.');
+  const blocks = [];
+  let current = null;
+  for (const line of lines) {
+    if (line.startsWith('## ')) {
+      current = { heading: line.trim(), body: [] };
+      blocks.push(current);
+    } else if (current) current.body.push(line);
+  }
+  const unreleased = blocks.find((block) => block.heading === changelogUnreleased);
+  if (!unreleased) problems.push(`Seção "${changelogUnreleased}" ausente.`);
+  const released = blocks
+    .map((block, index) => ({ block, index }))
+    .filter(({ block }) => changelogHeading.test(block.heading))
+    .map(({ block, index }) => {
+      const match = changelogHeading.exec(block.heading);
+      return { ...block, index, version: match[1], date: match[2] };
+    });
+  if (unreleased && released.length && blocks.indexOf(unreleased) > released[0].index)
+    problems.push('"Unreleased" deve vir antes das versões publicadas.');
+  for (let index = 1; index < released.length; index++) {
+    if (compareVersions(released[index - 1].version, released[index].version) <= 0)
+      problems.push(`Versões fora de ordem decrescente: ${released[index - 1].version} e ${released[index].version}.`);
+  }
+  for (const block of released) {
+    const parsed = new Date(`${block.date}T00:00:00Z`);
+    if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== block.date)
+      problems.push(`Data inválida na versão ${block.version}.`);
+    const sections = block.body.filter((line) => line.startsWith('### ')).map((line) => line.slice(4).trim());
+    for (const section of sections) {
+      if (!changelogSections.includes(section))
+        problems.push(`Seção "${section}" fora do padrão em ${block.version}.`);
+    }
+    if (new Set(sections).size !== sections.length) problems.push(`Seção repetida em ${block.version}.`);
+    if (!block.body.some((line) => line.startsWith('- '))) problems.push(`Versão ${block.version} sem itens.`);
+  }
+  const own = released.filter((block) => block.version === version);
+  if (own.length === 0) problems.push(`Seção da versão ${version} ausente.`);
+  if (own.length > 1) problems.push(`Seção da versão ${version} duplicada.`);
+  return problems;
+}
+
+
 export function validateIdentity(version, sha) {
   if (!stableVersion.test(version ?? '') && !isBetaVersion(version)) fail('Use versão estável MAJOR.MINOR.PATCH ou beta MAJOR.MINOR.PATCH-beta.N, sem prefixo v.');
   if (!/^[a-f0-9]{40}$/.test(sha ?? '')) fail('Informe o SHA completo de 40 caracteres.');
