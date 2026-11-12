@@ -1,6 +1,6 @@
 {
   "name": "projeto-fgts",
-  "version": "2.1.0-beta.1",
+  "version": "2.1.0-beta.2",
   "description": "Simulador de FGTS e rescisão trabalhista — Projeto de Extensão UNINTER (TypeScript + DDD)",
   "type": "module",
   "main": "src/main.ts",
