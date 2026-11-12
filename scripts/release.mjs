@@ -211,8 +211,9 @@ async function main(command) {
       return;
     }
     const { digest } = verifyBundle(bundle, version, sha);
-    const immutable = await request('immutable-releases');
-    if (!immutable.enabled) fail('Ative imutabilidade de releases antes de publicar.');
+    // GITHUB_TOKEN gets 403 here (endpoint needs admin); the published release must still report immutable below.
+    const immutable = await request('immutable-releases').catch(() => null);
+    if (immutable && !immutable.enabled) fail('Ative imutabilidade de releases antes de publicar.');
     if (!(await checkTag(false))) await request('git/refs', { method: 'POST', body: { ref: `refs/tags/${tag}`, sha } });
     let found = await release(false);
     if (found && found.prerelease !== isBetaVersion(version)) fail('Canal da release incompatível com a versão solicitada.');
