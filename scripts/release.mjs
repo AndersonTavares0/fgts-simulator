@@ -153,7 +153,8 @@ async function main(command) {
     if (!['ahead', 'identical'].includes(comparison.status)) fail('SHA do pacote não pertence ao histórico aprovado de main neste dispatch.');
   }
   async function release(required = true) {
-    const found = await request(`releases/tags/${tag}`, { missing: true });
+    // The tag endpoint never returns drafts; the list does, for tokens with write access.
+    const found = (await request(`releases/tags/${tag}`, { missing: true })) ?? (await request('releases?per_page=100')).find((item) => item.tag_name === tag);
     if (!found && required) fail('Release não encontrada.');
     return found;
   }
