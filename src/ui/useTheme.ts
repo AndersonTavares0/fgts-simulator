@@ -18,6 +18,8 @@ export function useTheme() {
 
   useEffect(() => {
     document.documentElement.dataset['theme'] = theme;
+    const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (themeColor) themeColor.content = theme === 'dark' ? '#0b100c' : '#f8faf8';
   }, [theme]);
 
   function toggle(): void {

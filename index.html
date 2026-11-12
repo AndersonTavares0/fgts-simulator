@@ -3,12 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#FAFAF9" />
+    <meta name="theme-color" content="#f8faf8" />
     <meta
       name="description"
       content="Simule depósitos do FGTS e parcelas selecionadas da rescisão. Compare cenários, salve neste navegador e baixe um relatório estimativo."
     />
     <title>Simulador FGTS · Entenda suas possibilidades</title>
+    <script>
+      (() => {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let theme = prefersDark ? 'dark' : 'light';
+        try {
+          const savedTheme = localStorage.getItem('fgts_simulator_theme');
+          if (savedTheme === 'light' || savedTheme === 'dark') theme = savedTheme;
+        } catch {
+          // Use the system preference when storage is unavailable.
+        }
+        document.documentElement.dataset.theme = theme;
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute('content', theme === 'dark' ? '#0b100c' : '#f8faf8');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

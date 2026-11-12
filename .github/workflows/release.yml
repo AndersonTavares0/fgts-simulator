@@ -5,12 +5,12 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: 'release: new/current dispatch SHA; resume: preserved bytes; rollback: explicit downgrade'
+        description: 'release: stable version and Pages; beta: immutable GitHub prerelease without Pages; resume/rollback: recovery operations'
         type: choice
-        options: [release, resume, rollback]
+        options: [release, beta, resume, rollback]
         required: true
       version:
-        description: 'Expected stable package version, without v (e.g. 2.1.0)'
+        description: 'Stable MAJOR.MINOR.PATCH or beta MAJOR.MINOR.PATCH-beta.N, without v'
         type: string
         required: true
       sha:
@@ -82,6 +82,7 @@ jobs:
     with:
       package: true
       version: ${{ inputs.version }}
+      operation: ${{ inputs.operation }}
       sha: ${{ inputs.sha }}
 
   publish:
@@ -110,7 +111,7 @@ jobs:
 
   deploy:
     needs: [plan, publish]
-    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.publish.result == 'success' || (inputs.operation == 'rollback' && needs.publish.result == 'skipped')) }}
+    if: ${{ inputs.operation != 'beta' && !cancelled() && needs.plan.result == 'success' && (needs.publish.result == 'success' || (inputs.operation == 'rollback' && needs.publish.result == 'skipped')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
