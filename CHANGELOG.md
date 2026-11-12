@@ -9,6 +9,19 @@ Versões anteriores a 2.0.0 não tinham `package.json` nem tag; o material hist�
 
 Nada pendente.
 
+## 2.1.0-beta.3 - 2026-11-12
+
+Pré-release publicada como `v2.1.0-beta.3`.
+
+### Added
+
+- Validação do `CHANGELOG.md` em todo PR e no job de release: título, `Unreleased` no topo, data real, ordem decrescente, seções permitidas, itens por versão e ausência de emojis.
+
+### Changed
+
+- Corpo da release passa a ser montado com a seção desta versão, o SHA validado e a instrução de recuperação; antes era um aviso genérico sem conteúdo.
+- `CHANGELOG.md` padronizado no formato Keep a Changelog, com histórico desde 2.0.0.
+
 ## 2.1.0-beta.2 - 2026-11-12
 
 Pré-release publicada como `v2.1.0-beta.2`.
