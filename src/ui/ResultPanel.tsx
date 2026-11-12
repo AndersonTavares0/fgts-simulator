@@ -66,7 +66,7 @@ export function ResultPanel({
       <section aria-labelledby="result-title" className="border-border lg:pt-0">
         <h2
           id="result-title"
-          className="text-muted-foreground text-[12px] font-medium tracking-[0.08em] uppercase"
+          className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]"
         >
           Resultado
         </h2>
@@ -93,7 +93,7 @@ export function ResultPanel({
       <div className="flex items-start justify-between gap-4">
         <h2
           id="result-title"
-          className="text-muted-foreground text-[12px] font-medium tracking-[0.08em] uppercase"
+          className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]"
         >
           Total estimado
         </h2>
@@ -131,7 +131,7 @@ export function ResultPanel({
 
       <div className="border-border mt-9 grid gap-7 border-t pt-6 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-border">
         <div className="sm:pr-8">
-          <h3 className="text-muted-foreground text-[11px] font-medium tracking-[0.08em] uppercase">
+          <h3 className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]">
             FGTS
           </h3>
           <dl className="mt-3.5 space-y-2.5 text-[13.5px]">
@@ -141,7 +141,7 @@ export function ResultPanel({
           </dl>
         </div>
         <div className="sm:pl-8">
-          <h3 className="text-muted-foreground text-[11px] font-medium tracking-[0.08em] uppercase">
+          <h3 className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]">
             Rescisão
           </h3>
           <dl className="mt-3.5 space-y-2.5 text-[13.5px]">

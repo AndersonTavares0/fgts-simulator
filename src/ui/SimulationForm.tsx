@@ -151,7 +151,7 @@ export function SimulationForm({
       )}
 
       <div>
-        <p className="text-muted-foreground mb-3 text-[11px] font-medium tracking-[0.08em] uppercase">
+        <p className="text-muted-foreground mb-3 text-[12px] font-medium tracking-[-0.01em]">
           Trabalho
         </p>
 
@@ -202,7 +202,7 @@ export function SimulationForm({
           ))}
         </div>
 
-        <p className="text-muted-foreground mt-7 mb-3 text-[11px] font-medium tracking-[0.08em] uppercase">
+        <p className="text-muted-foreground mt-7 mb-3 text-[12px] font-medium tracking-[-0.01em]">
           Saída ou saque
         </p>
 
