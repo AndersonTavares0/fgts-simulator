@@ -1,4 +1,5 @@
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
+import type { PointerEvent } from 'react';
 import { FormatAdapter } from '../adapters/FormatAdapter';
 import { Button } from './components/ui/button';
 import { chartMax } from './chartScale';
@@ -25,6 +26,7 @@ const yAt = (value: number, max: number): number => 98 - (value / max) * 94;
 
 export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   const [active, setActive] = useState<number | null>(null);
+  const plotSvg = useRef<SVGSVGElement>(null);
   const areaId = `area-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const data = snapshot.timeline;
   const total = data.length;
@@ -51,6 +53,15 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   if (total === 0) return null;
   const shown = active === null ? data[total - 1] : data[active];
   const activeX = active === null ? 0 : total < 2 ? 50 : (active / (total - 1)) * 100;
+
+  // Measured on the plot itself: the container includes the axis gutter, which
+  // would shift every hover towards the labels.
+  function trackPointer(event: PointerEvent<HTMLDivElement>): void {
+    const rect = plotSvg.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return;
+    const ratio = (event.clientX - rect.left) / rect.width;
+    setActive(Math.min(total - 1, Math.max(0, Math.round(ratio * (total - 1)))));
+  }
 
   return (
     <section className="border-border mt-10 border-t pt-6" aria-labelledby="evolution-title">
@@ -94,15 +105,12 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
       </div>
 
       <div
-        className="relative h-[210px] w-full"
+        className="relative h-[210px] w-full touch-pan-y select-none"
         role="img"
         aria-label={`Evolução mensal do saldo simulado em ${total} competências. Os mesmos valores estão na tabela abaixo.`}
         onPointerLeave={() => setActive(null)}
-        onPointerMove={(event) => {
-          const box = event.currentTarget.getBoundingClientRect();
-          const ratio = (event.clientX - box.left) / box.width;
-          setActive(Math.min(total - 1, Math.max(0, Math.round(ratio * (total - 1)))));
-        }}
+        onPointerDown={trackPointer}
+        onPointerMove={trackPointer}
       >
         <div className="absolute inset-0 flex flex-col justify-between pb-5 pl-10">
           {[1, 0.5, 0].map((share) => (
@@ -116,6 +124,7 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
         </div>
 
         <svg
+          ref={plotSvg}
           className="absolute inset-y-0 right-0 bottom-5 left-10 h-[calc(100%-1.25rem)] w-[calc(100%-2.5rem)]"
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
@@ -148,7 +157,8 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
               x2={activeX}
               y1="0"
               y2="100"
-              stroke="var(--line)"
+              stroke="var(--input)"
+              strokeDasharray="2 3"
               strokeWidth="1"
               vectorEffect="non-scaling-stroke"
             />
@@ -166,6 +176,20 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
           />
         )}
 
+        {active !== null &&
+          SERIES.map((serie) => (
+            <span
+              key={serie.key}
+              aria-hidden="true"
+              className="border-background pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+              style={{
+                background: serie.color,
+                left: `calc(2.5rem + (100% - 2.5rem) * ${activeX / 100})`,
+                top: `calc((100% - 1.25rem) * ${yAt(cents(data[active]!, serie.key), max) / 100})`,
+              }}
+            />
+          ))}
+
         <div
           className="text-muted-foreground pointer-events-none absolute bottom-0 left-10 flex w-[calc(100%-2.5rem)] justify-between text-[12px]"
           aria-hidden="true"
@@ -175,8 +199,26 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
         </div>
 
         {active !== null && (
+          <span
+            aria-hidden="true"
+            className="text-foreground num pointer-events-none absolute bottom-0 text-[12px] font-semibold"
+            style={{
+              left: `calc(2.5rem + (100% - 2.5rem) * ${activeX / 100})`,
+              transform:
+                activeX > 85
+                  ? 'translateX(-100%)'
+                  : activeX < 15
+                    ? 'translateX(0)'
+                    : 'translateX(-50%)',
+            }}
+          >
+            {FormatAdapter.civilDate(data[active]!.competencia)}
+          </span>
+        )}
+
+        {active !== null && (
           <div
-            className="bg-foreground text-background pointer-events-none absolute top-0 z-10 w-max max-w-[240px] rounded-lg px-2.5 py-1.5 text-[12px] shadow-lg"
+            className="bg-foreground text-background pointer-events-none absolute top-1 z-10 w-max max-w-[240px] rounded-lg px-2.5 py-1.5 text-[12px] shadow-lg"
             style={{
               left: `calc(2.5rem + (100% - 2.5rem) * ${activeX / 100})`,
               // Flip to the other side near the right edge so the box never overflows.
