@@ -363,73 +363,12 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
     }
   }
 
-  // Premissas e avisos em duas colunas
-  section('Premissas e avisos', 30);
-  const notesWidth = column;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.2);
-  const measure = (items: readonly string[]): number =>
-    items.reduce(
-      (sum, item) => sum + doc.splitTextToSize(item, notesWidth - 3.5).length * 3.3 + 1,
-      0,
-    );
-  const notesHeight = Math.max(measure(snapshot.assumptions), measure(snapshot.warnings)) + 10;
-  if (y + notesHeight <= BOTTOM) {
-    const top = y;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(MUTED);
-    doc.text('PREMISSAS', LEFT, y);
-    doc.text('AVISOS', LEFT + notesWidth + GAP, y);
-    const start = y + 4;
-    let leftY = start;
-    for (const item of snapshot.assumptions) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.2);
-      doc.setTextColor(MUTED);
-      for (const [index, line] of doc.splitTextToSize(item, notesWidth - 3.5).entries()) {
-        if (index === 0) {
-          doc.setTextColor(INK);
-          doc.text('·', LEFT, leftY);
-          doc.setTextColor(MUTED);
-        }
-        doc.text(line, LEFT + 3, leftY);
-        leftY += 3.3;
-      }
-      leftY += 1;
-    }
-    let rightY = start;
-    for (const item of snapshot.warnings) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.2);
-      doc.setTextColor(MUTED);
-      for (const [index, line] of doc.splitTextToSize(item, notesWidth - 3.5).entries()) {
-        if (index === 0) {
-          doc.setTextColor(INK);
-          doc.text('·', LEFT + notesWidth + GAP, rightY);
-          doc.setTextColor(MUTED);
-        }
-        doc.text(line, LEFT + notesWidth + GAP + 3, rightY);
-        rightY += 3.3;
-      }
-      rightY += 1;
-    }
-    y = Math.max(leftY, rightY) + 2;
-    void top;
-  } else {
-    for (const item of snapshot.assumptions) {
-      paragraph(`· ${item}`, 7.2);
-    }
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(MUTED);
-    ensure(6);
-    doc.text('AVISOS', LEFT, y);
-    y += 4;
-    for (const item of snapshot.warnings) {
-      paragraph(`· ${item}`, 7.2);
-    }
-  }
+  // Um aviso curto no lugar da lista completa: o relatório é estimativa, não extrato.
+  y += 3;
+  paragraph(
+    'Estimativa educativa e bruta, sem IRRF/INSS: não substitui o extrato da CAIXA, o cálculo de folha ou orientação profissional, nem representa diferenças da ADI 5090.',
+    7.2,
+  );
 
   footer();
   return doc.output('blob');
