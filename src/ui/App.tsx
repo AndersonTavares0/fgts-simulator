@@ -54,6 +54,10 @@ export function App() {
   const { theme, toggle: toggleTheme } = useTheme();
   const pwa = usePwa();
   const saved = Boolean(current && history.some((item) => item.id === current.id));
+  // Reload only costs work that was never stored: a pending result or a half-filled form.
+  const pendingWork = current
+    ? !saved
+    : Boolean(draft.salary.trim() || draft.startDate || draft.endDate);
 
   useEffect(() => {
     // On small screens only one column is visible; bring the active one into view
@@ -174,6 +178,17 @@ export function App() {
     }
   }
 
+  function applyUpdate(): void {
+    if (
+      pendingWork &&
+      !window.confirm(
+        'Atualizar recarrega a página e descarta o que ainda não foi guardado. Continuar?',
+      )
+    )
+      return;
+    pwa.update();
+  }
+
   function reload(snapshot: SimulationSnapshot): void {
     setDraft(draftFromInput(snapshot.input));
     setErrors({});
@@ -244,7 +259,7 @@ export function App() {
         Ir para o conteúdo
       </a>
 
-      <header className="border-border border-b">
+      <header className="border-border border-b print:hidden">
         <div className="mx-auto flex h-14 w-full max-w-[1200px] items-center px-5 md:gap-6 md:px-8">
           <a href="#simular" className="text-primary flex items-baseline gap-2 no-underline">
             <span className="text-[15px] font-semibold tracking-[-0.01em]">FGTS</span>
@@ -293,7 +308,7 @@ export function App() {
       <main id="conteudo" className="mx-auto w-full max-w-[1200px] flex-1 px-5 md:px-8">
         {area === 'simulate' && (
           <>
-            <div className="flex flex-wrap items-end justify-between gap-6 pt-10 md:pt-14">
+            <div className="flex flex-wrap items-end justify-between gap-6 pt-10 md:pt-14 print:hidden">
               <div>
                 <h1 className="text-[32px] leading-[1.05] font-semibold tracking-[-0.03em] text-balance md:text-[44px]">
                   Simule seu FGTS e sua rescisão
@@ -311,7 +326,7 @@ export function App() {
               </a>
             </div>
 
-            <div className="border-border mt-8 flex gap-6 border-b lg:hidden">
+            <div className="border-border mt-8 flex gap-6 border-b lg:hidden print:hidden">
               {(
                 [
                   ['input', 'Dados'],
@@ -334,8 +349,11 @@ export function App() {
               ))}
             </div>
 
-            <div className="mt-8 grid items-start gap-10 md:mt-14 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)] lg:gap-12 xl:gap-14">
-              <div ref={formColumn} className={view === 'result' ? 'hidden lg:block' : undefined}>
+            <div className="mt-8 grid items-start gap-10 md:mt-14 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)] lg:gap-12 xl:gap-14 print:mt-0 print:block print:gap-0">
+              <div
+                ref={formColumn}
+                className={`${view === 'result' ? 'hidden lg:block' : ''} print:hidden`}
+              >
                 <SimulationForm
                   draft={draft}
                   errors={errors}
@@ -347,7 +365,7 @@ export function App() {
               </div>
               <div
                 ref={resultColumn}
-                className={`lg:border-border lg:border-l lg:pl-12 xl:pl-14 ${
+                className={`lg:border-border lg:border-l lg:pl-12 xl:pl-14 print:border-0 print:pl-0 ${
                   view === 'input' ? 'hidden lg:block' : ''
                 }`}
               >
@@ -393,7 +411,7 @@ export function App() {
           </div>
         )}
 
-        <footer className="border-border text-muted-foreground mt-16 flex flex-col items-start gap-3 border-t py-6 text-[12px] md:mt-20 lg:flex-row lg:items-center lg:justify-between">
+        <footer className="border-border text-muted-foreground mt-16 flex flex-col items-start gap-3 border-t py-6 text-[12px] md:mt-20 lg:flex-row lg:items-center lg:justify-between print:hidden">
           <span role="status" className="flex items-center gap-1.5">
             <span
               className={`size-1.5 rounded-full ${pwa.online ? 'bg-primary' : 'bg-warn-ink'}`}
@@ -416,11 +434,7 @@ export function App() {
           {pwa.updateReady && (
             <span className="text-warn-ink" role="status">
               Nova versão disponível.{' '}
-              <button
-                type="button"
-                className="underline underline-offset-2"
-                onClick={pwa.update}
-              >
+              <button type="button" className="underline underline-offset-2" onClick={applyUpdate}>
                 Atualizar agora
               </button>
             </span>

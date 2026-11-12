@@ -152,7 +152,7 @@ export function ResultPanel({
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-2 sm:flex-row">
+      <div className="mt-8 flex flex-col gap-2 sm:flex-row print:hidden">
         <Button
           type="button"
           className="flex-1"
@@ -175,7 +175,7 @@ export function ResultPanel({
       </div>
 
       {sensitive && (
-        <div className="notice bg-muted mt-4">
+        <div className="notice bg-muted mt-4 print:hidden">
           <div className="flex items-start gap-2.5">
             <Checkbox
               id="consent-storage"
@@ -197,7 +197,7 @@ export function ResultPanel({
         </div>
       )}
 
-      <p className="help mt-3 min-h-4" role="status" aria-live="polite">
+      <p className="help mt-3 min-h-4 print:hidden" role="status" aria-live="polite">
         {status}
       </p>
 
