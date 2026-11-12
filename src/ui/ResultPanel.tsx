@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { ArrowDownTrayIcon, BookmarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { simulate } from '../application/Simulation';
 import type { SimulationSnapshot } from '../application/Simulation';
 import { TipoRescisao } from '../core/types';
 import { FormatAdapter } from '../adapters/FormatAdapter';
 import { inputRows, totalCaption } from './presentation';
+import { exampleDraft, toInput } from './form';
 import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
 import { Checkbox } from './components/ui/checkbox';
@@ -61,11 +64,13 @@ export function ResultPanel({
   onExportPdf,
   onExample,
 }: Props) {
+  // The empty state shows a real, labelled preview: the same case the button loads.
+  const demo = useMemo(() => {
+    const parsed = toInput(exampleDraft, false);
+    return 'errors' in parsed ? null : simulate(parsed.input);
+  }, []);
+
   if (!snapshot) {
-    const preview = [
-      ['FGTS', ['Saldo total no FGTS', 'Disponível para saque', 'Retido no FGTS']],
-      ['Rescisão', ['Multa rescisória', '13º proporcional', 'Férias + 1/3']],
-    ] as const;
     return (
       <section aria-labelledby="result-title" className="border-border lg:pt-0">
         <h2
@@ -74,42 +79,48 @@ export function ResultPanel({
         >
           Resultado
         </h2>
-        <p className="mt-4 max-w-[34ch] text-[22px] leading-snug font-medium tracking-[-0.02em]">
+        <p className="mt-4 max-w-[34ch] text-[16px] leading-snug font-medium tracking-[-0.01em]">
           O saldo e as verbas aparecem aqui depois do cálculo.
         </p>
         <p className="text-muted-foreground mt-3 max-w-[42ch] text-[14px] leading-relaxed">
           Preencha os dados ao lado. Nada é enviado para a internet.
         </p>
 
-        {/* Amostra sem valores: mostra o que o cálculo devolve sem inventar números. */}
-        <div className="border-border mt-8 grid gap-6 rounded-lg border border-dashed p-4 sm:grid-cols-2">
-          {preview.map(([title, labels]) => (
-            <div key={title}>
-              <p className="text-muted-foreground text-[12px] font-medium">{title}</p>
-              <ul aria-hidden="true" className="mt-3 space-y-2.5">
-                {labels.map((label) => (
-                  <li
-                    key={label}
-                    className="text-muted-foreground flex items-baseline justify-between gap-3 text-[14px]"
-                  >
-                    <span>{label}</span>
-                    <span className="border-border w-14 border-b border-dashed" />
-                  </li>
-                ))}
-              </ul>
+        {demo && (
+          <div className="border-border mt-8 rounded-lg border p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-muted-foreground text-[12px] font-medium">
+                Salário de {FormatAdapter.centsToBRL(demo.input.salaryCents)} por um ano
+              </p>
+              <Badge>Exemplo</Badge>
             </div>
-          ))}
-          <p className="text-muted-foreground text-[13px] sm:col-span-2">
-            Saldo, multa, 13º e férias, com o total em destaque.
-          </p>
-        </div>
+            <p className="num mt-2 text-[26px] leading-none font-semibold tracking-[-0.03em]">
+              {FormatAdapter.centsToBRL(demo.result.totalCents)}
+            </p>
+            <div className="border-border mt-4 grid gap-x-6 gap-y-1 border-t pt-3 sm:grid-cols-2">
+              <dl className="space-y-1.5 text-[14px]">
+                <Row label="Saldo no FGTS" cents={demo.result.saldoBaseCents} />
+                <Row label="Disponível" cents={demo.result.saldoDisponivelCents} />
+                <Row label="Retido" cents={demo.result.saldoRetidoCents} />
+              </dl>
+              <dl className="space-y-1.5 text-[14px]">
+                <Row label="Multa rescisória" cents={demo.result.multaCents} />
+                <Row label="13º proporcional" cents={demo.result.decimoTerceiroCents} />
+                <Row label="Férias + 1/3" cents={demo.result.feriasCents} />
+              </dl>
+            </div>
+            <p className="text-muted-foreground mt-3 text-[13px]">
+              Total estimado deste exemplo; o seu aparece ao calcular.
+            </p>
+          </div>
+        )}
 
         <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
           <Button variant="secondary" onClick={onExample}>
             Ver exemplo
           </Button>
           <span className="text-muted-foreground text-[13px]">
-            Preenche o formulário com um caso completo.
+            Preenche o formulário com este caso.
           </span>
         </div>
       </section>
