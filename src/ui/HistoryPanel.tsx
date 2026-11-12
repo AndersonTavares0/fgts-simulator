@@ -44,7 +44,7 @@ export function HistoryPanel({
           >
             Resultados
           </h1>
-          <p className="text-muted-foreground mt-3 text-[15px] leading-relaxed">
+          <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
             Guardados só neste aparelho. Marque dois para comparar.
           </p>
         </div>
@@ -70,7 +70,7 @@ export function HistoryPanel({
 
       {history.length === 0 ? (
         <div className="border-border mt-6 border-t pt-8">
-          <p className="text-[15px] font-medium">Nada guardado ainda</p>
+          <p className="text-[16px] font-medium">Nada guardado ainda</p>
           <p className="text-muted-foreground mt-2 max-w-[46ch] text-[14px] leading-relaxed">
             Calcule e toque em “Guardar” para ver depois neste aparelho.
           </p>
@@ -102,7 +102,7 @@ export function HistoryPanel({
                     <span className="num font-medium">
                       {FormatAdapter.centsToBRL(snapshot.result.totalCents)}
                     </span>
-                    <span className="text-muted-foreground text-[12.5px]">
+                    <span className="text-muted-foreground text-[13px]">
                       {FormatAdapter.civilDate(snapshot.input.startDate)} a{' '}
                       {FormatAdapter.civilDate(snapshot.input.endDate)} ·{' '}
                       {snapshot.input.scenario === 'TR' ? 'TR + 3% ao ano' : 'IPCA comparativo'}
