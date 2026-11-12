@@ -8,14 +8,7 @@ O ruleset de tags `release-tags` (`27035237`) bloqueia alteração/exclusão de 
 
 A sessão de implementação preservou as respostas anteriores em `local://governance-before.json` e a cobertura antes da exclusão em `local://governance-migration.json`. Esses arquivos são evidências locais, não backups versionados neste repositório.
 
-**Diferença live/desired:** o remoto ainda não exige `quality`. O arquivo [main.json](../.github/rulesets/main.json) declara a política desejada, incluindo `quality`, origem GitHub Actions e atualização obrigatória da base. Não aplicar esse JSON ao remoto antes de existir uma execução de PR bem-sucedida e recente do check real. O workflow local ainda precisa de commit/push autorizado e execução remota. Nenhuma configuração local prova que um PR com falha já está bloqueado.
-
-Para concluir esse gate, depois da autorização para publicar as mudanças:
-
-1. Abra PR para `main`; confirme execução do job `quality`, inclusive ao reabrir PR e em fork. Não use dispatch manual como substituto do check de PR.[^2]
-2. Consulte `GET /repos/AndersonTavares0/fgts-simulator/commits/{SHA_DO_MERGE_DE_TESTE_DO_PR}/check-runs`. Confira `name`, `app.id`, `conclusion=success`, SHA e execução nos últimos sete dias. O JSON espera `quality` e integração `15368`; ajuste o arquivo se a resposta real divergir.
-3. Salve o ruleset live anterior, confira que não houve mudança concorrente e aplique `PUT /repos/AndersonTavares0/fgts-simulator/rulesets/27035196` com o JSON revisado. Leia novamente o ruleset e `/rules/branches/main`.
-4. Em um PR descartável, provoque uma falha de qualidade, confirme merge bloqueado sem bypass administrativo; corrija e confirme squash permitido com zero aprovações. Não reduza proteção para passar esse teste.
+**Estado confirmado:** `GET /rules/branches/main` responde `quality` (integração `15368`) com `strict_required_status_checks_policy: true`; PRs com o check pendente ou vermelho aparecem como bloqueados e o merge é squash-only. A execução do check real em PRs, inclusive fork e reabertura, e o merge bloqueado sem bypass ficaram comprovados nos PRs #43, #45, #48 e #49.
 
 O environment `github-pages` continua autorizando somente a branch `main`. O fluxo abaixo não precisa de PAT, App adicional, push automático, aprovação de bot ou autorização para tags nesse environment.
 
@@ -58,7 +51,7 @@ O canal é explícito: `release` aceita somente versão estável e publica/impla
 
 `release.yml` só atende `workflow_dispatch`. O script recusa outra branch/evento, SHA inválido, versão divergente entre pacote/lock/input, canal incompatível, tag conflitante e origem fora do histórico de `main` fixado no dispatch. O build valida novamente o commit do dispatch; o fluxo não resolve `main` de novo no meio da publicação. O job `deploy` é condicionado ao canal e permanece pulado para beta.
 
-A exclusão mútua `pages` cobre plano, publicação, deploy, retomada e rollback. Ela não cancela runs em andamento e usa `queue: max` (até 100 pendentes); a ordem depende da entrada na espera, não da ordem dos cliques.[^3] Antes de implantar sem rollback, o script consulta a implantação Pages bem-sucedida mais recente e exige que o SHA candidato não seja anterior/divergente do SHA daquele workflow. Uma retomada depois de rollback pode exigir `rollback` explícito mesmo quando os bytes já estiverem no site: o registro Pages identifica o workflow autorizado, não o SHA antigo do conteúdo. Essa recusa conservadora evita rebaixamento silencioso.
+A exclusão mútua `pages` cobre plano, publicação, deploy, retomada e rollback. Ela não cancela runs em andamento e usa `queue: max` (até 100 pendentes); a ordem depende da entrada na espera, não da ordem dos cliques.[^2] Antes de implantar sem rollback, o script consulta a implantação Pages bem-sucedida mais recente e exige que o SHA candidato não seja anterior/divergente do SHA daquele workflow. Uma retomada depois de rollback pode exigir `rollback` explícito mesmo quando os bytes já estiverem no site: o registro Pages identifica o workflow autorizado, não o SHA antigo do conteúdo. Essa recusa conservadora evita rebaixamento silencioso.
 
 O script também consulta a versão pública e recusa versão menor ou mesma versão com SHA diferente fora de `rollback`. Uma resposta 404 só permite o primeiro corte quando o último deploy veio de um commit sem o workflow moderno; indisponibilidade ou identidade ausente depois desse corte bloqueiam promoção.
 
@@ -73,6 +66,8 @@ O build acrescenta `release.json` ao site e gera os três assets:
 | `SHA256SUMS` | SHA-256 do pacote e do manifesto externo |
 
 O checksum fica fora do arquivo que valida. O pacote não pode exceder 100 MiB na recuperação. O publicador cria a tag no SHA validado, cria uma draft, anexa primeiro o pacote e depois manifesto/checksums, confere os bytes e publica. Ele exige a confirmação de release imutável antes do deploy. Em conflitos, ele falha sem mover tag ou usar clobber.
+
+`GET /immutable-releases` exige permissão de administração, que o `GITHUB_TOKEN` do workflow não possui (403). Nesse caso o script ignora a pré-checagem e, depois de publicar, exige que a release reporte `immutable: true` antes de qualquer deploy; com imutabilidade desativada, a release sai publicada e mutável, o run falha antes do Pages e a release/tag precisa ser removida manualmente.
 
 O deploy baixa os assets publicados, confere hashes, versão, SHA, manifesto interno/externo e caminhos/tipos de arquivo. Depois extrai os mesmos arquivos e prepara o artefato Pages; não recompila. Artefatos Actions/Pages ficam por sete dias para operação; os assets da release são a fonte de recuperação após essa expiração. Imutabilidade depende também da permanência da release/repositório; mantenha uma cópia externa desses assets se precisar de backup independente.
 
@@ -111,5 +106,4 @@ Os checks automatizados confirmam qualidade e integridade do pacote; não demons
 ## Referências
 
 [^1]: GitHub, [Immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
-[^2]: GitHub, [Troubleshooting required status checks](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
-[^3]: GitHub, [Control workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
+[^2]: GitHub, [Control workflow concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
