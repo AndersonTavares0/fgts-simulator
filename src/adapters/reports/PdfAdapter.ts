@@ -23,17 +23,6 @@ const WIDTH = RIGHT - LEFT;
 const BOTTOM = 276;
 const GAP = 6;
 
-function amount(cents: string): string {
-  const negative = cents.startsWith('-');
-  const digits = (negative ? cents.slice(1) : cents).padStart(3, '0');
-  const whole = digits.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${negative ? '-' : ''}${whole},${digits.slice(-2)}`;
-}
-
-function brl(cents: string): string {
-  return `R$ ${amount(cents)}`;
-}
-
 function stamp(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -137,7 +126,7 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
       doc.setFontSize(8.4);
       doc.setTextColor(INK);
       doc.text(label, x, y);
-      doc.text(amount(cents), x + width, y, { align: 'right' });
+      doc.text(FormatAdapter.amount(cents), x + width, y, { align: 'right' });
       doc.setDrawColor(RULE);
       doc.setLineWidth(0.15);
       doc.line(x, y + 1.6, x + width, y + 1.6);
@@ -169,7 +158,7 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(26);
   doc.setTextColor(INK);
-  doc.text(`${amount(snapshot.result.totalCents)}`, LEFT + 7, y + 6);
+  doc.text(`${FormatAdapter.amount(snapshot.result.totalCents)}`, LEFT + 7, y + 6);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(12);
   doc.text('R$', LEFT, y + 6);
@@ -235,7 +224,7 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
   section('Dados contratuais');
   const input = snapshot.input;
   const facts: Array<[string, string]> = [
-    ['Salário mensal', brl(input.salaryCents)],
+    ['Salário mensal', FormatAdapter.centsToBRL(input.salaryCents)],
     ['Contrato', CONTRACT[input.contractType]],
     ['Admissão', FormatAdapter.civilDate(input.startDate)],
     ['Término', FormatAdapter.civilDate(input.endDate)],
@@ -334,9 +323,9 @@ export async function createReport(snapshot: SimulationSnapshot): Promise<Blob> 
     doc.setFontSize(7.2);
     doc.setTextColor(INK);
     doc.text(FormatAdapter.civilDate(point.competencia), x, rowY);
-    doc.text(amount(point.depositosCents), x + width - 38, rowY, { align: 'right' });
-    doc.text(amount(point.trCents), x + width - 19, rowY, { align: 'right' });
-    doc.text(amount(point.ipcaCents), x + width, rowY, { align: 'right' });
+    doc.text(FormatAdapter.amount(point.depositosCents), x + width - 38, rowY, { align: 'right' });
+    doc.text(FormatAdapter.amount(point.trCents), x + width - 19, rowY, { align: 'right' });
+    doc.text(FormatAdapter.amount(point.ipcaCents), x + width, rowY, { align: 'right' });
   };
 
   const timeline = snapshot.timeline;

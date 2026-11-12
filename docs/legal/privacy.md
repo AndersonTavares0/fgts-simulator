@@ -32,6 +32,6 @@ A exportação gera um arquivo local com os dados e premissas da simulação. Vo
 
 ## Atualizações e offline
 
-Uma atualização não deve forçar a recarga de formulários. Conclua ou salve o trabalho e feche todas as abas do simulador antes de reabrir para usar nova versão. Sem conexão, o aplicativo pode continuar executando a versão instalada e suas premissas anteriores.
+Uma atualização não deve forçar a recarga de formulários. Quando há versão nova, o rodapé mostra **Atualizar agora** e nada recarrega sem esse acionamento; fechar todas as abas do simulador também aplica a versão já baixada. Sem conexão, o aplicativo pode continuar executando a versão instalada e suas premissas anteriores.
 
 Esta política descreve o funcionamento do projeto; não constitui certificação jurídica de conformidade LGPD. Consulte a [Lei 13.709/2018](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm) sobre os direitos do titular e tratamento de dados pessoais.

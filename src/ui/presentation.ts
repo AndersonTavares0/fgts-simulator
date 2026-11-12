@@ -105,7 +105,6 @@ export function comparisonRows(
       second.calculationVersion,
       first.calculationVersion === second.calculationVersion ? 'Igual' : 'Versões diferentes',
     ],
-    ['Formato do registro', String(first.formatVersion), String(second.formatVersion), ''],
   ];
   const secondInputs = inputRows(second.input);
   inputRows(first.input).forEach(([label, value], index) => {

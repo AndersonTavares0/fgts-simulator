@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { TipoContrato, TipoRescisao } from '../../src/core/types';
 import type { SimulationSnapshot } from '../../src/application/Simulation';
 import { comparisonRows, inputRows } from '../../src/ui/presentation';
+import { chartMax } from '../../src/ui/chartScale';
 import { FormatAdapter } from '../../src/adapters/FormatAdapter';
 import { draftFromInput, emptyDraft, toInput } from '../../src/ui/form';
 
@@ -81,6 +82,62 @@ describe('UI comparison of original snapshots', () => {
     first.result.totalCents = '9007199254740000';
     second.result.totalCents = '9007199254740001';
     expect(comparisonRows(first, second).some((row) => row[3] === '+R$ 0,01')).toBe(true);
+  });
+
+  it('não expõe o formato interno do registro na comparação', () => {
+    const first = snapshot();
+    expect(
+      comparisonRows(first, snapshot()).some(([label]) => label === 'Formato do registro'),
+    ).toBe(false);
+  });
+});
+
+describe('Eixo do gráfico', () => {
+  it('cobre o IPCA quando ele supera a TR', () => {
+    expect(
+      chartMax([
+        {
+          competencia: '2025-01',
+          depositosCents: '100000',
+          trCents: '102000',
+          ipcaCents: '110000',
+        },
+        {
+          competencia: '2025-02',
+          depositosCents: '200000',
+          trCents: '205000',
+          ipcaCents: '235000',
+        },
+      ]),
+    ).toBe(2350);
+  });
+
+  it('mantém uma escala não nula com série zerada', () => {
+    expect(
+      chartMax([{ competencia: '2025-01', depositosCents: '0', trCents: '0', ipcaCents: '0' }]),
+    ).toBe(1);
+  });
+});
+
+describe('Data final do formulário', () => {
+  it('rejeita o mesmo dia com a mensagem do domínio', () => {
+    const result = toInput(
+      { ...emptyDraft, salary: '1.000,00', startDate: '2026-01-01', endDate: '2026-01-01' },
+      false,
+    );
+    expect('errors' in result ? result.errors.endDate : null).toBe(
+      'A data final deve ser posterior à data de início.',
+    );
+  });
+});
+
+describe('Formatação de centavos', () => {
+  it('mantém sinal, milhar e centavos com uma única implementação', () => {
+    expect(FormatAdapter.amount('123456')).toBe('1.234,56');
+    expect(FormatAdapter.amount('5')).toBe('0,05');
+    expect(FormatAdapter.amount('-123456')).toBe('-1.234,56');
+    expect(FormatAdapter.centsToBRL('-123456')).toBe('-R$ 1.234,56');
+    expect(FormatAdapter.centsToBRL('0')).toBe('R$ 0,00');
   });
 });
 
