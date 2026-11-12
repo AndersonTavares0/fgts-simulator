@@ -32,7 +32,8 @@ Qualquer falha interrompe o job. O resumo usa `GITHUB_STEP_SUMMARY`, sem coment�
 
 | Job | Permissões |
 | --- | --- |
-| Plano/qualidade/build | `contents: read` |
+| Plano | `contents: write` (drafts e assets preservados só são visíveis com escrita) |
+| Qualidade/build | `contents: read` |
 | Publicador sem checkout/npm | `contents: write` |
 | Deploy | `contents: read`, `deployments: read`, `pages: write`, `id-token: write` |
 
