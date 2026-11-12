@@ -2,7 +2,17 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { assetNames, assertPromotion, assertSameAsset, pack, sha256, validateIdentity, verifyBundle } from './release.mjs';
+import { assetNames, assertPromotion, assertSameAsset, checkChangelog, pack, sha256, validateIdentity, verifyBundle } from './release.mjs';
+
+const changelog = readFileSync('CHANGELOG.md', 'utf8');
+const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+const changelogProblems = checkChangelog(changelog, version);
+assert.deepEqual(changelogProblems, [], 'CHANGELOG.md fora do padrão.');
+assert.ok(checkChangelog('', version).length > 0, 'CHANGELOG vazio precisa falhar.');
+assert.ok(checkChangelog(changelog.replace(`## ${version} - `, '## '), version).length > 0, 'seção da versão atual é obrigatória.');
+assert.ok(checkChangelog(`${changelog}\n- \u2728\n`, version).length > 0, 'emoji precisa falhar.');
+assert.ok(checkChangelog(changelog.replace('### Fixed', '### Correções'), version).length > 0, 'seção fora do padrão precisa falhar.');
+assert.ok(checkChangelog(changelog.replace(/ - \d{4}-\d{2}-\d{2}/, ' - 2026-13-40'), version).length > 0, 'data inválida precisa falhar.');
 
 const root = mkdtempSync(join(tmpdir(), 'fgts-release-'));
 try {
@@ -41,7 +51,7 @@ try {
   pack(dist, bundle, manifest, '2.1.0', '2.1.0');
   writeFileSync(join(bundle, 'site.tar.gz'), Buffer.concat([archive, Buffer.from('corruption')]));
   assert.throws(() => verifyBundle(bundle, '2.1.0', manifest.sha));
-  console.log('Release: stable/beta identity, package, checksum and no-clobber checks passed.');
+  console.log('Release: changelog format, stable/beta identity, package, checksum and no-clobber checks passed.');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }
