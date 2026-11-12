@@ -9,46 +9,9 @@ Versões anteriores a 2.0.0 não tinham `package.json` nem tag; o material hist�
 
 Nada pendente.
 
-## 2.1.0-beta.3 - 2026-11-12
+## 2.1.0-beta.4 - 2026-11-12
 
-Pré-release publicada como `v2.1.0-beta.3`.
-
-### Added
-
-- Validação do `CHANGELOG.md` em todo PR e no job de release: título, `Unreleased` no topo, data real, ordem decrescente, seções permitidas, itens por versão e ausência de emojis.
-
-### Changed
-
-- Corpo da release passa a ser montado com a seção desta versão, o SHA validado e a instrução de recuperação; antes era um aviso genérico sem conteúdo.
-- `CHANGELOG.md` padronizado no formato Keep a Changelog, com histórico desde 2.0.0.
-
-## 2.1.0-beta.2 - 2026-11-12
-
-Pré-release publicada como `v2.1.0-beta.2`. A release e a tag foram removidas depois, substituídas pela `v2.1.0-beta.3`; o conteúdo abaixo permanece no histórico de commits.
-
-### Changed
-
-- Cache offline reduzido de 21 para 12 entradas: dependências do `html()` do jsPDF não são mais baixadas na instalação; PDF e uso offline continuam funcionando.
-- Comparação de simulações deixou de exibir o formato interno do registro.
-- Notas da 2.1.0-beta.1 corrigidas no repositório: a interface usa Heroicons e SVG local, não Recharts nem lucide-react.
-
-### Fixed
-
-- Escala do gráfico passou a cobrir IPCA e TR; a linha de referência não sai mais da área e o eixo acompanha o cenário selecionado.
-- Atualização do PWA: o rodapé oferece **Atualizar agora** e ativa a versão baixada; recarregar a página sozinho não aplicava a versão nova.
-- Histórico: registro inválido ou de outra versão deixou de esconder os válidos; a tela informa quantos ficaram fora da lista e nada é apagado.
-- Abertura do IndexedDB não fica mais pendente quando outra aba pede migração do banco.
-- Datas iguais no início e no fim são recusadas com a mesma regra e a mesma mensagem do cálculo, no campo correspondente.
-- Formatação de moeda com uma única implementação para tela, gráfico, histórico e PDF.
-
-### Security
-
-- Contraste elevado: série IPCA de 2,64 para 4,13:1 no tema claro; bordas de campo de 1,38 para 3,31:1 no claro e de 2,05 para 3,49:1 no escuro.
-- CSP por meta tag no build, com hash do script de tema; o modo de desenvolvimento continua sem a regra.
-
-## 2.1.0-beta.1 - 2026-11-12
-
-Pré-release publicada como `v2.1.0-beta.1`. A release e a tag foram removidas depois; o conteúdo abaixo permanece no histórico de commits.
+Pré-release publicada como `v2.1.0-beta.4`. Reúne todo o conteúdo desde a v2.0.3: o redesenho da interface, o FGTS do 13º, histórico, PDF, gráfico, PWA, a esteira de release e as correções da auditoria. As pré-releases 2.1.0-beta.1 a 2.1.0-beta.3 foram substituídas por esta; o conteúdo delas está consolidado abaixo e permanece no histórico de commits.
 
 ### Added
 
@@ -56,16 +19,21 @@ Pré-release publicada como `v2.1.0-beta.1`. A release e a tag foram removidas d
 - Histórico local em IndexedDB, com reabertura de resultados e comparação entre duas simulações.
 - Relatório PDF monocromático com total em destaque, memória de cálculo, dados contratuais, evolução mensal, premissas e avisos.
 - Gráfico de evolução do saldo em TR + 3% ao ano e referência IPCA, com os mesmos valores em tabela.
-- PWA com instalação, uso offline e atualização sem recarga forçada.
+- PWA com instalação, uso offline e atualização aplicada por ação explícita do usuário.
 - Auditoria semanal de CVEs, CodeQL e Dependabot agrupado por atualizações de actions e npm minor/patch.
 - Canal beta protegido: publicação de pré-release imutável com três assets e sem implantação no GitHub Pages.
 - Ruleset ativo em `main` com o check `quality` obrigatório, squash-only, histórico linear e sem bypass administrativo.
+- Validação do `CHANGELOG.md` em todo PR e no job de release: título, `Unreleased` no topo, data real, ordem decrescente, seções permitidas, itens por versão e ausência de emojis.
 
 ### Changed
 
 - Interface reescrita em React 19 + TypeScript + Tailwind CSS v4, com Heroicons e gráfico em SVG local.
 - Fluxo de release recuperável em quatro etapas: plano, qualidade, publicação imutável e Pages com verificação pública.
+- Corpo da release é montado com a seção desta versão no `CHANGELOG.md`, o SHA validado e a instrução de recuperação.
 - Documentação reorganizada em `docs/` (arquitetura, desenvolvimento, releases, premissas legais e privacidade), com os documentos anteriores em `docs/archive/`.
+- Cache offline reduzido de 21 para 12 entradas: dependências do `html()` do jsPDF não são mais baixadas na instalação.
+- Comparação de simulações deixou de exibir o formato interno do registro.
+- Formatação de moeda com uma única implementação para tela, gráfico, histórico e PDF.
 
 ### Removed
 
@@ -74,9 +42,19 @@ Pré-release publicada como `v2.1.0-beta.1`. A release e a tag foram removidas d
 
 ### Fixed
 
+- Escala do gráfico cobre IPCA e TR; a linha de referência não sai mais da área e o eixo acompanha o cenário selecionado.
+- Atualização do PWA ativa a versão baixada pelo botão **Atualizar agora**; recarregar a página sozinho não aplicava a versão nova.
+- Histórico: registro inválido ou de outra versão deixou de esconder os válidos; a tela informa quantos ficaram fora da lista e nada é apagado.
+- Abertura do IndexedDB não fica mais pendente quando outra aba pede migração do banco.
+- Datas iguais no início e no fim são recusadas com a mesma regra e a mesma mensagem do cálculo, no campo correspondente.
 - Reserva doméstica de 3,2% passou a ser corrigida como FGTS; acordo doméstico libera metade da reserva.
 - Justa causa e saque por doença grave não somam 13º nem férias proporcionais.
 - Fundamentos legais de doença grave, aposentadoria e saque-aniversário alinhados ao art. 20 da Lei 8.036/1990.
+
+### Security
+
+- Contraste elevado: série IPCA de 2,64 para 4,13:1 no tema claro; bordas de campo de 1,38 para 3,31:1 no claro e de 2,05 para 3,49:1 no escuro.
+- CSP por meta tag no build, com hash do script de tema; o modo de desenvolvimento continua sem a regra.
 
 ## 2.0.3 - 2026-06-19
 
