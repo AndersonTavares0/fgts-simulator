@@ -47,7 +47,7 @@ Rollback pula o job publicador; seus jobs não recebem `contents: write`.
 
 `CHANGELOG.md` segue o formato do Keep a Changelog 1.1.0 com versionamento semântico: título `# Changelog`, `## Unreleased` sempre no topo e uma seção por versão publicada no formato `## MAJOR.MINOR.PATCH[-beta.N] - AAAA-MM-DD`, da mais recente para a mais antiga. As seções permitidas são `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed` e `Security`; o texto é em português e não usa emojis.
 
-O mesmo PR que altera a versão move os itens de `Unreleased` para a nova seção. `node scripts/check-release.mjs` valida título, `Unreleased`, data real, ordem decrescente, seções permitidas, presença de itens e ausência de emojis; ele roda em todo PR e no job de release. O corpo da release no GitHub é um texto fixo do publicador e não é gerado a partir do changelog.
+O mesmo PR que altera a versão move os itens de `Unreleased` para a nova seção. `node scripts/check-release.mjs` valida título, `Unreleased`, data real, ordem decrescente, seções permitidas, presença de itens e ausência de emojis; ele roda em todo PR e no job de release. O corpo da release no GitHub é montado pelo publicador com a seção dessa versão do `CHANGELOG.md` (preservado no artefato das ferramentas, não no pacote), mais o SHA validado e a instrução de recuperação.
 
 1. Em PR humano, atualize `package.json`, a versão raiz e a entrada raiz de `package-lock.json`, e as notas da mudança. Para beta use `MAJOR.MINOR.PATCH-beta.N`; para produção estável use `MAJOR.MINOR.PATCH`, ambos sem zeros à esquerda.
 2. Passe `quality` e faça squash em `main`. Push/merge executa qualidade, **sem implantar produção** depois que estes workflows substituírem os antigos.
