@@ -11,7 +11,7 @@ assert.deepEqual(changelogProblems, [], 'CHANGELOG.md fora do padrão.');
 assert.ok(checkChangelog('', version).length > 0, 'CHANGELOG vazio precisa falhar.');
 assert.ok(checkChangelog(changelog.replace(`## ${version} - `, '## '), version).length > 0, 'seção da versão atual é obrigatória.');
 assert.ok(checkChangelog(`${changelog}\n- \u2728\n`, version).length > 0, 'emoji precisa falhar.');
-assert.ok(checkChangelog(changelog.replace('### Fixed', '### Correções'), version).length > 0, 'seção fora do padrão precisa falhar.');
+assert.ok(checkChangelog(changelog.replaceAll('### Fixed', '### Correções'), version).length > 0, 'seção fora do padrão precisa falhar.');
 assert.ok(checkChangelog(changelog.replace(/ - \d{4}-\d{2}-\d{2}/, ' - 2026-13-40'), version).length > 0, 'data inválida precisa falhar.');
 const notes = changelogSection(changelog, version);
 assert.ok(notes.includes('### '), 'notas da release precisam trazer as seções da versão.');

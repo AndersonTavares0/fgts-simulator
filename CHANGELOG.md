@@ -7,6 +7,10 @@ Versões anteriores a 2.0.0 não tinham `package.json` nem tag; o material hist�
 
 ## Unreleased
 
+### Fixed
+
+- Interação do gráfico: o mês agora corresponde exatamente ao ponto sob o cursor (antes a medida incluía a margem dos rótulos e deslocava a leitura), com linha-guia visível, marcador em cada série e a competência escrita no eixo.
+
 ### Changed
 
 - Relatório PDF substitui a lista completa de premissas e avisos por um único aviso curto; o caso típico cai de três para duas páginas.
