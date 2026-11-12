@@ -15,6 +15,7 @@ Versões anteriores a 2.0.0 não tinham `package.json` nem tag; o material hist�
 
 - Relatório PDF substitui a lista completa de premissas e avisos por um único aviso curto; o caso típico cai de três para duas páginas.
 - Seção do saldo acumulado abre com o valor final em destaque, as competências e o cenário; a legenda foi para o topo e a linha repetida abaixo do gráfico saiu.
+- Estado vazio do resultado mostra a prévia dos grupos e parcelas que o cálculo devolve, com o botão de exemplo explicado.
 
 ## 2.1.0-beta.4 - 2026-11-12
 
