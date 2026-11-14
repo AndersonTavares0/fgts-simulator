@@ -88,12 +88,11 @@ export class SaqueAniversarioService {
   static calcularParcela(saldoFGTS: Money): ResultadoSaqueAniversario {
     const saldoReais = saldoFGTS.reais;
 
-    const faixa = FAIXAS_SAQUE.find(
-      (f) => saldoReais >= f.limiteInferior && saldoReais <= f.limiteSuperior,
-    );
-
-    // Fallback para última faixa (saldo muito alto)
-    const faixaEfetiva = faixa ?? FAIXAS_SAQUE[FAIXAS_SAQUE.length - 1]!;
+    // Faixas contíguas e em ordem crescente: o primeiro teto que cobre o saldo é a faixa.
+    // (Evita lacunas de ponto flutuante entre limiteSuperior e o próximo limiteInferior.)
+    const faixaEfetiva =
+      FAIXAS_SAQUE.find((f) => saldoReais <= f.limiteSuperior) ??
+      FAIXAS_SAQUE[FAIXAS_SAQUE.length - 1]!;
 
     const valorPercentual = saldoFGTS.multiply(faixaEfetiva.aliquota);
     const parcelaFixa = Money.fromReais(faixaEfetiva.parcelaAdicional);

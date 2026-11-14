@@ -1,6 +1,7 @@
 import Decimal from 'decimal.js';
 import packageInfo from '../../package.json';
 import { parseCivilDate } from '../core/CivilDate';
+import { LIMITES, MAX_COMPETENCIAS } from '../core/limites';
 import { FGTSCalculatorService } from '../core/services/FGTSCalculatorService';
 import { Money, TipoContrato, TipoRescisao } from '../core/types';
 
@@ -78,7 +79,7 @@ const RESULT_KEYS = [
   'totalCents',
 ] as const;
 const MAX_CENTS = BigInt(Number.MAX_SAFE_INTEGER);
-const MAX_POINTS = 602;
+const MAX_POINTS = MAX_COMPETENCIAS;
 const DAY_MS = 86_400_000;
 const CALCULATION_VERSION = '2.3.0';
 
@@ -113,18 +114,22 @@ function validateInput(candidate: unknown): asserts candidate is SimulationInput
   if (
     !isCents(value.salaryCents) ||
     BigInt(value.salaryCents) <= 0n ||
-    BigInt(value.salaryCents) > 100_000_000n
+    BigInt(value.salaryCents) > LIMITES.salarioMaxCentavos
   ) {
-    throw new Error('Salário deve ser informado em centavos, entre R$ 0,01 e R$ 1.000.000,00.');
+    throw new Error('Salário deve ser informado em centavos, entre R$ 0,01 e R$ 10.000.000,00.');
   }
   const start = typeof value.startDate === 'string' ? parseCivilDate(value.startDate) : null;
   const end = typeof value.endDate === 'string' ? parseCivilDate(value.endDate) : null;
   if (!start || !end) throw new Error('Informe datas civis válidas no formato AAAA-MM-DD.');
   if (end <= start) throw new Error('Data de término deve ser posterior à data de início.');
+  if (value.startDate! < LIMITES.inicioFgts)
+    throw new Error(
+      'O FGTS começou em 01/01/1967 (Lei 5.107/1966): a data de início deve ser a partir dela.',
+    );
   const limit = new Date(start);
-  limit.setUTCFullYear(start.getUTCFullYear() + 50);
+  limit.setUTCFullYear(start.getUTCFullYear() + LIMITES.anosMax);
   if (limit.getUTCMonth() !== start.getUTCMonth()) limit.setUTCDate(0);
-  if (end > limit) throw new Error('Período máximo permitido: 50 anos.');
+  if (end > limit) throw new Error(`Período máximo permitido: ${LIMITES.anosMax} anos.`);
   if (Object.hasOwn(value, 'thirteenthMode')) {
     if (
       (value.thirteenthMode !== 'estimate' && value.thirteenthMode !== 'actual') ||

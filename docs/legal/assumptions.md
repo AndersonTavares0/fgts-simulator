@@ -16,6 +16,16 @@ As taxas mensais de TR e IPCA são premissas informadas, constantes no período.
 
 O gráfico representa saldo acumulado da conta simulada, incluindo FGTS sobre 13º quando modelado. Não inclui multa, férias ou verba rescisória de 13º. Indisponibilidade de saque não elimina saldo: o resumo mostra saldo disponível e retido separadamente. Resultado, série, relatório e histórico usam a mesma simulação e política de arredondamento Decimal/Money.
 
+## Limites de entrada
+
+Datas: a data de início deve ser 01/01/1967 ou posterior. O FGTS foi criado pela [Lei 5.107/1966](https://www2.camara.leg.br/legin/fed/lei/1960-1969/lei-5107-13-setembro-1966-368498-norma-pl.html) e começou a valer em 01/01/1967 ([Decreto 59.820/1966](https://www.planalto.gov.br/ccivil_03/decreto/1950-1969/d59820.htm)); não há depósito anterior. O período vai até 60 anos, que cobre toda a história do FGTS; é um limite do simulador, não da lei.
+
+Antes de 01/02/1991 a correção do FGTS não usava a TR ([Lei 8.177/1991](https://www.planalto.gov.br/ccivil_03/leis/L8177.htm)), e quem optou antes de 22/09/1971 pode ter juros progressivos de 3% a 6% ao ano (Lei 5.107/1966, mantidos pela [Lei 8.036/1990](https://www.planalto.gov.br/ccivil_03/leis/l8036consol.htm), art. 13). O simulador usa só as regras atuais (TR + 3%): para início anterior a 1991 o resultado é uma referência, e a tela avisa isso.
+
+Salário: até R$ 10.000.000,00 por mês. Esse limite não vem de lei: o depósito é 8% (2% para aprendiz) da remuneração paga ou devida (Lei 8.036, art. 15), sem teto. Ele existe para evitar erros de digitação. A estimativa é linear no salário; quem recebe mais pode simular com metade e dobrar o resultado, salvo diferença de arredondamento de centavos.
+
+Alterar esses limites não muda fórmula, mas muda o que a validação aceita: mantenha `src/core/limites.ts` como fonte única e os testes de fronteira.
+
 ## Verbas selecionadas
 
 Informe separadamente os avos ainda não pagos de 13º e de férias (0 a 12). Eles não são a duração total do contrato. O usuário deve conferir o ano civil do 13º, o período aquisitivo de férias, pagamentos e afastamentos. Férias proporcionais incluem 1/3. O aplicativo não calcula férias vencidas, aviso prévio, rescisão indireta, força maior, término de contrato a termo, IRRF nem o líquido integral da rescisão.
@@ -28,11 +38,20 @@ Valores são brutos. O app não retém IRRF nem INSS: o 13º é tributável, as 
 
 ## ADI 5090
 
+Em 18/02/2026 o STF reafirmou a tese no ARE 1.573.884 (Tema 1.444, rel. Min. Fachin, Plenário Virtual, unânime): a fórmula TR + 3% ao ano + distribuição de resultados é constitucional se o órgão gestor assegurar, no mínimo, correção equivalente à inflação oficial; não se aplica retroativamente e não autoriza trocar a TR pelo IPCA isoladamente. Por isso o cenário IPCA deste app é só comparação.
+
 A decisão mantém TR + 3% ao ano e distribuição de resultados. Quando a remuneração anual não alcançar o IPCA, cabe ao Conselho Curador determinar a compensação. Sua eficácia é prospectiva, a partir da publicação da ata em 17/06/2024. Uma comparação mensal TR/IPCA não reproduz esse procedimento nem determina diferenças retroativas recuperáveis.
 
 O modelo não inclui distribuição de resultados efetivamente creditada nem eventual compensação anual. Usar índices oficiais sem depósitos e eventos reais também não transforma uma simulação em extrato oficial.
 
+## Conferência de 13/11/2026
+
+Revisão do código e destas premissas contra as fontes abaixo, sem alterar nenhuma fórmula: multa de 40% e 20% (Lei 8.036, art. 18, §§ 1º e 2º), alíquotas de 8% e 2% (arts. 15 e 15, §7º), incisos III, IV, XI, XIII, XIV, XV, XVI, XVIII e XXII do art. 20, saque-aniversário (arts. 20-A a 20-D, com multa preservada na dispensa) e a tabela de faixas da Lei 13.932/2019. A culpa recíproca (20%) depende de reconhecimento pela Justiça do Trabalho (art. 18, §2º); o app a oferece como hipótese. As taxas iniciais são só exemplos: no Banco Central (SGS 226 e 433) a TR estava em cerca de 0,169% ao mês em 12/11/2026, e o IPCA mensal de jul a out/2026 foi 0,07%, −0,32%, 0,82% e 0,14%. O padrão de IPCA do app (0,37%) está acima dessa média recente; ajuste-o ao período simulado. Antecipação do saque-aniversário (Res. CCFGTS 1.130/2025: 3 saques e R$ 1.500 a partir de 01/11/2026) não é simulada. A MP 1.331/2025 (saque de saldo bloqueado de demitidos de 2020 a 23/12/2025) perdeu eficácia em 01/06/2026, conforme noticiado; confirme no Diário Oficial antes de relatar a um usuário.
+
 ## Fontes
+
+- [STF: Tema 1.444, ARE 1.573.884 (18/02/2026)](https://noticias.stf.jus.br/postsnoticias/saldos-do-fgts-devem-ser-corrigidos-no-minimo-pelo-indice-da-inflacao-reafirma-stf/)
+- [Banco Central: SGS 226 (TR) e 433 (IPCA)](https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados/ultimos/4?formato=json)
 
 - [STF: resumo da ADI 5090](https://www.stf.jus.br/arquivo/cms/noticiaNoticiaStf/anexo/ADI5090Infoasociedade.pdf)
 - [STF: ARE 1.569.824 AgR](https://redir.stf.jus.br/paginadorpub/paginador.jsp?docID=792781594&docTP=TP)
