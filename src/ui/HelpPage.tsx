@@ -1,116 +1,149 @@
+import {
+  ArrowTopRightOnSquareIcon,
+  BanknotesIcon,
+  CalculatorIcon,
+  CalendarDaysIcon,
+  LockClosedIcon,
+  PercentBadgeIcon,
+} from '@heroicons/react/24/outline';
+import type { ComponentType, ReactNode, SVGProps } from 'react';
+
+function Card({
+  id,
+  icon: Icon,
+  title,
+  items,
+  wide,
+  children,
+}: {
+  id?: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  title: string;
+  items: string[];
+  /** Cartão de largura total, com os itens em duas colunas. */
+  wide?: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      aria-label={title}
+      className={`border-border bg-card rounded-3xl border p-4 ${wide ? 'md:col-span-2' : ''}`}
+    >
+      <div className="mb-2.5 flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          className="bg-accent text-accent-foreground grid size-8 shrink-0 place-items-center rounded-full"
+        >
+          <Icon className="size-[18px]" />
+        </span>
+        <h2 className="text-[17px] font-semibold tracking-[-0.02em]">{title}</h2>
+      </div>
+      <ul
+        className={`text-muted-foreground text-[13.5px] leading-[1.5] ${wide ? 'md:grid md:grid-cols-2 md:gap-x-10 md:gap-y-1.5' : 'space-y-1.5'}`}
+      >
+        {items.map((item) => (
+          <li key={item} className="flex gap-2.5">
+            <span
+              aria-hidden="true"
+              className="bg-primary/50 mt-[9px] size-1.5 shrink-0 rounded-full"
+            />
+            {item}
+          </li>
+        ))}
+      </ul>
+      {children}
+    </section>
+  );
+}
+
+function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      className="text-primary mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-medium underline-offset-2 hover:underline"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+      <ArrowTopRightOnSquareIcon className="size-4" aria-hidden="true" />
+    </a>
+  );
+}
+
 export function HelpPage() {
   return (
-    <div className="max-w-[74ch]">
-      <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.025em] md:text-[38px]">
+    <div>
+      <h1 className="text-[26px] leading-[1.1] font-semibold tracking-[-0.03em] md:text-[32px]">
         Ajuda
       </h1>
-      <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-        Como a estimativa é feita e o que acontece com seus dados.
+      <p className="text-muted-foreground mt-1.5 text-[14.5px]">
+        Em poucas palavras: como a conta é feita e o que acontece com os seus dados.
       </p>
 
-      <section aria-labelledby="method-title" className="border-border mt-10 border-t pt-8">
-        <h2 id="method-title" className="text-[18px] font-semibold tracking-[-0.01em]">
-          Como calculamos
-        </h2>
-        <div className="mt-5 grid gap-8 md:grid-cols-2">
-          <div>
-            <h3 className="text-[14px] font-medium">Uma projeção, não um extrato</h3>
-            <p className="text-muted-foreground mt-2 text-[14px] leading-relaxed">
-              Usamos salário fixo e depósitos estimados por competência civil, proporcionais aos
-              dias do vínculo nos meses incompletos. Não reconstruímos depósitos reais, saques
-              anteriores, variações salariais, juros de atraso ou o extrato individual da CAIXA.
-            </p>
-            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              Para o FGTS sobre o 13º, estimamos pelo salário fixo: meses com ao menos 15 dias
-              contam como avo. Quando novembro e dezembro estão no período, dividimos o valor entre
-              esses meses. Em rescisões cabíveis, estimamos o proporcional no término; doença grave
-              e aposentadoria não presumem término no ano incompleto. O adiantamento pode não
-              aparecer em períodos encerrados antes de dezembro; atrasos e lucros não são modelados.
-              Como opção avançada, informe a remuneração bruta de 13º paga por competência. Ela não
-              prova depósitos, não reproduz índices históricos e não reconstitui extrato.
-            </p>
-            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              13º e férias usam os avos ainda devidos que você informar: mês com 15 dias ou mais
-              conta como avo inteiro. Na justa causa e no saque por doença grave, essas verbas não
-              entram: a primeira não as gera e a segunda é hipótese de saque, não de rescisão. O
-              total não apura integralmente tributos, descontos, aviso-prévio, rescisão indireta,
-              força maior, contrato a termo e todas as verbas de uma rescisão. O salário deve
-              respeitar o piso legal; o app não valida esse limite.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-[14px] font-medium">Taxas transparentes</h3>
-            <p className="text-muted-foreground mt-2 text-[14px] leading-relaxed">
-              O cenário padrão soma à TR mensal estimada a taxa mensal equivalente a 3% efetivos ao
-              ano; essa soma simplificada não reproduz necessariamente a combinação histórica
-              oficial. O IPCA é referência econômica alternativa, não crédito judicial ou garantia.
-            </p>
-            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              A ADI 5090 não é troca automática pela maior taxa mensal: envolve remuneração anual,
-              distribuição de resultados e eventual compensação. Esta projeção não reproduz esse
-              mecanismo nem recomposição retroativa. As taxas do formulário são exemplos: confira a
-              TR e o IPCA do mês.
-            </p>
-            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              Trabalho doméstico: a reserva de 3,2% é corrigida como o FGTS. No acordo comum, metade
-              da reserva é destinada ao trabalhador, conforme orientação do eSocial. A mesma reserva
-              incide sobre o 13º estimado ou informado.
-            </p>
-            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              Valores são brutos. Não descontamos IRRF nem INSS: o 13º é tributável, as férias
-              rescisórias com 1/3 são isentas e a multa não sofre retenção.
-            </p>
-            <a
-              className="text-foreground mt-3 inline-block text-[14px] underline underline-offset-2"
-              href="https://www.stf.jus.br/arquivo/cms/noticiaNoticiaStf/anexo/ADI5090Infoasociedade.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Resumo do STF sobre a ADI 5090
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="privacy-title" className="border-border mt-10 border-t pt-8">
-        <h2 id="privacy-title" className="text-[18px] font-semibold tracking-[-0.01em]">
-          Seus dados e privacidade
-        </h2>
-        <div className="mt-5 grid gap-8 md:grid-cols-2">
-          <div>
-            <h3 className="text-[14px] font-medium">O cálculo fica no seu dispositivo</h3>
-            <p className="text-muted-foreground mt-2 text-[14px] leading-relaxed">
-              As entradas não são enviadas pela aplicação a um servidor. O histórico só é gravado
-              quando você escolhe salvar. Doença grave exige autorizações separadas para calcular e
-              para guardar.
-            </p>
-            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              Dados locais podem ser removidos pelo navegador. Não há conta, sincronização ou
-              criptografia própria do histórico.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-[14px] font-medium">Limites do armazenamento local</h3>
-            <p className="text-muted-foreground mt-2 text-[14px] leading-relaxed">
-              Projetos GitHub Pages deste proprietário compartilham a mesma origem. O nome do banco
-              e o caminho do aplicativo não impedem que outro script dessa origem acesse os dados
-              locais.
-            </p>
-            <p className="text-muted-foreground mt-3 text-[14px] leading-relaxed">
-              O GitHub pode registrar seu IP para segurança. A primeira visita exige conexão; usar
-              offline depende da instalação completa dos recursos.
-            </p>
-            <a
-              className="text-foreground mt-3 inline-block text-[14px] underline underline-offset-2"
-              href="https://github.com/AndersonTavares0/fgts-simulator/blob/main/docs/legal/privacy.md"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Política de privacidade completa
-            </a>
-          </div>
-        </div>
-      </section>
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <Card
+          id="metodologia"
+          icon={CalculatorIcon}
+          title="O que é esta estimativa"
+          items={[
+            'É uma projeção, não o extrato da Caixa. Para o valor exato, consulte o app do FGTS.',
+            'Usamos o salário que você informar, igual em todos os meses.',
+            'Não entram depósitos atrasados, saques antigos nem mudanças de salário.',
+            'Os valores são brutos: não descontamos imposto de renda nem INSS.',
+          ]}
+        />
+        <Card
+          icon={BanknotesIcon}
+          title="O que entra no total"
+          items={[
+            'O saldo do FGTS que você pode sacar. O que ficar retido aparece à parte.',
+            'A multa da empresa, quando o motivo da saída dá direito a ela.',
+            '13º e férias proporcionais, pelos meses que você informar. Na justa causa e no saque por doença grave, eles não entram.',
+            'Ficam de fora: aviso-prévio, rescisão indireta, contrato com prazo e outras verbas.',
+          ]}
+        />
+        <Card
+          icon={PercentBadgeIcon}
+          title="Como o saldo rende"
+          items={[
+            'O padrão é TR mais 3% ao ano, como no FGTS. As taxas que mostramos são exemplos: confira a TR e o IPCA do mês.',
+            'O IPCA é só uma comparação com a inflação, não um valor garantido.',
+            'Para empregado doméstico, a reserva de 3,2% rende como o FGTS. No acordo com a empresa, metade dela vai para o trabalhador.',
+          ]}
+        >
+          <ExternalLink href="https://www.stf.jus.br/arquivo/cms/noticiaNoticiaStf/anexo/ADI5090Infoasociedade.pdf">
+            Entenda a decisão do STF sobre a correção
+          </ExternalLink>
+        </Card>
+        <Card
+          id="privacidade"
+          icon={LockClosedIcon}
+          title="Seus dados"
+          items={[
+            'A conta é feita no seu aparelho. Nada é enviado a um servidor.',
+            'O histórico só é guardado quando você escolhe salvar. Não há conta nem login.',
+            'No saque por doença grave, pedimos uma autorização para calcular e outra, separada, para salvar.',
+            'O navegador pode apagar dados locais a qualquer momento. Se quiser guardar, baixe o PDF.',
+            'Este site fica no GitHub Pages, que pode registrar seu IP. Outros projetos do mesmo dono compartilham o armazenamento local do navegador. A primeira visita precisa de internet.',
+          ]}
+        >
+          <ExternalLink href="https://github.com/AndersonTavares0/fgts-simulator/blob/main/docs/legal/privacy.md">
+            Política de privacidade completa
+          </ExternalLink>
+        </Card>
+        <Card
+          wide
+          icon={CalendarDaysIcon}
+          title="Limites do simulador"
+          items={[
+            'Datas: vale de 01/01/1967 (quando o FGTS começou) em diante, por até 60 anos de trabalho.',
+            'Antes de 1991 o FGTS funcionava de outro jeito, então o resultado é só uma ideia aproximada.',
+            'Salário: até R$ 10.000.000,00. Esse limite é nosso, não da lei: serve para evitar erro ao digitar.',
+            'Se o seu salário for maior, simule com a metade e dobre o resultado.',
+          ]}
+        />
+      </div>
     </div>
   );
 }

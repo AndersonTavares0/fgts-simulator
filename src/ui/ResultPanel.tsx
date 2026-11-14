@@ -1,28 +1,16 @@
-import { useMemo } from 'react';
-import { ArrowDownTrayIcon, BookmarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { ArrowDownTrayIcon, BookmarkIcon } from '@heroicons/react/24/outline';
 import { simulate } from '../application/Simulation';
 import type { SimulationSnapshot } from '../application/Simulation';
 import { TipoRescisao } from '../core/types';
 import { FormatAdapter } from '../adapters/FormatAdapter';
-import { inputRows, totalCaption } from './presentation';
-import { exampleDraft, toInput } from './form';
-import { Badge } from './components/ui/badge';
+import { totalCaption } from './presentation';
+import { emptyDraft, exampleDraft, toInput } from './form';
 import { Button } from './components/ui/button';
 import { Checkbox } from './components/ui/checkbox';
 import { Label } from './components/ui/label';
-
-// Plain names for the audience this tool serves; the technical labels stay in the PDF.
-const PLAIN: Record<keyof SimulationSnapshot['result'], string> = {
-  saldoBaseCents: 'Saldo total no FGTS (com correção)',
-  depositosCents: 'Depósitos da empresa',
-  rendimentoCents: 'Rendimento (juros)',
-  saldoDisponivelCents: 'Disponível para saque',
-  saldoRetidoCents: 'Retido no FGTS',
-  multaCents: 'Multa rescisória',
-  decimoTerceiroCents: '13º proporcional',
-  feriasCents: 'Férias + 1/3',
-  totalCents: 'Total estimado',
-};
+import { Breakdown } from './Breakdown';
 
 interface Props {
   snapshot: SimulationSnapshot | null;
@@ -35,19 +23,100 @@ interface Props {
   onSave: () => void;
   onExportPdf: () => void;
   onExample: () => void;
+  chart?: ReactNode;
 }
 
 function describe(snapshot: SimulationSnapshot): string {
-  return `${FormatAdapter.civilDate(snapshot.input.startDate)} a ${FormatAdapter.civilDate(
-    snapshot.input.endDate,
-  )} · ${snapshot.input.scenario === 'TR' ? 'TR + 3% ao ano' : 'IPCA comparativo'}`;
+  const { input } = snapshot;
+  const tr = input.scenario === 'TR';
+  const rate = FormatAdapter.rateToPercent(tr ? input.trMonthly : input.ipcaMonthly);
+  // The default rates are illustrative (nov/2026), so say so instead of passing them as official.
+  const isExample = rate === (tr ? emptyDraft.trMonthly : emptyDraft.ipcaMonthly);
+  return `${FormatAdapter.civilDate(input.startDate)} a ${FormatAdapter.civilDate(
+    input.endDate,
+  )} · ${tr ? 'TR + 3% ao ano' : 'IPCA'} de ${rate}% ao mês${isExample ? ' (exemplo, ajuste em “Ajustar detalhes”)' : ''}`;
 }
 
 function Row({ label, cents }: { label: string; cents: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4">
+    <div className="border-border flex items-baseline justify-between gap-4 border-b py-2 last:border-0">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="num font-medium">{FormatAdapter.centsToBRL(cents)}</dd>
+    </div>
+  );
+}
+
+/** The result laid out as a payslip: total on the dark band, the two groups of lines below. */
+function Slip({
+  snapshot,
+  caption,
+  sample,
+  badge,
+}: {
+  snapshot: SimulationSnapshot;
+  caption: string;
+  sample?: boolean;
+  badge?: string;
+}) {
+  const { result } = snapshot;
+  const [symbol, amount] = FormatAdapter.centsToBRL(result.totalCents).split(' ');
+  return (
+    <div className="border-border bg-card relative overflow-hidden rounded-3xl border">
+      <div className="text-band-foreground relative bg-[linear-gradient(135deg,var(--band),var(--band-2))] px-6 pt-5 pb-6 md:px-7">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 200 200"
+          className="text-band-foreground pointer-events-none absolute -top-16 -right-14 size-64 opacity-[0.14]"
+          fill="none"
+          stroke="currentColor"
+        >
+          {[30, 54, 78, 102].map((r) => (
+            <circle key={r} cx="100" cy="100" r={r} strokeWidth="1" />
+          ))}
+        </svg>
+        <div className="relative flex items-start justify-between gap-3">
+          <h2
+            id="result-title"
+            className="text-band-foreground/75 text-[13px] font-medium tracking-[0.01em]"
+          >
+            {sample ? 'Exemplo de resultado' : 'Total estimado'}
+          </h2>
+          {badge && (
+            <span className="bg-highlight text-ink inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold">
+              {badge}
+            </span>
+          )}
+        </div>
+        <p className="font-display relative mt-3 flex items-baseline gap-2">
+          <span className="text-band-foreground/75 text-[clamp(20px,2.4vw,26px)]">{symbol}</span>
+          <span className="num text-[clamp(44px,5vw,64px)] leading-[0.95] font-semibold tracking-[-0.025em]">
+            {amount}
+          </span>
+        </p>
+        <p className="text-band-foreground/90 relative mt-3 max-w-[46ch] text-[14px] leading-snug">
+          {caption}
+        </p>
+      </div>
+      <div className="grid gap-8 px-6 py-5 sm:grid-cols-2 sm:gap-10 md:px-7">
+        <div>
+          <h3 className="font-display text-[18px] font-semibold">No seu FGTS</h3>
+
+          <dl className="mt-3 text-[14.5px]">
+            <Row label="Saldo total" cents={result.saldoBaseCents} />
+            <Row label="Disponível para saque" cents={result.saldoDisponivelCents} />
+            <Row label="Retido" cents={result.saldoRetidoCents} />
+          </dl>
+        </div>
+        <div>
+          <h3 className="font-display text-[18px] font-semibold">Na saída do emprego</h3>
+
+          <dl className="mt-3 text-[14.5px]">
+            <Row label="Multa rescisória" cents={result.multaCents} />
+            <Row label="13º proporcional" cents={result.decimoTerceiroCents} />
+            <Row label="Férias + 1/3" cents={result.feriasCents} />
+          </dl>
+        </div>
+      </div>
     </div>
   );
 }
@@ -63,7 +132,9 @@ export function ResultPanel({
   onSave,
   onExportPdf,
   onExample,
+  chart,
 }: Props) {
+  const [tab, setTab] = useState<'summary' | 'steps' | 'chart'>('summary');
   // The empty state shows a real, labelled preview: the same case the button loads.
   const demo = useMemo(() => {
     const parsed = toInput(exampleDraft, false);
@@ -72,57 +143,27 @@ export function ResultPanel({
 
   if (!snapshot) {
     return (
-      <section aria-labelledby="result-title" className="border-border lg:pt-0">
-        <h2
-          id="result-title"
-          className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]"
-        >
-          Resultado
-        </h2>
-        <p className="mt-4 max-w-[34ch] text-[16px] leading-snug font-medium tracking-[-0.01em]">
-          O saldo e as verbas aparecem aqui depois do cálculo.
-        </p>
-        <p className="text-muted-foreground mt-3 max-w-[42ch] text-[14px] leading-relaxed">
-          Preencha os dados ao lado. Nada é enviado para a internet.
-        </p>
-
-        {demo && (
-          <div className="border-border mt-8 rounded-lg border p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-muted-foreground text-[12px] font-medium">
-                Salário de {FormatAdapter.centsToBRL(demo.input.salaryCents)} por um ano
-              </p>
-              <Badge>Exemplo</Badge>
-            </div>
-            <p className="num mt-2 text-[26px] leading-none font-semibold tracking-[-0.03em]">
-              {FormatAdapter.centsToBRL(demo.result.totalCents)}
+      <section aria-labelledby="result-title">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-display text-[20px] leading-tight font-semibold">
+              Seu resultado aparece aqui
             </p>
-            <div className="border-border mt-4 grid gap-x-6 gap-y-1 border-t pt-3 sm:grid-cols-2">
-              <dl className="space-y-1.5 text-[14px]">
-                <Row label="Saldo no FGTS" cents={demo.result.saldoBaseCents} />
-                <Row label="Disponível" cents={demo.result.saldoDisponivelCents} />
-                <Row label="Retido" cents={demo.result.saldoRetidoCents} />
-              </dl>
-              <dl className="space-y-1.5 text-[14px]">
-                <Row label="Multa rescisória" cents={demo.result.multaCents} />
-                <Row label="13º proporcional" cents={demo.result.decimoTerceiroCents} />
-                <Row label="Férias + 1/3" cents={demo.result.feriasCents} />
-              </dl>
-            </div>
-            <p className="text-muted-foreground mt-3 text-[13px]">
-              Total estimado deste exemplo; o seu aparece ao calcular.
-            </p>
+            <p className="help mt-1">Tudo fica no seu aparelho. Veja um exemplo enquanto isso.</p>
           </div>
-        )}
-
-        <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-          <Button variant="secondary" onClick={onExample}>
+          <Button variant="secondary" onClick={onExample} className="shrink-0">
             Ver exemplo
           </Button>
-          <span className="text-muted-foreground text-[13px]">
-            Preenche o formulário com este caso.
-          </span>
         </div>
+
+        {demo && (
+          <Slip
+            snapshot={demo}
+            sample
+            badge="Exemplo"
+            caption={`Salário de ${FormatAdapter.centsToBRL(demo.input.salaryCents)} por um ano de trabalho. O seu aparece ao calcular.`}
+          />
+        )}
       </section>
     );
   }
@@ -130,96 +171,64 @@ export function ResultPanel({
   const sensitive = snapshot.input.terminationType === TipoRescisao.DOENCA_GRAVE;
   const retained = snapshot.result.saldoRetidoCents !== '0';
   const hasTotal = BigInt(snapshot.result.totalCents) > 0n;
-  const [symbol, amount] = FormatAdapter.centsToBRL(snapshot.result.totalCents).split(' ');
+  const tabs: Array<['summary' | 'steps' | 'chart', string]> = [
+    ['summary', 'Resumo'],
+    ['steps', 'Passo a passo'],
+    ...(chart ? ([['chart', 'Evolução']] as Array<['chart', string]>) : []),
+  ];
 
   return (
-    <section aria-labelledby="result-title" aria-busy={busy !== null}>
-      <div className="flex items-start justify-between gap-4">
-        <h2
-          id="result-title"
-          className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]"
-        >
-          Total estimado
-        </h2>
-        {(saved || stale) && <Badge>{stale ? 'Dados mudaram' : 'Resultado guardado'}</Badge>}
-      </div>
-
-      <p className="mt-4 flex items-baseline gap-2.5">
-        <span className="text-muted-foreground text-[clamp(20px,2.4vw,26px)] font-normal tracking-normal">
-          {symbol}
-        </span>
-        <span className="num text-[clamp(48px,6.4vw,72px)] leading-[0.9] font-semibold tracking-[-0.04em]">
-          {amount}
-        </span>
-      </p>
-
-      <p className="mt-4 text-[14px]">
-        {hasTotal ? totalCaption(snapshot.result) : 'Nenhuma parcela a receber neste cenário.'}
-      </p>
-      <p className="text-muted-foreground mt-1 text-[13px]">
-        {describe(snapshot)} · estimativa bruta, sem descontos.
-      </p>
-
-      {retained && (
-        <p className="text-muted-foreground mt-2 text-[13px]">
-          {FormatAdapter.centsToBRL(snapshot.result.saldoRetidoCents)} ficam retidos no FGTS e não
-          entram no total.
-        </p>
-      )}
-
+    <section aria-label="Resultado" aria-busy={busy !== null}>
       {stale && (
-        <p className="notice bg-warn-bg text-warn-ink mt-6" role="status">
+        <p className="notice bg-warn-bg text-warn-ink mb-3" role="status">
           Os dados mudaram. Calcule de novo para guardar ou salvar o PDF.
         </p>
       )}
 
-      <div className="border-border mt-9 grid gap-7 border-t pt-6 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-border">
-        <div className="sm:pr-8">
-          <h3 className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]">
-            FGTS
-          </h3>
-          <dl className="mt-3.5 space-y-2.5 text-[14px]">
-            <Row label="Saldo total no FGTS" cents={snapshot.result.saldoBaseCents} />
-            <Row label="Disponível para saque" cents={snapshot.result.saldoDisponivelCents} />
-            <Row label="Retido no FGTS" cents={snapshot.result.saldoRetidoCents} />
-          </dl>
-        </div>
-        <div className="sm:pl-8">
-          <h3 className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]">
-            Rescisão
-          </h3>
-          <dl className="mt-3.5 space-y-2.5 text-[14px]">
-            <Row label="Multa rescisória" cents={snapshot.result.multaCents} />
-            <Row label="13º proporcional" cents={snapshot.result.decimoTerceiroCents} />
-            <Row label="Férias + 1/3" cents={snapshot.result.feriasCents} />
-          </dl>
-        </div>
-      </div>
-
-      <div className="mt-8 flex flex-col gap-2 sm:flex-row print:hidden">
-        <Button
-          type="button"
-          className="flex-1"
-          onClick={onSave}
-          disabled={stale || busy !== null || saved || (sensitive && !consentStorage)}
+      <div className="mb-4 flex flex-wrap items-center gap-2 print:hidden">
+        <div
+          role="tablist"
+          aria-label="Partes do resultado"
+          className="bg-muted flex min-w-[15rem] flex-1 gap-1 rounded-full p-1"
         >
-          <BookmarkIcon className="size-4" aria-hidden="true" />
-          {busy === 'save' ? 'Guardando…' : saved ? 'Guardado' : 'Guardar resultado'}
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          className="flex-1"
-          onClick={onExportPdf}
-          disabled={stale || busy !== null}
-        >
-          <ArrowDownTrayIcon className="size-4" aria-hidden="true" />
-          {busy === 'pdf' ? 'Preparando…' : 'Baixar PDF'}
-        </Button>
+          {tabs.map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={`min-h-9 flex-1 cursor-pointer rounded-full px-3 text-[13.5px] font-medium whitespace-nowrap transition-colors ${tab === id ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            className="min-h-10"
+            onClick={onSave}
+            disabled={stale || busy !== null || saved || (sensitive && !consentStorage)}
+          >
+            <BookmarkIcon className="size-4" aria-hidden="true" />
+            {busy === 'save' ? 'Guardando…' : saved ? 'Guardado' : 'Guardar'}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-10"
+            onClick={onExportPdf}
+            disabled={stale || busy !== null}
+          >
+            <ArrowDownTrayIcon className="size-4" aria-hidden="true" />
+            {busy === 'pdf' ? 'Preparando…' : 'PDF'}
+          </Button>
+        </div>
       </div>
 
       {sensitive && (
-        <div className="notice bg-muted mt-4 print:hidden">
+        <div className="notice bg-muted mb-3 print:hidden">
           <div className="flex items-start gap-2.5">
             <Checkbox
               id="consent-storage"
@@ -241,58 +250,35 @@ export function ResultPanel({
         </div>
       )}
 
-      <p className="help mt-3 min-h-4 print:hidden" role="status" aria-live="polite">
-        {status}
-      </p>
-
-      <details className="border-border group mt-8 border-t">
-        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-medium">
-          Como chegamos nesses valores
-          <ChevronDownIcon
-            className="text-muted-foreground size-4 transition-transform group-open:rotate-180"
-            aria-hidden="true"
-          />
-        </summary>
-        <dl className="mt-1">
-          {(Object.keys(PLAIN) as Array<keyof SimulationSnapshot['result']>)
-            .filter((key) => key !== 'totalCents')
-            .map((key) => (
-              <div key={key} className="row-value">
-                <dt className="text-muted-foreground">{PLAIN[key]}</dt>
-                <dd className="num text-right whitespace-nowrap">
-                  {FormatAdapter.centsToBRL(snapshot.result[key])}
-                </dd>
-              </div>
-            ))}
-        </dl>
-        {snapshot.warnings.length > 0 && (
-          <div className="notice bg-warn-bg text-warn-ink my-3">
-            <strong className="font-medium">Antes de interpretar</strong>
-            <ul className="mt-1 list-disc pl-5">
-              {snapshot.warnings.map((warning) => (
-                <li key={warning}>{warning}</li>
-              ))}
-            </ul>
-          </div>
+      <div role="tabpanel" key={tab} className="settle">
+        {tab === 'summary' && (
+          <>
+            <Slip
+              snapshot={snapshot}
+              badge={stale ? 'Dados mudaram' : saved ? 'Resultado guardado' : undefined}
+              caption={
+                hasTotal
+                  ? totalCaption(snapshot.result)
+                  : 'Nenhuma parcela a receber neste cenário.'
+              }
+            />
+            <p className="text-muted-foreground mt-3 text-[13px]">
+              {describe(snapshot)} · bruto, sem descontos.
+              {retained &&
+                ` ${FormatAdapter.centsToBRL(snapshot.result.saldoRetidoCents)} ficam retidos no FGTS e não entram no total.`}
+            </p>
+            <p className="help mt-1">
+              Quer conferir com calma? Leve o PDF a um advogado trabalhista ou ao sindicato.
+            </p>
+          </>
         )}
-        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
-          {inputRows(snapshot.input).map(([label, value]) => (
-            <div key={label} className="contents">
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="text-right break-words">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <ul className="text-muted-foreground mt-4 list-disc pl-5 text-[13px] leading-relaxed">
-          {snapshot.assumptions.map((assumption) => (
-            <li key={assumption}>{assumption}</li>
-          ))}
-        </ul>
-        <p className="help mt-3 break-all">
-          Aplicativo {snapshot.appVersion} · Regra {snapshot.calculationVersion} · Formato{' '}
-          {snapshot.formatVersion} · ID {snapshot.id}
-        </p>
-      </details>
+        {tab === 'steps' && <Breakdown snapshot={snapshot} />}
+        {tab === 'chart' && chart}
+      </div>
+
+      <p className="help mt-2 min-h-4 print:hidden" role="status" aria-live="polite">
+        {stale ? '' : status}
+      </p>
     </section>
   );
 }

@@ -4,7 +4,16 @@ import type { SimulationSnapshot } from '../../src/application/Simulation';
 import { comparisonRows, inputRows } from '../../src/ui/presentation';
 import { chartMax } from '../../src/ui/chartScale';
 import { FormatAdapter } from '../../src/adapters/FormatAdapter';
-import { draftFromInput, emptyDraft, toInput } from '../../src/ui/form';
+import {
+  draftFromInput,
+  emptyDraft,
+  formatMoneyInput,
+  initialDraft,
+  maxEndDate,
+  padMoneyInput,
+  todayIso,
+  toInput,
+} from '../../src/ui/form';
 
 function snapshot(): SimulationSnapshot {
   return {
@@ -126,7 +135,7 @@ describe('Data final do formulário', () => {
       false,
     );
     expect('errors' in result ? result.errors.endDate : null).toBe(
-      'A data final deve ser posterior à data de início.',
+      'A saída precisa ser depois da data em que você começou.',
     );
   });
 
@@ -186,7 +195,7 @@ describe('FGTS sobre 13º no formulário', () => {
     ]);
     expect(draftFromInput(result.input).thirteenthEntries).toEqual([
       { competencia: '2025-11', remuneracao: '500,00' },
-      { competencia: '2025-12', remuneracao: '1100,50' },
+      { competencia: '2025-12', remuneracao: '1.100,50' },
     ]);
     expect(inputRows(result.input)).toContainEqual([
       'Remunerações de 13º informadas',
@@ -240,4 +249,78 @@ describe('percentage input boundary', () => {
       expect(FormatAdapter.rateFromPercent(value)).toBeNull();
     },
   );
+});
+
+describe('limites do simulador e data padrão', () => {
+  const valid = { ...emptyDraft, salary: '3.000,00', startDate: '2000-03-15' };
+
+  it('"Saiu em" começa com a data de hoje e a pessoa pode trocar', () => {
+    expect(initialDraft().endDate).toBe(todayIso());
+    expect(todayIso(new Date(2026, 10, 13, 23, 59))).toBe('2026-11-13');
+    expect(initialDraft().startDate).toBe('');
+  });
+
+  it('aceita exatamente 60 anos e avisa acima disso com a última data possível', () => {
+    expect(maxEndDate('2000-03-15')).toBe('2060-03-15');
+    expect(maxEndDate('2000-02-29')).toBe('2060-02-29');
+    expect('input' in toInput({ ...valid, endDate: '2060-03-15' }, false)).toBe(true);
+    const result = toInput({ ...valid, endDate: '2060-03-16' }, false);
+    expect('errors' in result ? result.errors.endDate : null).toBe(
+      'O máximo é 60 anos de trabalho. Escolha uma saída até 15/03/2060.',
+    );
+  });
+
+  it('não aceita entrada antes de 1967, quando o FGTS começou', () => {
+    const early = toInput({ ...valid, startDate: '1966-12-31', endDate: '2000-01-01' }, false);
+    expect('errors' in early ? early.errors.startDate : null).toBe(
+      'O FGTS começou em 1967. Escolha uma data a partir de 01/01/1967.',
+    );
+    const zoeira = toInput({ ...valid, startDate: '0001-01-01', endDate: '2025-01-01' }, false);
+    expect('errors' in zoeira ? zoeira.errors.startDate : null).toContain('1967');
+    expect(
+      'input' in toInput({ ...valid, startDate: '1967-01-01', endDate: '1968-01-01' }, false),
+    ).toBe(true);
+  });
+
+  it('aceita salário de até R$ 10.000.000,00 e avisa acima disso', () => {
+    const at = { ...valid, endDate: '2025-12-31', salary: '10.000.000,00' };
+    expect('input' in toInput(at, false)).toBe(true);
+    const over = toInput({ ...at, salary: '10.000.000,01' }, false);
+    expect('errors' in over ? over.errors.salary : null).toContain('O máximo é R$ 10.000.000,00');
+  });
+});
+
+describe('máscara de dinheiro', () => {
+  it('separa milhares com ponto e aceita vírgula com até duas casas', () => {
+    expect(formatMoneyInput('1559')).toBe('1.559');
+    expect(formatMoneyInput('1.559')).toBe('1.559');
+    expect(formatMoneyInput('1559,5')).toBe('1.559,5');
+    expect(formatMoneyInput('1559,567')).toBe('1.559,56');
+    expect(formatMoneyInput('1559,')).toBe('1.559,');
+    expect(formatMoneyInput(',5')).toBe('0,5');
+    expect(formatMoneyInput('000123')).toBe('123');
+    expect(formatMoneyInput('abc')).toBe('');
+    expect(formatMoneyInput('1234567')).toBe('1.234.567');
+  });
+
+  it('completa as casas ao sair do campo', () => {
+    expect(padMoneyInput('1.559')).toBe('1.559,00');
+    expect(padMoneyInput('1.559,5')).toBe('1.559,50');
+    expect(padMoneyInput('1.559,')).toBe('1.559,00');
+    expect(padMoneyInput('')).toBe('');
+    expect(padMoneyInput(',5')).toBe('0,50');
+  });
+
+  it('o valor mascarado é aceito pelo cálculo', () => {
+    const result = toInput(
+      {
+        ...initialDraft(),
+        salary: padMoneyInput(formatMoneyInput('1559')),
+        startDate: '2025-01-01',
+        endDate: '2025-12-31',
+      },
+      false,
+    );
+    expect('input' in result && result.input.salaryCents).toBe('155900');
+  });
 });
