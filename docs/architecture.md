@@ -9,6 +9,8 @@ O aplicativo estático usa Vite e TypeScript. Não há servidor de cálculos nem
 3. Um snapshot serializável reúne entradas, resultado, premissas, avisos e versões.
 4. Apresentação, IndexedDB e o PDF consomem esse snapshot. Nenhum exportador lê números do DOM ou implementa juros separados.
 
+Depois do primeiro cálculo, o formulário recalcula a cada edição válida e marca o resultado como desatualizado quando os dados deixam de ser válidos (sem recalcular nem reaproveitar consentimentos). Os limites de entrada (início do FGTS em 1967, 60 anos e salário máximo) vivem em `src/core/limites.ts` e são aplicados pela validação de `simulate` e pelo formulário.
+
 `Money` e Decimal fazem operações financeiras em centavos. Conversão para números de desenho ocorre somente no gráfico; rótulos usam os valores originais. Avos de 13º/férias são independentes do calendário de depósitos. Veja [premissas](legal/assumptions.md).
 
 ## Persistência e versões
