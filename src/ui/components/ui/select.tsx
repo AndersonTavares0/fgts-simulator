@@ -7,7 +7,7 @@ export function Select({ className, children, ...props }: SelectHTMLAttributes<H
     <div className="relative">
       <select
         className={cn(
-          'border-border bg-card text-foreground min-h-12 w-full appearance-none rounded-lg border px-3 py-2 pr-9 text-[15.5px] transition-colors',
+          'border-border bg-card text-foreground min-h-11 w-full appearance-none rounded-xl border px-3 py-2 pr-9 text-[15.5px] transition-colors',
           'hover:border-input disabled:cursor-not-allowed disabled:opacity-40',
           className,
         )}

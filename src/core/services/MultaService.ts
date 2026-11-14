@@ -24,7 +24,7 @@ const REGRAS_MULTA = {
   },
   [TipoRescisao.CULPA_RECIPROCA]: {
     percentual: 20,
-    fundamento: 'Art. 484, CLT — Súmula 14 TST',
+    fundamento: 'Art. 18, §2º, Lei 8.036/1990; Art. 484, CLT — Súmula 14 TST',
   },
   [TipoRescisao.DOENCA_GRAVE]: {
     percentual: 0,

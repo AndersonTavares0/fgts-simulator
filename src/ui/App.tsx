@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MoonIcon, SunIcon } from '@heroicons/react/24/outline';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ClockIcon,
+  LockClosedIcon,
+  MoonIcon,
+  SunIcon,
+  WifiIcon,
+} from '@heroicons/react/24/outline';
 import { simulate } from '../application/Simulation';
 import type { SimulationSnapshot } from '../application/Simulation';
 import {
@@ -17,7 +23,7 @@ import { ResultPanel } from './ResultPanel';
 import { HistoryPanel } from './HistoryPanel';
 import { HelpPage } from './HelpPage';
 import { EvolutionChart } from './EvolutionChart';
-import { draftFromInput, emptyDraft, exampleDraft, toInput } from './form';
+import { draftFromInput, exampleDraft, initialDraft, toInput } from './form';
 import type { Draft, FieldErrors } from './form';
 
 type Area = 'simulate' | 'history' | 'help';
@@ -35,8 +41,9 @@ function errorMessage(error: unknown): string {
 }
 
 export function App() {
-  const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [draft, setDraft] = useState<Draft>(initialDraft);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [liveErrors, setLiveErrors] = useState<FieldErrors>({});
   const [consentProcessing, setConsentProcessing] = useState(false);
   const [consentStorage, setConsentStorage] = useState(false);
   const [current, setCurrent] = useState<SimulationSnapshot | null>(null);
@@ -55,9 +62,7 @@ export function App() {
   const pwa = usePwa();
   const saved = Boolean(current && history.some((item) => item.id === current.id));
   // Reload only costs work that was never stored: a pending result or a half-filled form.
-  const pendingWork = current
-    ? !saved
-    : Boolean(draft.salary.trim() || draft.startDate || draft.endDate);
+  const pendingWork = current ? !saved : Boolean(draft.salary.trim() || draft.startDate);
 
   useEffect(() => {
     // On small screens only one column is visible; bring the active one into view
@@ -99,17 +104,37 @@ export function App() {
     void refreshHistory();
   }, [refreshHistory]);
 
-  const setDraftPatch = useMemo(
-    () => (patch: Partial<Draft>) => {
-      setDraft((value) => ({ ...value, ...patch }));
-      setErrors({});
-      if (current) {
-        setStale(true);
-        setStatus('Os dados mudaram. Calcule de novo para guardar ou salvar o PDF.');
+  // The first result is an explicit action. After that, edits keep it in sync when the new data
+  // is valid; otherwise the result is marked stale and nothing is recalculated (so a health
+  // consent that was withdrawn never keeps producing a result).
+  const setDraftPatch = (patch: Partial<Draft>): void => {
+    const next = { ...draft, ...patch };
+    setDraft(next);
+    setErrors({});
+    setLiveErrors({});
+    if (!current) return;
+    const parsed = toInput(next, consentProcessing);
+    if (!('errors' in parsed)) {
+      try {
+        setCurrent(simulate(parsed.input));
+        setStale(false);
+        setConsentStorage(false);
+        setStatus('');
+        return;
+      } catch (error) {
+        setErrors({ form: errorMessage(error) });
       }
-    },
-    [current],
-  );
+    }
+    if ('errors' in parsed) {
+      // Mostra o porquê (limite de data ou de salário) sem mover o foco e sem avisar de campo vazio.
+      const filled = (['salary', 'startDate', 'endDate'] as const).filter(
+        (key) => next[key].trim() !== '' && parsed.errors[key],
+      );
+      setLiveErrors(Object.fromEntries(filled.map((key) => [key, parsed.errors[key]])));
+    }
+    setStale(true);
+    setStatus('Os dados mudaram. Calcule de novo para guardar ou salvar o PDF.');
+  };
 
   function calculate(next: Draft = draft, consent = consentProcessing): void {
     const result = toInput(next, consent);
@@ -240,15 +265,17 @@ export function App() {
     });
   }
 
+  // Say nothing while the offline cache is still being prepared (and in dev, where it never is):
+  // only report states the user can act on or rely on.
   const offlineStatus = !pwa.online
     ? pwa.offlineReady
       ? 'Sem internet · o app continua funcionando'
       : 'Sem internet · abra uma vez com internet para usar depois'
     : pwa.offlineReady
-      ? 'Pode usar sem internet'
+      ? 'Pronto para usar sem internet'
       : pwa.registerError
         ? 'Sem modo offline · abra por HTTPS'
-        : 'Preparando o modo offline…';
+        : '';
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -259,27 +286,35 @@ export function App() {
         Ir para o conteúdo
       </a>
 
-      <header className="border-border border-b print:hidden">
+      <header className="border-border bg-background/80 sticky top-0 z-10 border-b backdrop-blur print:hidden">
         <div className="mx-auto flex h-14 w-full max-w-[1200px] items-center px-5 md:gap-6 md:px-8">
-          <a href="#simular" className="text-primary flex items-baseline gap-2 no-underline">
-            <span className="text-[16px] font-semibold tracking-[-0.01em]">FGTS</span>
-            <span className="text-muted-foreground hidden text-[13px] sm:inline">Simulador</span>
+          <a href="#simular" className="flex items-center gap-2.5 no-underline">
+            <span
+              aria-hidden="true"
+              className="font-display bg-band text-band-foreground grid size-8 place-items-center rounded-xl text-[18px] leading-none font-bold"
+            >
+              F
+            </span>
+            <span className="text-foreground hidden text-[18px] font-semibold tracking-[-0.02em] sm:inline">
+              FGTS{' '}
+              <span className="text-muted-foreground hidden font-normal sm:inline">simulador</span>
+            </span>
           </a>
           <nav aria-label="Navegação principal" className="ml-auto flex items-center md:gap-1">
             {(
               [
                 ['#simular', 'Calcular', 'simulate'],
                 ['#historico', 'Resultados', 'history'],
-                ['#metodologia', 'Ajuda', 'help'],
+                ['#ajuda', 'Ajuda', 'help'],
               ] as const
             ).map(([href, label, target]) => (
               <a
                 key={href}
                 href={href}
                 aria-current={area === target ? 'page' : undefined}
-                className={`flex h-10 items-center rounded-md px-2 text-[14px] no-underline transition-colors md:px-3 ${
+                className={`flex h-9 items-center rounded-full px-3 text-[14.5px] no-underline transition-colors md:px-4 ${
                   area === target
-                    ? 'text-primary font-medium'
+                    ? 'bg-accent text-accent-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -308,18 +343,37 @@ export function App() {
       <main id="conteudo" className="mx-auto w-full max-w-[1200px] flex-1 px-5 md:px-8">
         {area === 'simulate' && (
           <>
-            <div className="pt-10 md:pt-14 print:hidden">
-              <div>
-                <h1 className="text-[32px] leading-[1.05] font-semibold tracking-[-0.03em] text-balance md:text-[44px]">
-                  Simule seu FGTS e sua rescisão
-                </h1>
-                <p className="text-muted-foreground mt-4 max-w-[60ch] text-[14px] leading-relaxed">
-                  Saldo estimado do FGTS e verbas da saída: multa, 13º e férias.
-                </p>
+            <div className="pt-5 md:pt-6 print:hidden">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h1 className="text-[32px] leading-[1.05] font-semibold tracking-[-0.04em] text-balance md:text-[44px]">
+                    Simule seu FGTS e sua{' '}
+                    <span className="text-ink bg-[linear-gradient(transparent_62%,var(--highlight)_62%,var(--highlight)_92%,transparent_92%)] px-1 [box-decoration-break:clone]">
+                      rescisão
+                    </span>
+                  </h1>
+                  <p className="text-muted-foreground mt-3 max-w-[60ch] text-[15px] leading-relaxed">
+                    Veja quanto você tem no FGTS e o que pode receber ao sair: multa, 13º e férias.
+                  </p>
+                </div>
+                <ul className="text-muted-foreground flex flex-wrap gap-x-5 gap-y-2 text-[14px] lg:flex-col lg:gap-1.5">
+                  {(
+                    [
+                      [ClockIcon, 'Leva menos de um minuto'],
+                      [LockClosedIcon, 'Nada sai do seu aparelho'],
+                      [WifiIcon, 'Funciona sem internet'],
+                    ] as const
+                  ).map(([Icon, text]) => (
+                    <li key={text} className="flex items-center gap-2">
+                      <Icon className="text-primary size-[18px]" aria-hidden="true" />
+                      {text}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
 
-            <div className="border-border mt-8 flex gap-6 border-b lg:hidden print:hidden">
+            <div className="border-border mt-5 flex gap-6 border-b lg:hidden print:hidden">
               {(
                 [
                   ['input', 'Dados'],
@@ -342,14 +396,15 @@ export function App() {
               ))}
             </div>
 
-            <div className="mt-8 grid items-start gap-10 md:mt-14 lg:grid-cols-[minmax(300px,380px)_minmax(0,1fr)] lg:gap-12 xl:gap-14 print:mt-0 print:block print:gap-0">
+            <div className="mt-5 grid items-start gap-8 md:mt-7 lg:grid-cols-[minmax(320px,400px)_minmax(0,1fr)] lg:gap-10 xl:gap-12 print:mt-0 print:block print:gap-0">
               <div
                 ref={formColumn}
-                className={`${view === 'result' ? 'hidden lg:block' : ''} print:hidden`}
+                className={`border-border bg-card rounded-3xl border p-5 ${view === 'result' ? 'hidden lg:block' : ''} print:hidden`}
               >
                 <SimulationForm
                   draft={draft}
                   errors={errors}
+                  liveErrors={liveErrors}
                   consentProcessing={consentProcessing}
                   onDraft={setDraftPatch}
                   onConsent={setConsentProcessing}
@@ -358,9 +413,7 @@ export function App() {
               </div>
               <div
                 ref={resultColumn}
-                className={`lg:border-border lg:border-l lg:pl-12 xl:pl-14 print:border-0 print:pl-0 ${
-                  view === 'input' ? 'hidden lg:block' : ''
-                }`}
+                className={`print:border-0 print:pl-0 ${view === 'input' ? 'hidden lg:block' : ''}`}
               >
                 <ResultPanel
                   snapshot={current}
@@ -373,12 +426,9 @@ export function App() {
                   onSave={() => void save()}
                   onExportPdf={() => void exportPdf()}
                   onExample={useExample}
+                  chart={current ? <EvolutionChart snapshot={current} /> : undefined}
                 />
               </div>
-            </div>
-
-            <div className={view === 'input' ? 'hidden lg:block' : undefined}>
-              {current && <EvolutionChart snapshot={current} />}
             </div>
           </>
         )}
@@ -399,19 +449,23 @@ export function App() {
         )}
 
         {area === 'help' && (
-          <div className="pt-10 md:pt-14">
+          <div className="pt-6 md:pt-8">
             <HelpPage />
           </div>
         )}
 
-        <footer className="border-border text-muted-foreground mt-16 flex flex-col items-start gap-3 border-t py-6 text-[12px] md:mt-20 lg:flex-row lg:items-center lg:justify-between print:hidden">
-          <span role="status" className="flex items-center gap-1.5">
-            <span
-              className={`size-1.5 rounded-full ${pwa.online ? 'bg-primary' : 'bg-warn-ink'}`}
-              aria-hidden="true"
-            />
-            {offlineStatus}
-          </span>
+        <footer className="border-border text-muted-foreground mt-4 flex flex-col items-start gap-3 border-t py-3 text-[12px] md:mt-5 lg:flex-row lg:items-center lg:justify-between print:hidden">
+          {offlineStatus ? (
+            <span role="status" className="flex items-center gap-1.5">
+              <span
+                className={`size-1.5 rounded-full ${pwa.online ? 'bg-primary' : 'bg-warn-ink'}`}
+                aria-hidden="true"
+              />
+              {offlineStatus}
+            </span>
+          ) : (
+            <span />
+          )}
           {pwa.canInstall && (
             <button
               type="button"

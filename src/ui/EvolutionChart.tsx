@@ -8,10 +8,11 @@ import type { SimulationSnapshot } from '../application/Simulation';
 type Point = SimulationSnapshot['timeline'][number];
 type Series = 'tr' | 'ipca' | 'depositos';
 
-// Depósitos são lineares e redundantes no gráfico; ficam na tabela mensal.
+// A linha pontilhada de depósitos mostra o que foi colocado; o espaço até o saldo é o rendimento.
 const SERIES: Array<{ key: Series; label: string; dashed: boolean; color: string }> = [
-  { key: 'tr', label: 'Saldo acumulado (TR + 3%)', dashed: false, color: 'var(--chart-1)' },
-  { key: 'ipca', label: 'Referência IPCA', dashed: true, color: 'var(--chart-2)' },
+  { key: 'tr', label: 'Seu saldo (TR + 3%)', dashed: false, color: 'var(--chart-1)' },
+  { key: 'depositos', label: 'O que a empresa depositou', dashed: true, color: 'var(--input)' },
+  { key: 'ipca', label: 'Só pelo IPCA (comparação)', dashed: true, color: 'var(--chart-2)' },
 ];
 
 const FIELD: Record<Series, 'trCents' | 'ipcaCents' | 'depositosCents'> = {
@@ -21,7 +22,8 @@ const FIELD: Record<Series, 'trCents' | 'ipcaCents' | 'depositosCents'> = {
 };
 
 const cents = (point: Point, key: Series): number => Number(point[FIELD[key]]) / 100;
-const xAt = (index: number, total: number): number => (total < 2 ? 50 : (index / (total - 1)) * 100);
+const xAt = (index: number, total: number): number =>
+  total < 2 ? 50 : (index / (total - 1)) * 100;
 const yAt = (value: number, max: number): number => 98 - (value / max) * 94;
 
 export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
@@ -42,10 +44,13 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   const { paths, area } = useMemo(() => {
     const path = (key: Series): string =>
       data
-        .map((point, index) => `${index ? 'L' : 'M'}${xAt(index, total)} ${yAt(cents(point, key), max)}`)
+        .map(
+          (point, index) =>
+            `${index ? 'L' : 'M'}${xAt(index, total)} ${yAt(cents(point, key), max)}`,
+        )
         .join(' ');
     return {
-      paths: { tr: path('tr'), ipca: path('ipca') },
+      paths: { tr: path('tr'), ipca: path('ipca'), depositos: path('depositos') },
       area: `${path('tr')} L${xAt(total - 1, total)} 98 L${xAt(0, total)} 98 Z`,
     };
   }, [data, total, max]);
@@ -64,45 +69,58 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
   }
 
   return (
-    <section className="border-border mt-10 border-t pt-6" aria-labelledby="evolution-title">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        <div>
-          <h2
-            id="evolution-title"
-            className="text-muted-foreground text-[12px] font-medium tracking-[-0.01em]"
+    <section
+      className="border-border bg-card rounded-3xl border p-5"
+      aria-labelledby="evolution-title"
+    >
+      <h2 id="evolution-title" className="text-[18px] font-semibold tracking-[-0.02em]">
+        Como o seu saldo cresce
+      </h2>
+      <p className="help mt-1">
+        {total} {total === 1 ? 'mês' : 'meses'} de depósitos, de{' '}
+        {FormatAdapter.civilDate(data[0]!.competencia)} a{' '}
+        {FormatAdapter.civilDate(data[total - 1]!.competencia)}.
+      </p>
+
+      <dl className="mt-4 grid grid-cols-3 gap-2">
+        {(
+          [
+            ['A empresa depositou', data[total - 1]!.depositosCents],
+            ['O saldo rendeu', snapshot.result.rendimentoCents],
+            ['Saldo no FGTS', snapshot.result.saldoBaseCents],
+          ] as const
+        ).map(([label, value], index) => (
+          <div
+            key={label}
+            className={`rounded-2xl px-3 py-2.5 ${index === 2 ? 'bg-accent text-accent-foreground' : 'bg-muted/60'}`}
           >
-            Saldo acumulado em {FormatAdapter.civilDate(data[total - 1]!.competencia)}
-          </h2>
-          <p className="num mt-1.5 text-[26px] leading-none font-semibold tracking-[-0.03em]">
-            {FormatAdapter.centsToBRL(snapshot.result.saldoBaseCents)}
-          </p>
-          <p className="text-muted-foreground mt-2 text-[13px]">
-            {total} competências ·{' '}
-            {snapshot.input.scenario === 'TR' ? 'TR + 3% ao ano' : 'IPCA comparativo'} · valores em
-            R$
-            {snapshot.result.saldoRetidoCents !== '0' && ' · inclui saldo retido'}
-          </p>
-        </div>
-        <ul className="text-muted-foreground flex flex-col gap-1.5 text-[12px]">
-          {SERIES.map((serie) => (
-            <li key={serie.key} className="flex items-center gap-1.5">
-              <span
-                aria-hidden="true"
-                className="h-[3px] w-4 rounded-full"
-                style={
-                  serie.dashed
-                    ? {
-                        height: 0,
-                        borderTop: `3px ${serie.key === 'depositos' ? 'dotted' : 'dashed'} ${serie.color}`,
-                      }
-                    : { background: serie.color }
-                }
-              />
-              {serie.label}
-            </li>
-          ))}
-        </ul>
-      </div>
+            <dt className="text-[12px] opacity-80">{label}</dt>
+            <dd className="num mt-0.5 text-[15px] font-semibold tracking-[-0.01em] sm:text-[17px]">
+              {FormatAdapter.centsToBRL(value)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <ul className="text-muted-foreground mt-4 mb-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[12.5px]">
+        {SERIES.map((serie) => (
+          <li key={serie.key} className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="h-[3px] w-4 rounded-full"
+              style={
+                serie.dashed
+                  ? {
+                      height: 0,
+                      borderTop: `3px ${serie.key === 'depositos' ? 'dotted' : 'dashed'} ${serie.color}`,
+                    }
+                  : { background: serie.color }
+              }
+            />
+            {serie.label}
+          </li>
+        ))}
+      </ul>
 
       <div
         className="relative h-[210px] w-full touch-pan-y select-none"
@@ -237,9 +255,22 @@ export function EvolutionChart({ snapshot }: { snapshot: SimulationSnapshot }) {
         )}
       </div>
 
+      <p className="text-muted-foreground mt-3 text-[13px]">
+        {ipcaNote(data[total - 1]!)} É só uma comparação, não um valor que você tem direito a
+        receber.
+        {snapshot.result.saldoRetidoCents !== '0' && ' O saldo inclui a parte retida no FGTS.'}
+      </p>
+
       <TableToggle snapshot={snapshot} />
     </section>
   );
+}
+
+function ipcaNote(last: Point): string {
+  const diff = BigInt(last.ipcaCents) - BigInt(last.trCents);
+  if (diff === 0n) return 'Pela inflação (IPCA), o saldo seria igual.';
+  const amount = FormatAdapter.centsToBRL((diff < 0n ? -diff : diff).toString());
+  return `Se o saldo rendesse só pelo IPCA, ficaria ${amount} ${diff < 0n ? 'abaixo' : 'acima'}.`;
 }
 
 function TableToggle({ snapshot }: { snapshot: SimulationSnapshot }) {

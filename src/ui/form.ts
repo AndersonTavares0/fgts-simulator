@@ -1,6 +1,8 @@
 import Decimal from 'decimal.js';
 import { FormatAdapter } from '../adapters/FormatAdapter';
 import { TipoContrato, TipoRescisao } from '../core/types';
+import { parseCivilDate } from '../core/CivilDate';
+import { LIMITES } from '../core/limites';
 import type { SimulationInput } from '../application/Simulation';
 
 export interface Draft {
@@ -41,6 +43,70 @@ export const emptyDraft: Draft = {
   scenario: 'TR',
 };
 
+/** Data de hoje (calendário local) no formato AAAA-MM-DD. */
+export function todayIso(now: Date = new Date()): string {
+  const pad = (value: number): string => String(value).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/** Formulário novo: "Saiu em" já vem com a data de hoje; a pessoa escolhe a dela. */
+export function initialDraft(): Draft {
+  return { ...emptyDraft, endDate: todayIso() };
+}
+
+/**
+ * Antes de 01/02/1991 a correção do FGTS não era a TR (Lei 8.177/1991), e quem optou antes de
+ * 22/09/1971 pode ter juros progressivos de 3% a 6% (Lei 5.107/1966; Lei 8.036/1990, art. 13).
+ */
+export const isLegacyStart = (startDate: string): boolean =>
+  startDate >= LIMITES.inicioFgts && startDate < '1991-02-01';
+
+function isSalaryTooHigh(value: string): boolean {
+  const text = value.trim().replace(/^R\$\s*/, '');
+  if (value.length > 32 || !/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(text)) return false;
+  return new Decimal(text.replace(/\./g, '').replace(',', '.')).gt(
+    Number(LIMITES.salarioMaxCentavos) / 100,
+  );
+}
+
+/**
+ * Máscara de dinheiro ao digitar: separa os milhares com ponto e aceita vírgula e até duas casas
+ * ("1559" vira "1.559", "1559,5" vira "1.559,5"). Pontos digitados são ignorados porque a máscara
+ * já os coloca.
+ */
+export function formatMoneyInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d,]/g, '');
+  const comma = cleaned.indexOf(',');
+  const integerPart = (comma < 0 ? cleaned : cleaned.slice(0, comma)).replace(/^0+(?=\d)/, '');
+  const decimals =
+    comma < 0
+      ? null
+      : cleaned
+          .slice(comma + 1)
+          .replace(/,/g, '')
+          .slice(0, 2);
+  const grouped = integerPart.slice(0, 9).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return decimals === null ? grouped : `${grouped || '0'},${decimals}`;
+}
+
+/** Ao sair do campo completa as casas: "1.559" vira "1.559,00" e "1.559,5" vira "1.559,50". */
+export function padMoneyInput(value: string): string {
+  if (!value.trim()) return '';
+  const masked = formatMoneyInput(value);
+  const [integerPart = '0', decimals = ''] = masked.split(',');
+  return `${integerPart || '0'},${decimals.padEnd(2, '0')}`;
+}
+
+/** Última data de saída aceita para uma data de entrada, no formato AAAA-MM-DD. */
+export function maxEndDate(startDate: string): string | null {
+  const start = parseCivilDate(startDate);
+  if (!start) return null;
+  const limit = new Date(start);
+  limit.setUTCFullYear(start.getUTCFullYear() + LIMITES.anosMax);
+  if (limit.getUTCMonth() !== start.getUTCMonth()) limit.setUTCDate(0);
+  return limit.toISOString().slice(0, 10);
+}
+
 export const exampleDraft: Draft = {
   ...emptyDraft,
   salary: '3.000,00',
@@ -50,7 +116,7 @@ export const exampleDraft: Draft = {
 
 export function draftFromInput(input: SimulationInput): Draft {
   return {
-    salary: new Decimal(input.salaryCents).div(100).toFixed(2).replace('.', ','),
+    salary: padMoneyInput(new Decimal(input.salaryCents).div(100).toFixed(2).replace('.', ',')),
     startDate: input.startDate,
     endDate: input.endDate,
     contractType: input.contractType,
@@ -59,7 +125,9 @@ export function draftFromInput(input: SimulationInput): Draft {
     thirteenthMode: input.thirteenthMode ?? 'estimate',
     thirteenthEntries: (input.thirteenthEntries ?? []).map((entry) => ({
       competencia: entry.competencia,
-      remuneracao: new Decimal(entry.remuneracaoCents).div(100).toFixed(2).replace('.', ','),
+      remuneracao: padMoneyInput(
+        new Decimal(entry.remuneracaoCents).div(100).toFixed(2).replace('.', ','),
+      ),
     })),
     includeVacation: input.includeVacation,
     thirteenthMonths: String(input.thirteenthMonths),
@@ -86,25 +154,35 @@ export function toInput(
 ): { input: SimulationInput } | { errors: FieldErrors } {
   const errors: FieldErrors = {};
   const salary = FormatAdapter.parseMonetaryInput(draft.salary);
-  if (!salary) errors.salary = 'Informe um salário maior que zero, como 2.500,00.';
+  if (!salary)
+    errors.salary = isSalaryTooHigh(draft.salary)
+      ? `Valor muito alto. O máximo é ${FormatAdapter.centsToBRL(String(LIMITES.salarioMaxCentavos))}.`
+      : 'Digite seu salário, por exemplo 2.500,00.';
   const start = FormatAdapter.parseDate(draft.startDate);
   const end = FormatAdapter.parseDate(draft.endDate);
-  if (!start) errors.startDate = 'Informe uma data de início válida.';
-  if (!end) errors.endDate = 'Informe uma data final válida.';
+  if (!start) errors.startDate = 'Escolha a data em que você começou.';
+  else if (draft.startDate < LIMITES.inicioFgts)
+    errors.startDate = `O FGTS começou em ${FormatAdapter.civilDate(LIMITES.inicioFgts).slice(6)}. Escolha uma data a partir de ${FormatAdapter.civilDate(LIMITES.inicioFgts)}.`;
+  if (!end) errors.endDate = 'Escolha a data em que você saiu.';
   if (start && end && draft.endDate <= draft.startDate)
-    errors.endDate = 'A data final deve ser posterior à data de início.';
+    errors.endDate = 'A saída precisa ser depois da data em que você começou.';
+  else if (start && end && draft.startDate >= LIMITES.inicioFgts) {
+    const limit = maxEndDate(draft.startDate);
+    if (limit && draft.endDate > limit)
+      errors.endDate = `O máximo é ${LIMITES.anosMax} anos de trabalho. Escolha uma saída até ${FormatAdapter.civilDate(limit)}.`;
+  }
   const tr = FormatAdapter.rateFromPercent(draft.trMonthly);
   const ipca = FormatAdapter.rateFromPercent(draft.ipcaMonthly);
   if (tr === null || new Decimal(tr).isNegative() || new Decimal(tr).gt('0.1'))
-    errors.trMonthly = 'Informe uma TR entre 0% e 10% ao mês.';
+    errors.trMonthly = 'Use uma TR entre 0% e 10% ao mês.';
   if (ipca === null || new Decimal(ipca).lte(-1) || new Decimal(ipca).gt('0.1'))
-    errors.ipcaMonthly = 'Informe um IPCA maior que −100% e até 10% ao mês.';
+    errors.ipcaMonthly = 'Use um IPCA acima de −100% e até 10% ao mês.';
   for (const [toggle, field] of [
     [draft.include13, 'thirteenthMonths'],
     [draft.includeVacation, 'vacationMonths'],
   ] as const) {
     if (toggle && !/^(?:[0-9]|1[0-2])$/.test(draft[field]))
-      errors[field] = 'Informe um número inteiro de avos entre 0 e 12.';
+      errors[field] = 'Use um número de 0 a 12.';
   }
   const entries = new Map<string, bigint>();
   if (draft.thirteenthMode === 'actual') {
@@ -115,9 +193,9 @@ export function toInput(
         (start && entry.competencia < draft.startDate.slice(0, 7)) ||
         (end && entry.competencia > draft.endDate.slice(0, 7))
       ) {
-        errors.thirteenthEntries = 'Informe competências válidas dentro do período simulado.';
+        errors.thirteenthEntries = 'Use meses entre a entrada e a saída.';
       } else if (amount === null) {
-        errors.thirteenthEntries = 'Informe uma remuneração bruta válida em cada parcela.';
+        errors.thirteenthEntries = 'Confira o valor de cada parcela do 13º.';
       } else {
         const total = (entries.get(entry.competencia) ?? 0n) + amount;
         if (total > BigInt(Number.MAX_SAFE_INTEGER))
@@ -127,8 +205,7 @@ export function toInput(
     }
   }
   if (draft.terminationType === TipoRescisao.DOENCA_GRAVE && !consentProcessing)
-    errors.consentProcessing =
-      'Autorize o uso desta informação sensível para calcular ou escolha outro motivo.';
+    errors.consentProcessing = 'Marque a caixinha para continuar, ou escolha outra situação.';
 
   if (Object.keys(errors).length || !salary || tr === null || ipca === null) return { errors };
   return {

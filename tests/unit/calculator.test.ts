@@ -266,6 +266,12 @@ describe('SaqueAniversarioService — Tabela Oficial Caixa', () => {
     expect(resultado.valorSaque.cents).toBe(37000);
   });
 
+  it('Limites das faixas: R$ 500,00 e R$ 500,01 caem em faixas distintas', () => {
+    expect(SaqueAniversarioService.calcularParcela(Money.fromReais(500)).aliquota).toBe(50);
+    expect(SaqueAniversarioService.calcularParcela(Money.fromCents(50001)).aliquota).toBe(40);
+    expect(SaqueAniversarioService.calcularParcela(Money.fromCents(500001)).aliquota).toBe(20);
+  });
+
   it('Faixa acima de R$ 20.000 → 5% + R$ 2.900', () => {
     const saldo = Money.fromReais(25000);
     const resultado = SaqueAniversarioService.calcularParcela(saldo);

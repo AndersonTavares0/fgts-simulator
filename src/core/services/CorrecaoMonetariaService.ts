@@ -1,5 +1,6 @@
 import Decimal from 'decimal.js';
 import { Money } from '../types';
+import { MAX_COMPETENCIAS } from '../limites';
 import type { IndicesCorrecao, PontoCorrecao, ResultadoCorrecao } from '../types';
 
 const JUROS_MENSAL = new Decimal('1.03').pow(new Decimal(1).dividedBy(12)).minus(1);
@@ -16,7 +17,7 @@ export class CorrecaoMonetariaService {
     periodos?: readonly Decimal[],
     depositosExtras?: readonly Money[],
   ): ResultadoCorrecao {
-    if (!Number.isFinite(meses) || meses < 0 || meses > 602) {
+    if (!Number.isFinite(meses) || meses < 0 || meses > MAX_COMPETENCIAS) {
       throw new Error('Período de correção inválido.');
     }
     if (cenario !== 'TR' && cenario !== 'IPCA') throw new Error('Cenário de correção inválido.');
@@ -41,7 +42,7 @@ export class CorrecaoMonetariaService {
       ...(meses % 1 ? [new Decimal(meses).minus(Math.floor(meses))] : []),
     ];
     if (
-      fracoes.length > 602 ||
+      fracoes.length > MAX_COMPETENCIAS ||
       fracoes.some(
         (fracao) => !fracao.isFinite() || fracao.lessThanOrEqualTo(0) || fracao.greaterThan(1),
       )

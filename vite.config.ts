@@ -57,8 +57,8 @@ export default defineConfig({
         start_url: '/fgts-simulator/',
         scope: '/fgts-simulator/',
         display: 'standalone',
-        theme_color: '#fafaf9',
-        background_color: '#fafaf9',
+        theme_color: '#f6f8f7',
+        background_color: '#f6f8f7',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },

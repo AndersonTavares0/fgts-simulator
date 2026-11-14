@@ -9,6 +9,42 @@ Versões anteriores a 2.0.0 não tinham `package.json` nem tag; o material hist�
 
 Nada pendente.
 
+## 2.2.0 - 2026-11-13
+
+Redesenho calmo da interface (tema claro e escuro da mesma família verde), formulário e resultado que cabem na tela, cálculo ao vivo, limites de entrada explicados e relatório PDF reorganizado, mantendo-o monocromático e de uma página.
+
+### Added
+
+- Resultado em três abas (Resumo, Passo a passo, Evolução), com uma rosca interativa que explica cada parte do total ao passar o mouse ou focar na legenda.
+- Cálculo ao vivo: depois do primeiro cálculo, o resultado acompanha as edições; dados inválidos ou sem consentimento deixam o resultado desatualizado, sem recalcular.
+- Máscara de dinheiro no salário e nas remunerações do 13º ("1559" vira "1.559" e, ao sair do campo, "1.559,00").
+- "Saiu em" começa com a data de hoje; a pessoa escolhe a dela.
+- Limites de entrada explicados na tela, na Ajuda e em `docs/legal/assumptions.md`: entrada a partir de 01/01/1967 (início do FGTS, Lei 5.107/1966), até 60 anos de vínculo e salário de até R$ 10.000.000,00, com aviso para entrada antes de 1991. Fonte única em `src/core/limites.ts`.
+- Aba Evolução com depósitos, rendimento, saldo e a comparação com o IPCA, e a linha de depósitos no gráfico.
+- PDF com barra de composição só de contorno, passo a passo numerado, gráfico de linhas e resumo anual para vínculos longos, com a série mensal em anexo.
+- Testes de limites, da máscara de dinheiro e do PDF (uma página, só cinza e nenhuma área preenchida).
+
+### Changed
+
+- Paleta, tipografia (somente Geist) e espaçamento reescritos; tema escuro em verde-grafite com o mesmo cartão de total do tema claro.
+- "Ajustar detalhes" (antes "Mais opções") troca a vista dentro do mesmo cartão, em três abas, em vez de abrir um popup.
+- Página de Ajuda em cartões com frases curtas e sem jargão, sem abas.
+- Erros de formulário mais suaves e em linguagem simples, junto ao campo; saiu a caixa vermelha de resumo.
+- Período máximo passou de 50 para 60 anos e o salário máximo de R$ 1.000.000,00 para R$ 10.000.000,00. A fórmula e a versão de cálculo não mudaram; registros salvos continuam válidos.
+- Rodapé mostra o estado offline somente quando há algo útil a dizer.
+- Textos do passo a passo e as partes do total passam a vir de um único lugar, compartilhado por tela e PDF.
+
+### Fixed
+
+- A busca da faixa do saque-aniversário podia cair na faixa errada por arredondamento de ponto flutuante.
+- A fundamentação da multa por culpa recíproca passou a citar também o art. 18, §2º da Lei 8.036/1990.
+- Aviso "Os dados mudaram" aparecia duas vezes no resultado.
+- O campo "Saiu em" descia quando a data de entrada tinha erro.
+
+### Removed
+
+- Componente de diálogo e a dependência `@radix-ui/react-dialog`, sem uso.
+
 ## 2.1.0 - 2026-11-12
 
 Primeira versão estável da linha 2.1, publicada no GitHub Pages. Reúne o redesenho da interface, o FGTS do 13º, histórico, PDF, gráfico, PWA, a esteira de release e as correções da auditoria, incluindo os ajustes feitos depois da beta.4.

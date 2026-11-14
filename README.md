@@ -10,10 +10,11 @@ Os resultados são estimativas. O aplicativo não consulta seu extrato CAIXA, n�
 
 - Contratos CLT, aprendizagem e doméstico; modalidades de saída e saque-aniversário.
 - Avos ainda não pagos de 13º e férias informados separadamente da duração do contrato.
-- FGTS sobre 13º: estimativa padrão pelo salário fixo ou remunerações brutas reais por competência em **Mais opções**, sem confundir com as verbas rescisórias.
+- FGTS sobre 13º: estimativa padrão pelo salário fixo ou remunerações brutas reais por competência em **Ajustar detalhes**, sem confundir com as verbas rescisórias.
 - Evolução mensal do saldo: depósitos, cenário TR + 3% a.a. e comparação pelo IPCA, com tabela acessível.
 - Histórico opcional em IndexedDB: reabrir, comparar duas simulações e excluir registros.
-- Relatório **PDF** monocromático (A4) gerado no próprio app: total, grupos FGTS/rescisão, dados contratuais, memória de cálculo, premissas, avisos e série mensal. Funciona offline.
+- Relatório **PDF** monocromático e de uma página (A4), de propósito, para poupar tinta e papel: total, grupos FGTS/rescisão, composição do total, passo a passo, gráfico, dados informados e série mensal (em anexo quando o vínculo é longo). Gerado no próprio app; funciona offline.
+- Cálculo ao vivo depois do primeiro resultado e resultado em três abas: Resumo, Passo a passo (com rosca interativa) e Evolução.
 - PWA instalável nos navegadores compatíveis, com cálculo, gráfico, histórico e PDF offline após a preparação inicial.
 - Interface responsiva, temas claro/escuro e fontes locais.
 
@@ -23,7 +24,9 @@ O cenário padrão soma TR mensal à taxa mensal equivalente a 3% efetivos ao an
 
 ## Uso e armazenamento
 
-Preencha o contrato e escolha **Calcular**, ou clique em **Usar exemplo** para preencher e calcular um caso fictício sem salvar nada. Parcelas e taxas ficam em seções expansíveis. No celular, alterne entre **Dados** e **Resultado**; **Histórico** e **Ajuda** são áreas separadas, não seções de uma página longa. Alterar as entradas invalida as ações do resultado anterior até novo cálculo. **Salvar simulação** é uma decisão explícita; não registramos cada edição.
+Preencha salário, datas ("Saiu em" já vem com a data de hoje) e a situação, e escolha **Ver quanto posso receber**, ou clique em **Ver exemplo** para calcular um caso fictício sem guardar nada. Contrato, 13º, férias e taxas ficam em **Ajustar detalhes**, que troca a vista dentro do mesmo cartão. Depois do primeiro cálculo, o resultado acompanha as edições; se os dados ficarem inválidos (ou sem o consentimento de doença grave), o resultado fica desatualizado e as ações de guardar e PDF são desativadas até um novo cálculo válido. No celular, alterne entre **Dados** e **Resultado**; **Resultados** (histórico) e **Ajuda** são áreas separadas. **Guardar** é uma decisão explícita; não registramos cada edição.
+
+**Limites de entrada:** a entrada vale a partir de 01/01/1967 (o FGTS começou com a Lei 5.107/1966), o vínculo vai até 60 anos e o salário até R$ 10.000.000,00. Só o primeiro tem base legal; os outros dois são limites do simulador, explicados em [premissas](docs/legal/assumptions.md). Antes de 1991 o FGTS funcionava de outro jeito, e o resultado é só uma ideia aproximada.
 
 O histórico fica neste navegador/dispositivo, sem conta ou sincronização. Limpeza de dados, sessão privada ou políticas do navegador podem removê-lo. Não é backup. A modalidade de doença grave exige consentimento de cálculo e uma autorização separada para salvar. Excluir o histórico não apaga PDFs já baixados.
 
@@ -55,7 +58,7 @@ npm run preview
 **React 19 + TypeScript + Vite**, **Tailwind CSS v4**, **shadcn/ui + Radix** e **Heroicons**, sem backend. `decimal.js`/`Money` preservam precisão em centavos; `idb` gerencia IndexedDB, jsPDF gera o relatório e `vite-plugin-pwa` prepara os arquivos offline. O PDF é carregado sob demanda.
 
 ```text
-src/core/          regras financeiras e Money
+src/core/          regras financeiras, Money e limites de entrada
 src/application/   simulação validada e snapshot compartilhado
 src/ui/            componentes React: formulário, resultado, gráfico, histórico e ajuda
 src/adapters/      formatação, histórico e PDF

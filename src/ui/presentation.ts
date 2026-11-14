@@ -122,3 +122,65 @@ export function comparisonRows(
   }
   return rows;
 }
+
+type ResultKey = keyof SimulationSnapshot['result'];
+
+/** De onde vem o total: mesmas partes, rótulos e explicações na tela e no PDF. */
+export const compositionParts: Array<{ key: ResultKey; label: string; desc: string }> = [
+  {
+    key: 'saldoDisponivelCents',
+    label: 'FGTS disponível',
+    desc: 'Dinheiro do FGTS que você pode sacar.',
+  },
+  {
+    key: 'multaCents',
+    label: 'Multa rescisória',
+    desc: 'Paga pela empresa quando o motivo da saída dá direito.',
+  },
+  {
+    key: 'decimoTerceiroCents',
+    label: '13º proporcional',
+    desc: 'Parte do 13º que ainda não foi paga.',
+  },
+  { key: 'feriasCents', label: 'Férias + 1/3', desc: 'Férias proporcionais mais um terço.' },
+];
+
+/** Os seis passos da conta em linguagem simples, na ordem em que acontecem. */
+export function breakdownSteps(
+  snapshot: SimulationSnapshot,
+): Array<{ key: ResultKey; label: string; hint: string }> {
+  const { input, result } = snapshot;
+  const rate = input.contractType === TipoContrato.APRENDIZ ? '2%' : '8%';
+  const retained = result.saldoRetidoCents !== '0';
+  return [
+    { key: 'depositosCents', label: 'A empresa depositou', hint: `${rate} do salário por mês.` },
+    {
+      key: 'rendimentoCents',
+      label: 'O saldo rendeu',
+      hint: input.scenario === 'TR' ? 'TR + 3% ao ano.' : 'Referência pelo IPCA.',
+    },
+    {
+      key: 'saldoBaseCents',
+      label: 'Saldo total no FGTS',
+      hint: retained
+        ? `${FormatAdapter.centsToBRL(result.saldoRetidoCents)} ficam retidos.`
+        : 'Depósitos + rendimento.',
+    },
+    {
+      key: 'multaCents',
+      label: 'Multa rescisória',
+      hint:
+        input.contractType === TipoContrato.DOMESTICO ? 'Reserva de 3,2%.' : 'Paga pela empresa.',
+    },
+    {
+      key: 'decimoTerceiroCents',
+      label: '13º proporcional',
+      hint: input.include13 ? `${input.thirteenthMonths} avos a receber.` : 'Não incluído.',
+    },
+    {
+      key: 'feriasCents',
+      label: 'Férias + 1/3',
+      hint: input.includeVacation ? `${input.vacationMonths} avos a receber.` : 'Não incluídas.',
+    },
+  ];
+}

@@ -4,6 +4,7 @@
  */
 
 import Decimal from 'decimal.js';
+import { LIMITES } from '../core/limites';
 import { Money, TipoRescisao } from '../core/types';
 import { parseCivilDate } from '../core/CivilDate';
 
@@ -70,6 +71,8 @@ export class FormatAdapter {
     const text = value.trim().replace(/^R\$\s*/, '');
     if (!/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(text)) return null;
     const money = Money.fromReais(text.replace(/\./g, '').replace(',', '.'));
-    return money.isPositive() && money.decimal.lessThanOrEqualTo(100_000_000) ? money : null;
+    return money.isPositive() && money.decimal.lessThanOrEqualTo(Number(LIMITES.salarioMaxCentavos))
+      ? money
+      : null;
   }
 }

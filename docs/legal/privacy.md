@@ -8,7 +8,7 @@ Responsável pelo projeto: Anderson Tavares. Contato: [repositório do projeto](
 
 A aplicação calcula salário, período, modalidade de saída e opções exclusivamente no navegador. Não transmite essas entradas para um backend, analytics ou publicidade. A hospedagem GitHub Pages recebe requisições de arquivos e registra o IP por segurança, conforme [documentação do GitHub](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages).
 
-As simulações permanecem apenas em memória até você escolher **Salvar simulação**. Essa ação grava entradas, resultado, premissas, série e versões em IndexedDB neste navegador/dispositivo. Não há conta, nuvem, sincronização ou backup automático. O histórico permanece até você excluir os registros, limpar os dados do site ou o navegador removê-los por suas políticas de armazenamento. Sessões privadas podem ser temporárias.
+As simulações permanecem apenas em memória até você escolher **Guardar**. Essa ação grava entradas, resultado, premissas, série e versões em IndexedDB neste navegador/dispositivo. Não há conta, nuvem, sincronização ou backup automático. O histórico permanece até você excluir os registros, limpar os dados do site ou o navegador removê-los por suas políticas de armazenamento. Sessões privadas podem ser temporárias.
 
 Preferência de tema usa localStorage. Arquivos do aplicativo, fontes e bibliotecas usam Cache API para permitir acesso offline; esse cache não é um histórico de resultados.
 

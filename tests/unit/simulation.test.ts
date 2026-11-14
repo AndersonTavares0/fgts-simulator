@@ -137,18 +137,32 @@ describe('simulate — documento financeiro único', () => {
     expect(isSimulationSnapshot(snapshot)).toBe(true);
   });
 
-  it('aceita exatamente cinquenta anos civis e rejeita o dia seguinte', () => {
-    const snapshot = simulate({ ...INPUT, startDate: '1976-01-01', endDate: '2026-01-01' });
-    expect(snapshot.timeline).toHaveLength(601);
+  it('aceita exatamente sessenta anos civis e rejeita o dia seguinte', () => {
+    const snapshot = simulate({ ...INPUT, startDate: '1967-01-01', endDate: '2027-01-01' });
+    expect(snapshot.timeline).toHaveLength(721);
     expect(isSimulationSnapshot(snapshot)).toBe(true);
-    expect(() => simulate({ ...INPUT, startDate: '1976-01-01', endDate: '2026-01-02' })).toThrow();
+    expect(() => simulate({ ...INPUT, startDate: '1967-01-01', endDate: '2027-01-02' })).toThrow(
+      /60 anos/,
+    );
+  });
+
+  it('não há FGTS antes de 01/01/1967 (Lei 5.107/1966)', () => {
+    expect(() =>
+      simulate({ ...INPUT, startDate: '1967-01-01', endDate: '1968-01-01' }),
+    ).not.toThrow();
+    expect(() => simulate({ ...INPUT, startDate: '1966-12-31', endDate: '1968-01-01' })).toThrow(
+      /1967/,
+    );
+    expect(() => simulate({ ...INPUT, startDate: '0001-01-01', endDate: '2025-01-01' })).toThrow(
+      /1967/,
+    );
   });
 
   it.each<Partial<SimulationInput>>([
     { salaryCents: '300000abc' },
     { salaryCents: '300000.5' },
     { salaryCents: '0' },
-    { salaryCents: '100000001' },
+    { salaryCents: '1000000001' },
     { startDate: '2024-02-30' },
     { startDate: '2024-1-01' },
     { endDate: '2024-01-01' },
@@ -486,17 +500,17 @@ describe('Limites civis da projeção', () => {
     expect(snapshot.result.saldoBaseCents).toBe('312000');
   });
 
-  it('limita o aniversário de cinquenta anos de uma admissão em 29 de fevereiro', () => {
+  it('limita o aniversário de sessenta anos de uma admissão em 29 de fevereiro', () => {
     expect(() =>
-      simulate({ ...INPUT, startDate: '1976-02-29', endDate: '2026-02-28' }),
+      simulate({ ...INPUT, startDate: '1976-02-29', endDate: '2036-02-29' }),
     ).not.toThrow();
-    expect(() => simulate({ ...INPUT, startDate: '1976-02-29', endDate: '2026-03-01' })).toThrow();
+    expect(() => simulate({ ...INPUT, startDate: '1976-02-29', endDate: '2036-03-01' })).toThrow();
   });
 
   it('aceita o limite salarial exato em uma competência única', () => {
-    const snapshot = simulate({ ...INPUT, salaryCents: '100000000', endDate: '2024-01-31' });
+    const snapshot = simulate({ ...INPUT, salaryCents: '1000000000', endDate: '2024-01-31' });
     expect(snapshot.timeline).toHaveLength(1);
-    expect(snapshot.result.saldoBaseCents).toBe('8000000');
+    expect(snapshot.result.saldoBaseCents).toBe('80000000');
     expect(snapshot.result.rendimentoCents).toBe('0');
   });
 });
